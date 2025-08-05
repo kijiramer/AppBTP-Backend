@@ -1,0 +1,422 @@
+import React, { useState } from 'react';
+import {
+  StyleSheet,
+  Alert,
+  Keyboard,
+  SafeAreaView,
+  View,
+  ActivityIndicator,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  Button,
+} from 'react-native';
+import axios from 'axios';
+import { useForm, Controller } from 'react-hook-form';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import FeatherIcon from 'react-native-vector-icons/Feather';
+import { useNavigation } from '@react-navigation/native';
+import useNavigationCustom from '../Controleur/useNavigationCustom';
+
+
+
+export default function SignUp() {
+  const [loading, setLoading] = useState(false);
+  const navigation = useNavigation();
+  const { goBack, navigateTo } = useNavigationCustom();
+  const {
+    handleSubmit,
+    control,
+    formState: { errors },
+    reset,
+    watch,
+  } = useForm({
+    mode: 'onBlur',
+    defaultValues: {
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
+  });
+
+ /*  function handleSubmit() {
+    const userData = {
+      email,
+      password,
+      name,
+      confirmPassword,
+    };
+    axios
+      .post('http://192.168.1.89:5001/signup', userData, {timeout: 5000})
+      .then(res => console.log(res.data))
+      .catch(e => console.log(e));
+
+      reset();
+    setLoading(false);
+
+    Alert.alert(
+      'Successful submission!',
+      'New account is created, navigating to the next screen!',
+    );
+  } */
+
+    const onSubmit = async data => {
+      setLoading(true);
+      Keyboard.dismiss();
+    
+      axios
+        .post('http://192.168.1.89:5001/signup', data)
+        .then(res => {
+          console.log(res.data);
+          reset();
+          setLoading(false);
+          Alert.alert(
+            'Successful submission!',
+            'New account is created, navigating to the next screen!',
+            [
+              {
+                text: "OK",
+                onPress: () => navigateTo('LoginPage'),
+              }
+            ]
+          );
+        })
+        .catch(error => {
+          setLoading(false);
+          if (error.response) {
+            // The request was made and the server responded with a status code that falls out of the range of 2xx
+            if (error.response.status === 409) {
+              Alert.alert('Conflict', 'Email address is already in use.');
+            } else {
+              Alert.alert('Error', 'Something went wrong. Please try again later.');
+            }
+          } else if (error.request) {
+            // The request was made but no response was received
+            Alert.alert('Error', 'No response from the server. Please check your network connection.');
+          } else {
+            // Something happened in setting up the request that triggered an Error
+            Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+          }
+          console.log(error);
+        });
+    };
+
+  return (
+    <>
+      {loading && (
+        <View style={styles.activityOverflow}>
+          <ActivityIndicator size="large" color="#fff" />
+        </View>
+      )}
+
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#e8ecf4' }}>
+        <View style={styles.container}>
+          <KeyboardAwareScrollView>
+            <View style={styles.header}>
+              <View style={styles.headerBack}>
+                <TouchableOpacity onPress={goBack}>
+                  <FeatherIcon
+                  color="#1D2A32"
+                  name="chevron-left"
+                  size={30} />
+                </TouchableOpacity>
+                
+              </View>
+
+              <Text style={styles.title}>Let's Get Started!</Text>
+
+              <Text style={styles.subtitle}>
+                Fill in the fields below to get started with your new account.
+              </Text>
+            </View>
+
+            <View style={styles.form}>
+              <View style={styles.input}>
+                <Text style={styles.inputLabel}>Full Name</Text>
+
+                <>
+                  <Controller
+                    control={control}
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <TextInput
+                        clearButtonMode="while-editing"
+                        placeholder="John Doe"
+                        placeholderTextColor="#6b7280"
+                        style={styles.inputControl}
+                        onBlur={onBlur}
+                        onChangeText={name => onChange(name)}
+                        value={value} />
+                    )}
+                    name="name"
+                    rules={{
+                      required: {
+                        value: true,
+                        message: 'Full Name is required.',
+                      },
+                    }}
+                  />
+                  {errors.name && (
+                    <Text style={styles.inputError}>{errors.name.message}</Text>
+                  )}
+                </>
+              </View>
+
+              <View style={styles.input}>
+                <Text style={styles.inputLabel}>Email Address</Text>
+
+                <>
+                  <Controller
+                    control={control}
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <TextInput
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        clearButtonMode="while-editing"
+                        keyboardType="email-address"
+                        placeholder="john@example.com"
+                        placeholderTextColor="#6b7280"
+                        style={styles.inputControl}
+                        onBlur={onBlur}
+                        onChangeText={email => onChange(email)}
+                        value={value} />
+                    )}
+                    name="email"
+                    rules={{
+                      required: {
+                        value: true,
+                        message: 'Email Address is required.',
+                      },
+
+                      pattern: {
+                        value: /\S+@\S+\.\S+/,
+                        message: 'Please enter a valid email address.',
+                      },
+                    }}
+                  />
+                  {errors.email && (
+                    <Text style={styles.inputError}>
+                      {errors.email.message}
+                    </Text>
+                  )}
+                </>
+              </View>
+
+              <View style={styles.input}>
+                <Text style={styles.inputLabel}>Password</Text>
+
+                <>
+                  <Controller
+                    control={control}
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <TextInput
+                        autoCorrect={false}
+                        clearButtonMode="while-editing"
+                        placeholder="********"
+                        placeholderTextColor="#6b7280"
+                        style={styles.inputControl}
+                        secureTextEntry={true}
+                        onBlur={onBlur}
+                        onChangeText={password => onChange(password)}
+                        value={value} />
+                    )}
+                    name="password"
+                    rules={{
+                      required: {
+                        value: true,
+                        message: 'Password is required.',
+                      },
+
+                      minLength: {
+                        value: 6,
+                        message: 'Password must be at least 6 characters.',
+                      },
+                    }}
+                  />
+                  {errors.password && (
+                    <Text style={styles.inputError}>
+                      {errors.password.message}
+                    </Text>
+                  )}
+                </>
+              </View>
+
+              <View style={styles.input}>
+                <Text style={styles.inputLabel}>Confirm Password</Text>
+
+                <>
+                  <Controller
+                    control={control}
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <TextInput
+                        autoCorrect={false}
+                        clearButtonMode="while-editing"
+                        placeholder="********"
+                        placeholderTextColor="#6b7280"
+                        style={styles.inputControl}
+                        secureTextEntry={true}
+                        onBlur={onBlur}
+                        onChangeText={confirmPassword =>
+                          onChange(confirmPassword)
+                        }
+                        value={value} />
+                    )}
+                    name="confirmPassword"
+                    rules={{
+                      required: {
+                        value: true,
+                        message: 'Confirm Password is required.',
+                      },
+
+                      validate: val => {
+                        if (watch('password') !== val) {
+                          return 'Passwords must match.';
+                        }
+                      },
+                    }}
+                  />
+                  {errors.confirmPassword && (
+                    <Text style={styles.inputError}>
+                      {errors.confirmPassword.message}
+                    </Text>
+                  )}
+                </>
+              </View>
+
+              <View style={styles.formAction}>
+                <TouchableOpacity onPress={handleSubmit(onSubmit)}>
+                  <View style={styles.btn}>
+                    <Text style={styles.btnText}>Valider</Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </KeyboardAwareScrollView>
+
+          <TouchableOpacity
+            onPress={()=>navigateTo('LoginPage')}
+              // handle link
+            style={{ marginTop: 'auto' }}>
+            <Text style={styles.formFooter}>
+              Already have an account?{' '}
+              <Text style={{ textDecorationLine: 'underline' }}>Sign in</Text>
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    </>
+  );
+}
+
+const styles = StyleSheet.create({
+  activityOverflow: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    right: 0,
+    left: 0,
+    zIndex: 9999,
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingBottom: 60,
+  },
+  container: {
+    paddingVertical: 24,
+    paddingHorizontal: 0,
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 0,
+  },
+  title: {
+    fontSize: 31,
+    fontWeight: '700',
+    color: '#1D2A32',
+    marginBottom: 6,
+  },
+  subtitle: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#929292',
+  },
+  /** Header */
+  header: {
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
+    marginBottom: 24,
+    paddingHorizontal: 24,
+  },
+  headerBack: {
+    padding: 8,
+    paddingTop: 0,
+    position: 'relative',
+    marginLeft: -16,
+    marginBottom: 6,
+  },
+  /** Form */
+  form: {
+    marginBottom: 24,
+    paddingHorizontal: 24,
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 0,
+  },
+  formAction: {
+    marginTop: 4,
+    marginBottom: 16,
+  },
+  formFooter: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#222',
+    textAlign: 'center',
+    letterSpacing: 0.15,
+  },
+  /** Input */
+  input: {
+    marginBottom: 16,
+  },
+  inputLabel: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#222',
+    marginBottom: 8,
+  },
+  inputControl: {
+    height: 50,
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#222',
+    borderWidth: 1,
+    borderColor: '#C9D3DB',
+    borderStyle: 'solid',
+  },
+  inputError: {
+    marginTop: 4,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '500',
+    color: 'red',
+  },
+  /** Button */
+  btn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 30,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderWidth: 1,
+    backgroundColor: '#075eec',
+    borderColor: '#075eec',
+  },
+  btnText: {
+    fontSize: 18,
+    lineHeight: 26,
+    fontWeight: '600',
+    color: '#fff',
+  },
+});
