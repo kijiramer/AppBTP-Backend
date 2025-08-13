@@ -4,13 +4,89 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const connectDB = require('./db');
-const { User, City, Building, Note, Constatation } = require('./CombinedModel'); // Import the models
+const { User, City, Building, Note, Constatation, Effectif } = require('./CombinedModel'); // Import the models
+
+const JWT_SECRET = 'hvdvay6ert72839289()aiyg8t87qt72393293883uhefiuh78ttq3ifi78272jbkj?[]]pou89ywe';
 
 const app = express();
+
+// Configuration CORS pour permettre les requêtes depuis le navigateur
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  
+  if (req.method === 'OPTIONS') {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
+
 app.use(express.json());
 
 // Connect to MongoDB
 connectDB();
+
+// Routes pour l'effectif
+app.post('/effectif', async (req, res) => {
+  try {
+    const header = req.get('Authorization');
+    if (!header) {
+      return res.status(401).json({ success: false, message: 'You are not authorized.' });
+    }
+    const token = header.split(' ')[1];
+    const payload = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(payload.id);
+    if (!user) {
+      throw new Error('Invalid user.');
+    }
+    const { city, building, floor, apartment, company, nombrePersonnes, selectedDate } = req.body;
+    const effectif = new Effectif({
+      city,
+      building,
+      floor,
+      apartment,
+      company,
+      nombrePersonnes,
+      selectedDate,
+      userId: user._id
+    });
+    await effectif.save();
+    res.json({ success: true, effectif });
+  } catch (err) {
+    console.error('Error creating effectif:', err.message);
+    res.status(500).json({ success: false, message: 'Error creating effectif', error: err.message });
+  }
+});
+
+app.get('/effectif', async (req, res) => {
+  try {
+    const header = req.get('Authorization');
+    if (!header) {
+      return res.status(401).json({ success: false, message: 'You are not authorized.' });
+    }
+    const token = header.split(' ')[1];
+    const payload = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(payload.id);
+    if (!user) {
+      throw new Error('Invalid user.');
+    }
+    const { city, building, floor, apartment, company, selectedDate } = req.query;
+    const filter = { userId: user._id };
+    if (city) filter.city = city;
+    if (building) filter.building = building;
+    if (floor) filter.floor = floor;
+    if (apartment) filter.apartment = apartment;
+    if (company) filter.company = company;
+    if (selectedDate) filter.selectedDate = selectedDate;
+    const effectifs = await Effectif.find(filter).sort({ createdAt: -1 });
+    res.json({ success: true, effectifs });
+  } catch (err) {
+    console.error('Error fetching effectif:', err.message);
+    res.status(500).json({ success: false, message: 'Error fetching effectif', error: err.message });
+  }
+});
 
 // Helper functions
 const generateSaltAndHashForPassword = (password) => {
@@ -42,8 +118,6 @@ const sanitizeUser = (user) => {
   delete sanitized.hash;
   return sanitized;
 };
-
-const JWT_SECRET = 'hvdvay6ert72839289()aiyg8t87qt72393293883uhefiuh78ttq3ifi78272jbkj?[]]pou89ywe';
 
 app.get('/user', async (req, res) => {
   const header = req.get('Authorization');
@@ -218,6 +292,45 @@ app.get('/notes', async (req, res) => {
   } catch (err) {
     console.error('Error fetching notes:', err.message);
     res.status(500).json({ success: false, message: 'Error fetching notes', error: err.message });
+  }
+});
+
+// Récupérer toutes les dates (jours) où des notes existent pour un contexte
+app.get('/notes/dates', async (req, res) => {
+  const header = req.get('Authorization');
+  if (!header) {
+    return res.status(401).json({ success: false, message: 'You are not authorized.' });
+  }
+
+  const token = header.split(' ')[1];
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(payload.id);
+    if (!user) {
+      throw new Error('Invalid user.');
+    }
+
+    const { city, building, task } = req.query;
+    const filter = { userId: user._id };
+    if (city) filter.city = city;
+    if (building) filter.building = building;
+    if (task) filter.task = task;
+
+    const notes = await Note.find(filter).select('selectedDate').lean();
+    const set = new Set();
+    for (const n of notes) {
+      if (n.selectedDate) {
+        const d = new Date(n.selectedDate);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        set.add(`${y}-${m}-${day}`);
+      }
+    }
+    return res.json({ success: true, dates: Array.from(set) });
+  } catch (err) {
+    console.error('Error fetching note dates:', err.message);
+    res.status(500).json({ success: false, message: 'Error fetching note dates', error: err.message });
   }
 });
 
