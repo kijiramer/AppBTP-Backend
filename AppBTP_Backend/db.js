@@ -1,8 +1,10 @@
 const mongoose = require('mongoose');
 
 const connectDB = async () => {
+  const defaultUri = 'mongodb+srv://kijiramer:admin@cluster0.bafh5lk.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+  const mongoUri = process.env.MONGODB_URI || defaultUri;
   try {
-    await mongoose.connect('mongodb+srv://kijiramer:admin@cluster0.bafh5lk.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', {
+    await mongoose.connect(mongoUri, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
