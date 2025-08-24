@@ -17,7 +17,7 @@ import { Picker } from '@react-native-picker/picker';
 import moment from 'moment';
 import 'moment/locale/fr';
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import Storage from '../utils/Storage';
 import { Ionicons } from '@expo/vector-icons';
 
 import Header from './Header';
@@ -67,7 +67,7 @@ export default function Note({ route, navigation }) {
   const loadNotes = async () => {
     try {
       setLoading(true);
-      const token = await AsyncStorage.getItem('token');
+  const token = await Storage.getItem('token');
       if (!token) {
         Alert.alert('Erreur', 'Vous devez être connecté');
         return;
@@ -100,7 +100,7 @@ export default function Note({ route, navigation }) {
   const addNote = async () => {
     try {
       setLoading(true);
-      const token = await AsyncStorage.getItem('token');
+  const token = await Storage.getItem('token');
       if (!token) {
         Alert.alert('Erreur', 'Vous devez être connecté');
         return;
@@ -176,7 +176,7 @@ export default function Note({ route, navigation }) {
           onPress: async () => {
             try {
               setLoading(true);
-              const token = await AsyncStorage.getItem('token');
+              const token = await Storage.getItem('token');
               if (!token) {
                 Alert.alert('Erreur', 'Vous devez être connecté');
                 return;
@@ -235,7 +235,7 @@ export default function Note({ route, navigation }) {
   const [noteDates, setNoteDates] = useState([]);
   const loadNoteDates = async () => {
     try {
-      const token = await AsyncStorage.getItem('token');
+  const token = await Storage.getItem('token');
       if (!token) return;
   const url = `http://192.168.1.89:8081/notes/dates?city=${city}&building=${building}&task=${task}`;
       const response = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
@@ -245,7 +245,7 @@ export default function Note({ route, navigation }) {
     } catch (e) {
       // Fallback silencieux: récupérer toutes les notes et en déduire les dates
       try {
-        const token = await AsyncStorage.getItem('token');
+  const token = await Storage.getItem('token');
         if (!token) return;
   const urlAll = `http://192.168.1.89:8081/notes?city=${city}&building=${building}&task=${task}`;
         const respAll = await axios.get(urlAll, { headers: { Authorization: `Bearer ${token}` } });

@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import * as SplashScreen from 'expo-splash-screen';
 import { useFonts } from 'expo-font';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import Storage from './utils/Storage';
 import LoginPage from "./Vue/LoginPage";
 import SignUp from "./Vue/SignUp";
 import HomePage from "./Vue/HomePage";
@@ -53,7 +53,7 @@ export default function App() {
 
   useEffect(() => {
     const checkToken = async () => {
-      const token = await AsyncStorage.getItem('token');
+      const token = await Storage.getItem('token');
       if (token) {
         await loadUser(token);
       }

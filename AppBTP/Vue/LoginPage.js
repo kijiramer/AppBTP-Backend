@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import Storage from '../utils/Storage';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useNavigation } from '@react-navigation/native';
 import useNavigationCustom from '../Controleur/useNavigationCustom';
@@ -68,7 +68,7 @@ export default function LoginPage() {
 
     useEffect(() => {
         const loadExistingUser = async () => {
-            const token = await AsyncStorage.getItem('token');
+            const token = await Storage.getItem('token');
 
             if (!token) {
                 return;

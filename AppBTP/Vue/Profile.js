@@ -5,7 +5,7 @@ import Modal from 'react-native-modal';
 import FeatherIcon from 'react-native-vector-icons/Feather';
 import ScreenWrapper from '../Controleur/ScreenWrapper';
 import photodeprofile from '../assets/photodeprofile.png';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import Storage from '../utils/Storage';
 import { useNavigation } from '@react-navigation/native';
 
 export default function Profile() {
