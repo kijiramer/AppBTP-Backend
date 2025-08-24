@@ -1,0 +1,97 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import * as SplashScreen from 'expo-splash-screen';
+import { useFonts } from 'expo-font';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import LoginPage from "./Vue/LoginPage";
+import SignUp from "./Vue/SignUp";
+import HomePage from "./Vue/HomePage";
+import Profile from './Vue/Profile';
+import Chantier from './Vue/Chantier';
+import Batiment from './Vue/Batiment';
+import Note from './Vue/Note';
+import Constatation from './Vue/Constatation';
+import Effectif from './Vue/Effectif';
+import PrivacyPolicy from './Vue/PrivacyPolicy';
+import { TabProvider } from './Controleur/TabContext';
+import axios from 'axios';
+import { View, ActivityIndicator } from 'react-native';
+
+const Stack = createStackNavigator();
+
+SplashScreen.preventAutoHideAsync();
+
+export default function App() {
+  const [fontsLoaded] = useFonts({
+    'Quicksand-Bold': require('./assets/fonts/Quicksand-Bold.ttf'),
+  });
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [initialRoute, setInitialRoute] = useState("LoginPage");
+  const [loading, setLoading] = useState(false);
+
+  const loadUser = useCallback(async (token: string) => {
+    try {
+      setLoading(true);
+  const response = await axios.get('http://192.168.1.89:8081/user', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const { data } = response;
+      if (data.user) {
+        setInitialRoute("HomePage");
+      }
+    } catch (err) {
+      console.log("Error loading user:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const checkToken = async () => {
+      const token = await AsyncStorage.getItem('token');
+      if (token) {
+        await loadUser(token);
+      }
+      setIsLoading(false);
+    };
+    checkToken();
+  }, [loadUser]);
+
+  useEffect(() => {
+    if (!isLoading && fontsLoaded) {
+      SplashScreen.hideAsync(); // Fermer l'écran de démarrage après le chargement des polices et la vérification du token
+    }
+  }, [isLoading, fontsLoaded]);
+
+  if (isLoading || !fontsLoaded) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#F85F6A" />
+      </View>
+    ); 
+  }
+
+  return (
+    <TabProvider>
+      <NavigationContainer>
+      <Stack.Navigator initialRouteName={initialRoute}>
+        <Stack.Screen name="LoginPage" component={LoginPage} options={{ headerShown: false }} />
+        <Stack.Screen name="SignUp" component={SignUp} options={{ headerShown: false }} />
+        <Stack.Screen name="HomePage" component={HomePage} options={{ headerShown: false }} />
+        <Stack.Screen name="Profile" component={Profile} options={{ headerShown: false }} />
+        <Stack.Screen name="Chantier" component={Chantier} options={{ headerShown: false }} />
+        <Stack.Screen name="Batiment" component={Batiment} options={{ headerShown: false }} />
+        <Stack.Screen name="Note" component={Note} options={{ headerShown: false }} />
+        <Stack.Screen name="Constatation" component={Constatation} options={{ headerShown: false }} />
+        <Stack.Screen name="Effectif" component={Effectif} options={{ headerShown: false }} />
+  <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicy} options={{ headerShown: false }} />
+      </Stack.Navigator>
+    </NavigationContainer>
+    </TabProvider>
+  );
+}
