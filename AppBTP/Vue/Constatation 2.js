@@ -3,7 +3,7 @@ import { StyleSheet, SafeAreaView, ScrollView, View, Text, TouchableOpacity, Ima
 import * as ImagePicker from 'expo-image-picker';
 import { Picker } from '@react-native-picker/picker';
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import Storage from '../utils/Storage';
 
 import Header from './Header';
 import ScreenWrapper from '../Controleur/ScreenWrapper';
@@ -63,7 +63,7 @@ export default function Constatation({ route, navigation }) {
     const loadConstatations = async () => {
         try {
             setLoading(true);
-            const token = await AsyncStorage.getItem('token');
+            const token = await Storage.getItem('token');
             if (!token) {
                 Alert.alert('Erreur', 'Vous devez être connecté');
                 return;
@@ -98,7 +98,7 @@ export default function Constatation({ route, navigation }) {
 
         try {
             setLoading(true);
-            const token = await AsyncStorage.getItem('token');
+            const token = await Storage.getItem('token');
             if (!token) {
                 Alert.alert('Erreur', 'Vous devez être connecté');
                 return;

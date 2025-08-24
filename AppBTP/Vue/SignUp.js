@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useForm, Controller } from 'react-hook-form';
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import Storage from '../utils/Storage';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import FeatherIcon from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
@@ -69,7 +69,7 @@ export default function SignUp() {
 
   useEffect(() => {
     const loadExistingUser = async () => {
-      const token = await AsyncStorage.getItem('token');
+  const token = await Storage.getItem('token');
 
       if (!token) {
         return;
@@ -88,7 +88,7 @@ export default function SignUp() {
   const response = await axios.post('http://192.168.1.89:8081/signup', data);
       const { token } = response.data;
 
-      await AsyncStorage.setItem('token', token);
+  await Storage.setItem('token', token);
       await loadUser(token);
 
       reset();
@@ -118,7 +118,7 @@ export default function SignUp() {
 
         <TouchableOpacity
           onPress={async () => {
-            await AsyncStorage.removeItem('token');
+            await Storage.removeItem('token');
             setUser(null);
           }}>
           <Text style={styles.loggedInLink}>Log out</Text>

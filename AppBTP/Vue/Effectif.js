@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { StyleSheet, SafeAreaView, ScrollView, View, Text, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import moment from 'moment';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import Storage from '../utils/Storage';
 import Header from './Header';
 import ScreenWrapper from '../Controleur/ScreenWrapper';
 
@@ -30,7 +30,7 @@ export default function Effectif({ route, navigation }) {
       return;
     }
     try {
-      const token = await AsyncStorage.getItem('token');
+  const token = await Storage.getItem('token');
       if (!token) {
         Alert.alert('Erreur', 'Vous devez être connecté');
         return;
