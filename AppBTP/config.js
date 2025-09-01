@@ -4,7 +4,7 @@ import Constants from 'expo-constants';
 // Configuration des URLs pour différentes plateformes
 const TUNNEL_URL = 'https://chubby-cloths-marry.loca.lt';
 const LOCAL_HOST_IP = '192.168.1.89';
-const LOCAL_PORT = '8081'; // Port du backend
+const LOCAL_PORT = '8082'; // Port du backend
 
 const getBaseURL = () => {
   if (Platform.OS === 'web') {
