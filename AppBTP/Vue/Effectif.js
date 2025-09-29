@@ -6,6 +6,7 @@ import moment from 'moment';
 import Storage from '../utils/Storage';
 import Header from './Header';
 import ScreenWrapper from '../Controleur/ScreenWrapper';
+import { API_BASE_URL } from '../config';
 
 export default function Effectif({ route, navigation }) {
   const { city, building, task } = route.params;
@@ -44,7 +45,7 @@ export default function Effectif({ route, navigation }) {
         nombrePersonnes: Number(form.nombrePersonnes),
         selectedDate: form.selectedDate,
       };
-  const response = await fetch('http://192.168.1.89:8081/effectif', {
+  const response = await fetch(`${API_BASE_URL}/effectif`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

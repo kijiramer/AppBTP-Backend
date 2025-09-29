@@ -3,6 +3,7 @@ const express = require('express');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
+const cookieParser = require('cookie-parser');
 const connectDB = require('./db');
 const { User, City, Building, Note, Constatation, Effectif } = require('./CombinedModel'); // Import the models
 
@@ -10,11 +11,17 @@ const JWT_SECRET = 'hvdvay6ert72839289()aiyg8t87qt72393293883uhefiuh78ttq3ifi782
 
 const app = express();
 
+// Cookie parser pour lire les cookies httpOnly
+app.use(cookieParser());
+
 // Configuration CORS pour permettre les requêtes depuis le navigateur
+// NOTE: when using cookies (HttpOnly) you must set a specific origin and allow credentials
+const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:3000';
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Origin', CLIENT_ORIGIN);
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cookie');
+  res.header('Access-Control-Allow-Credentials', 'true');
   
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
@@ -27,6 +34,25 @@ app.use(express.json());
 
 // Connect to MongoDB
 connectDB();
+
+// Route racine
+app.get('/', (req, res) => {
+  res.json({
+    message: 'Bienvenue sur l\'API AppBTP',
+    version: '1.0.0',
+    status: 'running',
+    endpoints: {
+      auth: {
+        login: 'POST /login',
+        register: 'POST /register'
+      },
+      data: {
+        effectif: 'POST /effectif',
+        constatations: 'GET /constatations'
+      }
+    }
+  });
+});
 
 // Routes pour l'effectif
 app.post('/effectif', async (req, res) => {
@@ -120,11 +146,13 @@ const sanitizeUser = (user) => {
 };
 
 app.get('/user', async (req, res) => {
+  // Accept token from Authorization header or cookie
   const header = req.get('Authorization');
-  if (!header) {
+  const cookieToken = req.cookies && req.cookies.token;
+  const token = header ? header.split(' ')[1] : cookieToken;
+  if (!token) {
     return res.status(401).json({ success: false, message: 'You are not authorized.' });
   }
-  const token = header.split(' ')[1];
   await new Promise(resolve => setTimeout(resolve, 1000));
   try {
     const payload = jwt.verify(token, JWT_SECRET);
@@ -179,7 +207,14 @@ app.post('/login', async (req, res) => {
   const token = jwt.sign(payload, JWT_SECRET, {
     expiresIn: '7d',
   });
-  return res.status(200).json({ success: true, token });
+  // Set cookie httpOnly
+  res.cookie('token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+  });
+  return res.status(200).json({ success: true });
 });
 
 app.post('/signup', async (req, res) => {
@@ -204,7 +239,93 @@ app.post('/signup', async (req, res) => {
   const token = jwt.sign(payload, JWT_SECRET, {
     expiresIn: '7d',
   });
-  return res.status(200).json({ success: true, token });
+  // Set cookie httpOnly
+  res.cookie('token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+  });
+  return res.status(200).json({ success: true });
+});
+
+// Admin middleware
+const isAdmin = async (req, res, next) => {
+  try {
+    // check Authorization header first, then cookie
+    const header = req.get('Authorization');
+    const cookieToken = req.cookies && req.cookies.token;
+    const token = header ? header.split(' ')[1] : cookieToken;
+    if (!token) return res.status(401).json({ success: false, message: 'You are not authorized.' });
+    const payload = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(payload.id);
+    if (!user || user.role !== 'admin') return res.status(403).json({ success: false, message: 'Admin only.' });
+    req.user = user;
+    next();
+  } catch (err) {
+    return res.status(401).json({ success: false, message: 'Invalid token.' });
+  }
+};
+
+// Admin route: list users (admin only)
+app.get('/admin/users', isAdmin, async (req, res) => {
+  try {
+    const users = await User.find().select('-salt -hash');
+    res.json({ success: true, users });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Error fetching users', error: err.message });
+  }
+});
+
+// Admin route: create a user (admin only)
+app.post('/admin/users', isAdmin, async (req, res) => {
+  try {
+    const { name, email, password, role } = req.body;
+    if (!name || !email || !password) return res.status(400).json({ success: false, message: 'Missing fields' });
+    const existing = await User.findOne({ email });
+    if (existing) return res.status(400).json({ success: false, message: 'User with this email already exists.' });
+    const { salt, hash } = generateSaltAndHashForPassword(password);
+    const user = new User({ name, email, salt, hash, role: role || 'user' });
+    await user.save();
+    return res.json({ success: true, user: sanitizeUser(user) });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Error creating user', error: err.message });
+  }
+});
+
+// Admin route: update a user (admin only)
+app.put('/admin/users/:id', isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, password, role } = req.body;
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    if (name) user.name = name;
+    if (email) user.email = email;
+    if (role) user.role = role;
+    if (password) {
+      const { salt, hash } = generateSaltAndHashForPassword(password);
+      user.salt = salt;
+      user.hash = hash;
+    }
+    await user.save();
+    return res.json({ success: true, user: sanitizeUser(user) });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Error updating user', error: err.message });
+  }
+});
+
+// Admin route: delete a user (admin only)
+app.delete('/admin/users/:id', isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    await User.findByIdAndDelete(id);
+    return res.json({ success: true, message: 'User deleted' });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Error deleting user', error: err.message });
+  }
 });
 
 // Add the cities route
@@ -442,6 +563,31 @@ app.get('/constatations', async (req, res) => {
   }
 });
 
-app.listen(8081, '0.0.0.0', () => {
-  console.log('Express server is running on port 8081.');
+// Logout : clear token cookie
+app.post('/logout', (req, res) => {
+  res.clearCookie('token', { path: '/' });
+  return res.json({ success: true, message: 'Logged out' });
+});
+
+const PORT = process.env.PORT || 8081;
+const HOST = process.env.HOST || '0.0.0.0';
+
+const server = app.listen(PORT, HOST, () => {
+  console.log(`Express server is running on port ${PORT}.`);
+});
+
+server.on('error', (err) => {
+  if (err && err.code === 'EADDRINUSE') {
+    console.error(`Error: Port ${PORT} is already in use. Kill the process using it or change PORT.`);
+  } else {
+    console.error('Server error:', err);
+  }
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled Rejection at:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
 });

@@ -18,11 +18,17 @@
       },
       "ios": {
         "simulator": true
+      },
+      "env": {
+        "YARN_IGNORE_ENGINES": "1"
       }
     },
     "production": {
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "YARN_IGNORE_ENGINES": "1"
       }
     }
   },

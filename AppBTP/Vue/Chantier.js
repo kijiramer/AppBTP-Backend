@@ -5,6 +5,7 @@ import ScreenWrapper from '../Controleur/ScreenWrapper';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import { TabContext } from '../Controleur/TabContext';
 import axios from 'axios'; // Import axios for API calls
+import { API_BASE_URL } from '../config';
 
 const Card = ({ name, onPress }) => (
   <TouchableOpacity style={styles.card} onPress={onPress}>
@@ -32,7 +33,7 @@ export default function Chantier({ route, navigation }) {
 
   // Fetch buildings from API
   useEffect(() => {
-  axios.get('http://192.168.1.89:8081/buildings')
+  axios.get(`${API_BASE_URL}/buildings`)
       .then(response => {
         setBuildings(response.data);
       })

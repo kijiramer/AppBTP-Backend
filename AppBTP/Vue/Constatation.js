@@ -4,6 +4,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Picker } from '@react-native-picker/picker';
 import axios from 'axios';
 import Storage from '../utils/Storage';
+import { API_BASE_URL } from '../config';
 
 import Header from './Header';
 import ScreenWrapper from '../Controleur/ScreenWrapper';
@@ -69,7 +70,7 @@ export default function Constatation({ route, navigation }) {
                 return;
             }
 
-            const response = await axios.get(`http://192.168.1.89:8081/constatations?city=${city}&building=${building}&task=${task}&selectedDate=${selectedDate.toISOString()}`, {
+            const response = await axios.get(`${API_BASE_URL}/constatations?city=${city}&building=${building}&task=${task}&selectedDate=${selectedDate.toISOString()}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -114,7 +115,7 @@ export default function Constatation({ route, navigation }) {
                 selectedDate: selectedDate.toISOString(),
             };
 
-            const response = await axios.post('http://192.168.1.89:8081/constatations', constatationData, {
+            const response = await axios.post(`${API_BASE_URL}/constatations`, constatationData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
