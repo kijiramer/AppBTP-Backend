@@ -12,9 +12,9 @@
       "dest": "/App.js"
     }
   ],
-  "env": {
-    "MONGODB_URI": "@mongodb_uri",
-    "JWT_SECRET": "@jwt_secret",
-    "NODE_ENV": "production"
+  "functions": {
+    "App.js": {
+      "maxDuration": 10
+    }
   }
 }
