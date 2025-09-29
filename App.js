@@ -20,7 +20,8 @@ const allowedOrigins = [
   'http://localhost:3001',
   'http://localhost:5173',
   'https://vite-reactwebapp-jb6v8ebto-kijis-projects.vercel.app',
-  'https://appbtp-webapp-vite.vercel.app'
+  'https://appbtp-webapp-vite.vercel.app',
+  'https://app-btp-web-app-vite-1d7ssuw7e-kijis-projects.vercel.app'
 ];
 
 app.use((req, res, next) => {
@@ -53,10 +54,13 @@ connectDB();
 
 // Route racine
 app.get('/', (req, res) => {
+  console.log('Root route accessed from origin:', req.headers.origin);
   res.json({
     message: 'Bienvenue sur l\'API AppBTP',
     version: '1.0.0',
     status: 'running',
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    environment: process.env.NODE_ENV || 'development',
     endpoints: {
       auth: {
         login: 'POST /login',
