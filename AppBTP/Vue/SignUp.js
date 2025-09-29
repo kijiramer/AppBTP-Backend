@@ -17,6 +17,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import FeatherIcon from 'react-native-vector-icons/Feather';
 import { useNavigation } from '@react-navigation/native';
 import useNavigationCustom from '../Controleur/useNavigationCustom';
+import { API_BASE_URL } from '../config';
 
 
 export default function SignUp() {
@@ -43,7 +44,7 @@ export default function SignUp() {
   const loadUser = useCallback(async token => {
     try {
       setLoading(true);
-  const { data } = await axios.get('http://192.168.1.89:8081/user', {
+  const { data } = await axios.get(`${API_BASE_URL}/user`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -85,7 +86,7 @@ export default function SignUp() {
     Keyboard.dismiss();
 
     try {
-  const response = await axios.post('http://192.168.1.89:8081/signup', data);
+  const response = await axios.post(`${API_BASE_URL}/signup`, data);
       const { token } = response.data;
 
   await Storage.setItem('token', token);

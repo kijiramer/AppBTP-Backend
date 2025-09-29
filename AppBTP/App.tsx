@@ -2,7 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import * as SplashScreen from 'expo-splash-screen';
-import { useFonts } from 'expo-font';
+// Temporary shim to avoid expo-font startup issues in local dev
+// Remove when expo-font issues are resolved.
+const { useFonts } = require('./expo-font-shim');
 import Storage from './utils/Storage';
 import LoginPage from "./Vue/LoginPage";
 import SignUp from "./Vue/SignUp";
@@ -16,6 +18,7 @@ import Effectif from './Vue/Effectif';
 import PrivacyPolicy from './Vue/PrivacyPolicy';
 import { TabProvider } from './Controleur/TabContext';
 import axios from 'axios';
+import { API_BASE_URL } from './config';
 import { View, ActivityIndicator } from 'react-native';
 
 const Stack = createStackNavigator();
@@ -34,7 +37,7 @@ export default function App() {
   const loadUser = useCallback(async (token: string) => {
     try {
       setLoading(true);
-  const response = await axios.get('http://192.168.1.89:8081/user', {
+  const response = await axios.get(`${API_BASE_URL}/user`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

@@ -20,6 +20,29 @@ import { useNavigation } from '@react-navigation/native';
 import useNavigationCustom from '../Controleur/useNavigationCustom';
 import { API_BASE_URL } from '../config';
 
+// Configuration Axios
+const api = axios.create({
+    baseURL: API_BASE_URL,
+    timeout: 10000, // 10 secondes timeout
+    headers: {
+        'Content-Type': 'application/json',
+    },
+});
+
+// Intercepteur pour les erreurs
+api.interceptors.response.use(
+    response => response,
+    error => {
+        if (error.code === 'ECONNABORTED') {
+            throw new Error('La requête a expiré. Vérifiez votre connexion réseau.');
+        }
+        if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
+            throw new Error('Impossible de contacter le serveur. Vérifiez votre connexion.');
+        }
+        throw error;
+    }
+);
+
 export default function LoginPage() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -41,7 +64,7 @@ export default function LoginPage() {
         try {
             setLoading(true);
             console.log("Sending token:", token);
-            const response = await axios.get(`${API_BASE_URL}/user`, {
+            const response = await api.get('/user', {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -90,7 +113,7 @@ export default function LoginPage() {
 
         try {
             console.log("🌐 Making request to:", `${API_BASE_URL}/login`);
-            const response = await axios.post(`${API_BASE_URL}/login`, data);
+            const response = await api.post('/login', data);
             console.log("✅ API response:", response.data);
 
             if (!response.data.success) {
@@ -103,7 +126,7 @@ export default function LoginPage() {
 
             const { token } = response.data;
 
-            await AsyncStorage.setItem('token', token);
+            await Storage.setItem('token', token);
             console.log("Token saved:", token);
 
             await loadUser(token);

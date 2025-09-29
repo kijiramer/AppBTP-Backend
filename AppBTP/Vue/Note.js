@@ -23,6 +23,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Header from './Header';
 import ScreenWrapper from '../Controleur/ScreenWrapper';
 import { displayCalendarScreen } from './Components/Calendar';
+import { API_BASE_URL } from '../config';
 
 moment.locale('fr');
 
@@ -73,7 +74,7 @@ export default function Note({ route, navigation }) {
         return;
       }
 
-  const response = await axios.get(`http://192.168.1.89:8081/notes?city=${city}&building=${building}&task=${task}&selectedDate=${selectedDate.toISOString()}`, {
+  const response = await axios.get(`${API_BASE_URL}/notes?city=${city}&building=${building}&task=${task}&selectedDate=${selectedDate.toISOString()}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -118,7 +119,7 @@ export default function Note({ route, navigation }) {
         selectedDate: selectedDate.toISOString(),
       };
 
-  const response = await axios.post('http://192.168.1.89:8081/notes', noteData, {
+  const response = await axios.post(`${API_BASE_URL}/notes`, noteData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -182,7 +183,7 @@ export default function Note({ route, navigation }) {
                 return;
               }
 
-              const response = await axios.delete(`http://192.168.1.89:8081/notes/${noteId}`, {
+              const response = await axios.delete(`${API_BASE_URL}/notes/${noteId}`, {
                 headers: {
                   Authorization: `Bearer ${token}`,
                 },
@@ -237,7 +238,7 @@ export default function Note({ route, navigation }) {
     try {
   const token = await Storage.getItem('token');
       if (!token) return;
-  const url = `http://192.168.1.89:8081/notes/dates?city=${city}&building=${building}&task=${task}`;
+  const url = `${API_BASE_URL}/notes/dates?city=${city}&building=${building}&task=${task}`;
       const response = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
       if (response.data.success && Array.isArray(response.data.dates)) {
         setNoteDates(response.data.dates);
@@ -247,7 +248,7 @@ export default function Note({ route, navigation }) {
       try {
   const token = await Storage.getItem('token');
         if (!token) return;
-  const urlAll = `http://192.168.1.89:8081/notes?city=${city}&building=${building}&task=${task}`;
+  const urlAll = `${API_BASE_URL}/notes?city=${city}&building=${building}&task=${task}`;
         const respAll = await axios.get(urlAll, { headers: { Authorization: `Bearer ${token}` } });
         if (respAll.data.success && Array.isArray(respAll.data.notes)) {
           const set = new Set();

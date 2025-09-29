@@ -40,7 +40,12 @@
       "Bash(/usr/local/Cellar/mysql/9.4.0_1/support-files/mysql.server start)",
       "Bash(brew services:*)",
       "Bash(brew uninstall:*)",
-      "Bash(mariadb:*)"
+      "Bash(mariadb:*)",
+      "Bash(npm run build:*)",
+      "Bash(vercel:*)",
+      "Bash(/usr/local/bin/vercel /Users/mehdiakounad/Desktop/ApplicationBTP/WebApp --prod --yes)",
+      "Bash(bash:*)",
+      "Bash(export:*)"
     ],
     "deny": []
   }

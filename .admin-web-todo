@@ -1,0 +1,8 @@
+Internal todo: prepare admin web
+- Verify backend has admin flag on user model
+- Decide web stack (Next.js SSR vs React SPA)
+- Scaffold project (nextjs) under /AdminWeb or /web-admin
+- Implement login page calling backend /login and obtain token
+- Implement protected dashboard pages and API proxy
+- Add backend middleware to validate admin role for admin-only endpoints
+- Add deployment instructions (Vercel/Netlify)

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, SafeAreaView, TouchableOpacity, ScrollView, Image, Text } from 'react-native';
 import Header from './Header';
+import { API_BASE_URL } from '../config';
 import bannerImage from '../assets/Banner.jpg';
 import ScreenWrapper from '../Controleur/ScreenWrapper';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -11,7 +12,7 @@ export default function Home({ navigation }) {
 
   // Fetch cities from API
   useEffect(() => {
-  axios.get('http://192.168.1.89:8081/cities')
+    axios.get(`${API_BASE_URL}/cities`)
       .then(response => {
         setCities(response.data);
       })
