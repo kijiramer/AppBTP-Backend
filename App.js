@@ -25,9 +25,16 @@ const allowedOrigins = [
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin) || process.env.NODE_ENV === 'production') {
+  
+  // Permettre localhost et domaines Vercel
+  const isLocalhost = origin && (origin.includes('localhost') || origin.includes('127.0.0.1'));
+  const isVercel = origin && (origin.includes('vercel.app') || origin.includes('netlify.app'));
+  const isAllowed = allowedOrigins.includes(origin);
+  
+  if (isAllowed || isLocalhost || isVercel || process.env.NODE_ENV === 'production') {
     res.header('Access-Control-Allow-Origin', origin || '*');
   }
+  
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cookie');
   res.header('Access-Control-Allow-Credentials', 'true');
