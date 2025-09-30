@@ -233,7 +233,7 @@ app.post('/login', async (req, res) => {
     sameSite: 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
   });
-  return res.status(200).json({ success: true });
+  return res.status(200).json({ success: true, token });
 });
 
 app.post('/signup', async (req, res) => {
@@ -265,7 +265,7 @@ app.post('/signup', async (req, res) => {
     sameSite: 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
   });
-  return res.status(200).json({ success: true });
+  return res.status(200).json({ success: true, token });
 });
 
 // Admin middleware
