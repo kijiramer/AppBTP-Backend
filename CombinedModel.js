@@ -87,6 +87,10 @@ const constatationSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  chantierName: {
+    type: String,
+    required: true
+  },
   city: {
     type: String,
     required: true
@@ -114,6 +118,10 @@ const constatationSchema = new mongoose.Schema({
   selectedDate: {
     type: Date,
     required: true
+  },
+  endDate: {
+    type: Date,
+    required: false
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
