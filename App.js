@@ -22,7 +22,8 @@ const allowedOrigins = [
   'https://vite-reactwebapp-jb6v8ebto-kijis-projects.vercel.app',
   'https://appbtp-webapp-vite.vercel.app',
   'https://app-btp-web-app-vite-1d7ssuw7e-kijis-projects.vercel.app',
-  'https://app-btp-web-app-vite-5psnqle0x-kijis-projects.vercel.app'
+  'https://app-btp-web-app-vite-5psnqle0x-kijis-projects.vercel.app',
+  'https://app-btp-web-app-vite-fy34d3rjm-kijis-projects.vercel.app'
 ];
 
 app.use((req, res, next) => {
