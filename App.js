@@ -582,6 +582,42 @@ app.get('/constatations', async (req, res) => {
   }
 });
 
+// Supprimer une constatation
+app.delete('/constatations/:id', async (req, res) => {
+  const header = req.get('Authorization');
+  if (!header) {
+    return res.status(401).json({ success: false, message: 'You are not authorized.' });
+  }
+
+  const token = header.split(' ')[1];
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(payload.id);
+    if (!user) {
+      throw new Error('Invalid user.');
+    }
+
+    const constatationId = req.params.id;
+    const constatation = await Constatation.findById(constatationId);
+
+    if (!constatation) {
+      return res.status(404).json({ success: false, message: 'Constatation not found' });
+    }
+
+    // Vérifier que l'utilisateur est le propriétaire de la constatation
+    if (constatation.userId.toString() !== user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'You are not authorized to delete this constatation' });
+    }
+
+    await Constatation.findByIdAndDelete(constatationId);
+    console.log('Constatation deleted successfully:', constatationId);
+    res.json({ success: true, message: 'Constatation deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting constatation:', err.message);
+    res.status(500).json({ success: false, message: 'Error deleting constatation', error: err.message });
+  }
+});
+
 // Logout : clear token cookie
 app.post('/logout', (req, res) => {
   res.clearCookie('token', { path: '/' });
