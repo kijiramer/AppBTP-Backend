@@ -21,7 +21,8 @@ const allowedOrigins = [
   'http://localhost:5173',
   'https://vite-reactwebapp-jb6v8ebto-kijis-projects.vercel.app',
   'https://appbtp-webapp-vite.vercel.app',
-  'https://app-btp-web-app-vite-1d7ssuw7e-kijis-projects.vercel.app'
+  'https://app-btp-web-app-vite-1d7ssuw7e-kijis-projects.vercel.app',
+  'https://app-btp-web-app-vite-5psnqle0x-kijis-projects.vercel.app'
 ];
 
 app.use((req, res, next) => {
