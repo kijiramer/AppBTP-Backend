@@ -19,12 +19,7 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
   'http://localhost:5173',
-  'https://vite-reactwebapp-jb6v8ebto-kijis-projects.vercel.app',
-  'https://appbtp-webapp-vite.vercel.app',
-  'https://app-btp-web-app-vite-1d7ssuw7e-kijis-projects.vercel.app',
-  'https://app-btp-web-app-vite-5psnqle0x-kijis-projects.vercel.app',
-  'https://app-btp-web-app-vite-fy34d3rjm-kijis-projects.vercel.app',
-  'https://app-btp-web-app-vite-kimuz1sf9-kijis-projects.vercel.app'
+  'https://appbtp-webapp.vercel.app'
 ];
 
 app.use((req, res, next) => {
