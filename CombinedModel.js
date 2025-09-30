@@ -83,6 +83,10 @@ const Note = mongoose.model('Note', noteSchema);
 
 // Constatation schema
 const constatationSchema = new mongoose.Schema({
+  reportNumber: {
+    type: Number,
+    required: true
+  },
   city: {
     type: String,
     required: true

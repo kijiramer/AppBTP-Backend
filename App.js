@@ -522,9 +522,10 @@ app.post('/constatations', async (req, res) => {
       throw new Error('Invalid user.');
     }
 
-    const { city, building, task, company, imageAvant, imageApres, selectedDate } = req.body;
-    
+    const { reportNumber, city, building, task, company, imageAvant, imageApres, selectedDate } = req.body;
+
     const constatation = new Constatation({
+      reportNumber,
       city,
       building,
       task,
