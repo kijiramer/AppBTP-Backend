@@ -107,10 +107,6 @@ const constatationSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  remarque: {
-    type: String,
-    default: ''
-  },
   selectedDate: {
     type: Date,
     required: true
