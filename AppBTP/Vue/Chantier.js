@@ -1,8 +1,9 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { StyleSheet, SafeAreaView, View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from './Header';
 import ScreenWrapper from '../Controleur/ScreenWrapper';
-import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
+import { MaterialIcons as MaterialIcon } from '@expo/vector-icons';
 import { TabContext } from '../Controleur/TabContext';
 import axios from 'axios'; // Import axios for API calls
 import { API_BASE_URL } from '../config';

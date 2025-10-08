@@ -4,10 +4,10 @@ import {
   StyleSheet,
   Dimensions,
   TouchableOpacity,
-  SafeAreaView,
   View,
   Text,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import moment from 'moment';
 import 'moment/locale/fr';
 
@@ -26,13 +26,13 @@ export function displayCalendarScreen(selectedDate, onDateChange, datesWithNotes
   // Utilise la date fournie ou la date interne
   const currentSelectedDate = selectedDate || internalSelectedDate;
 
-  // Génère les 7 jours de la semaine actuelle
-  const currentWeek = useMemo(() => {
+  // Génère 21 jours (3 semaines)
+  const currentWeeks = useMemo(() => {
     const startOfWeek = moment()
         .add(weekOffset, 'weeks')
         .startOf('isoWeek');
 
-    return Array.from({ length: 7 }, (_, i) => {
+    return Array.from({ length: 21 }, (_, i) => {
       const dayMoment = moment(startOfWeek).add(i, 'days');
       return {
         weekday: dayMoment.format('ddd'),
@@ -93,61 +93,56 @@ export function displayCalendarScreen(selectedDate, onDateChange, datesWithNotes
             </TouchableOpacity>
           </View>
 
-          {/* Jours de la semaine (Lun -> Dim) */}
-          <View style={styles.weekRow}>
-            {currentWeek.map((item, idx) => {
-              const isActive =
-                  currentSelectedDate.toDateString() === item.date.toDateString();
-              const isToday = today.isSame(item.date, 'day');
-              const hasNotes = datesWithNotes.includes(moment(item.date).format('YYYY-MM-DD'));
+          {/* Jours de la semaine (3 semaines = 3 lignes) */}
+          {[0, 1, 2].map(weekIndex => (
+            <View key={weekIndex} style={styles.weekRow}>
+              {currentWeeks.slice(weekIndex * 7, (weekIndex + 1) * 7).map((item, idx) => {
+                const isActive =
+                    currentSelectedDate.toDateString() === item.date.toDateString();
+                const isToday = today.isSame(item.date, 'day');
+                const hasNotes = datesWithNotes.includes(moment(item.date).format('YYYY-MM-DD'));
 
-              return (
-                  <TouchableOpacity
-                      key={idx}
-                      style={styles.dayWrapper}
-                      onPress={() => handleDateSelect(item.date)}
-                      activeOpacity={0.7}
-                  >
-                    <View
-                        style={[
-                          styles.dayItem,
-                          isActive && styles.activeDay,
-                          isToday && styles.todayBorder,
-                        ]}
+                return (
+                    <TouchableOpacity
+                        key={idx}
+                        style={styles.dayWrapper}
+                        onPress={() => handleDateSelect(item.date)}
+                        activeOpacity={0.7}
                     >
-                      {hasNotes && (
-                        <View style={[styles.noteDotOverlay, isActive && styles.activeDot]} />
-                      )}
-                      <Text
+                      <View
                           style={[
-                            styles.weekdayText,
-                            isActive && styles.activeText,
+                            styles.dayItem,
+                            isActive && styles.activeDay,
+                            isToday && styles.todayBorder,
                           ]}
                       >
-                        {item.weekday}
-                      </Text>
-                      <View style={styles.dateContainer}>
+                        {hasNotes && (
+                          <View style={[styles.noteDotOverlay, isActive && styles.activeDot]} />
+                        )}
                         <Text
                             style={[
-                              styles.dateText,
+                              styles.weekdayText,
                               isActive && styles.activeText,
                             ]}
                         >
-                          {item.date.getDate()}
+                          {item.weekday}
                         </Text>
+                        <View style={styles.dateContainer}>
+                          <Text
+                              style={[
+                                styles.dateText,
+                                isActive && styles.activeText,
+                              ]}
+                          >
+                            {item.date.getDate()}
+                          </Text>
+                        </View>
                       </View>
-                    </View>
-                  </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          {/* Date sélectionnée */}
-          <View style={styles.selectedDateContainer}>
-            <Text style={styles.selectedDateText}>
-              {'Date sélectionnée : ' + formattedSelectedDate}
-            </Text>
-          </View>
+                    </TouchableOpacity>
+                );
+              })}
+            </View>
+          ))}
 
         </View>
 

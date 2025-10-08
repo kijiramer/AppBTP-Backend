@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
-import { StyleSheet, SafeAreaView, View, Text, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from './Header';
 import ScreenWrapper from '../Controleur/ScreenWrapper';
 import { TabContext } from '../Controleur/TabContext';

@@ -1,5 +1,6 @@
 import React from 'react';
-import { SafeAreaView, StyleSheet, View, ScrollView, Text, TouchableOpacity, Linking } from 'react-native';
+import { StyleSheet, View, ScrollView, Text, TouchableOpacity, Linking } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import ScreenWrapper from '../Controleur/ScreenWrapper';
 import Header from './Header';
 
