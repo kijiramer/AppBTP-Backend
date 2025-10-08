@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { StyleSheet, SafeAreaView, View, ScrollView, Text, TouchableOpacity, Image, TextInput, Linking, Alert } from 'react-native';
+import { StyleSheet, View, ScrollView, Text, TouchableOpacity, Image, TextInput, Linking, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import Modal from 'react-native-modal';
-import FeatherIcon from 'react-native-vector-icons/Feather';
+import { Feather as FeatherIcon } from '@expo/vector-icons';
 import ScreenWrapper from '../Controleur/ScreenWrapper';
 import photodeprofile from '../assets/photodeprofile.png';
 import Storage from '../utils/Storage';
@@ -65,7 +66,7 @@ export default function Profile() {
       const ok = await requestMediaLibraryPermission();
       if (!ok) return;
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,

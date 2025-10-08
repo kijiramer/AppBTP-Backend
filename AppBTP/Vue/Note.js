@@ -2,7 +2,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   View,
   Text,
@@ -13,6 +12,7 @@ import {
   Animated,
   PanResponder,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
 import moment from 'moment';
 import 'moment/locale/fr';
@@ -207,6 +207,70 @@ export default function Note({ route, navigation }) {
     );
   };
 
+  // Fermer une note (ajouter l'heure de fermeture)
+  const closeNote = async (noteId) => {
+    const currentTime = moment().format('HH:mm');
+
+    Alert.alert(
+      'Fermer la note',
+      `Voulez-vous fermer cette note à ${currentTime} ?`,
+      [
+        {
+          text: 'Annuler',
+          style: 'cancel',
+        },
+        {
+          text: 'Confirmer',
+          onPress: async () => {
+            try {
+              setLoading(true);
+              const token = await Storage.getItem('token');
+              if (!token) {
+                Alert.alert('Erreur', 'Vous devez être connecté');
+                return;
+              }
+
+              console.log('Closing note:', noteId);
+              console.log('API URL:', `${API_BASE_URL}/notes/${noteId}`);
+              console.log('Data:', { closedTime: currentTime });
+
+              const response = await axios.put(
+                `${API_BASE_URL}/notes/${noteId}`,
+                { closedTime: currentTime },
+                {
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                  },
+                }
+              );
+
+              console.log('Response:', response.data);
+
+              if (response.data.success) {
+                // Mettre à jour la note dans l'état local
+                setNotes(prev =>
+                  prev.map(note =>
+                    note.id === noteId
+                      ? { ...note, closedTime: currentTime }
+                      : note
+                  )
+                );
+                Alert.alert('Succès', 'Note fermée avec succès');
+              }
+            } catch (err) {
+              console.error('Error closing note:', err);
+              console.error('Error details:', err.response?.data);
+              Alert.alert('Erreur', `Impossible de fermer la note: ${err.response?.data?.message || err.message}`);
+            } finally {
+              setLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   // Quand le formulaire apparaît, on centre automatiquement
   const handleFormLayout = e => {
     const { y, height } = e.nativeEvent.layout;
@@ -277,9 +341,10 @@ export default function Note({ route, navigation }) {
   };
 
   // Composant pour une note avec swipe
-  const SwipeableNoteCard = ({ note, onDelete }) => {
+  const SwipeableNoteCard = ({ note, onDelete, onClose }) => {
     const translateX = useRef(new Animated.Value(0)).current;
     const isThisNoteSwipedLeft = swipedNoteId === note.id;
+    const isNoteOpen = note.openTime && !note.closedTime;
 
     // Fermer automatiquement si une autre note est swipée
     useEffect(() => {
@@ -341,33 +406,46 @@ export default function Note({ route, navigation }) {
             <Ionicons name="trash" size={18} color="#fff" />
           </TouchableOpacity>
         </View>
-        
+
         {/* Note avec swipe */}
-        <Animated.View 
+        <Animated.View
           style={[styles.noteCard, { transform: [{ translateX }], zIndex: 1 }]}
           {...panResponder.panHandlers}
         >
+          {/* Badge Entreprise */}
           <View style={styles.badge}>
             <Text style={styles.badgeText}>
               {note.label}
             </Text>
           </View>
-          <View style={styles.noteContent}>
-            <View style={styles.noteRow}>
-              <Text style={styles.noteField}>
-                Étage : {note.floor}
-              </Text>
-              <Text style={styles.noteField}>
-                Apt : {note.apartment}
-              </Text>
-              <Text style={styles.noteField}>
-                Ouvert : {note.openTime || '-'}
-              </Text>
-              <Text style={styles.noteField}>
-                Fermé : {note.closedTime || '-'}
-              </Text>
+
+          <TouchableOpacity
+            activeOpacity={isNoteOpen ? 0.7 : 1}
+            onPress={() => isNoteOpen && onClose && onClose()}
+            disabled={!isNoteOpen}
+          >
+            <View style={styles.noteContent}>
+              <View style={styles.noteRow}>
+                <Text style={styles.noteField}>
+                  Étage : {note.floor}
+                </Text>
+                <Text style={styles.noteField}>
+                  Apt : {note.apartment}
+                </Text>
+                <Text style={[styles.noteField, isNoteOpen && styles.openNoteHighlight]}>
+                  Ouvert : {note.openTime || '-'}
+                </Text>
+                <Text style={styles.noteField}>
+                  Fermé : {note.closedTime || '-'}
+                </Text>
+              </View>
+              {isNoteOpen && (
+                <View style={styles.tapHint}>
+                  <Text style={styles.tapHintText}>Appuyez pour fermer</Text>
+                </View>
+              )}
             </View>
-          </View>
+          </TouchableOpacity>
         </Animated.View>
       </View>
     );
@@ -395,13 +473,49 @@ export default function Note({ route, navigation }) {
             </View>
 
             {/* Notes existantes */}
-            {notes.map((note, idx) => (
-                <SwipeableNoteCard
-                  key={note.id || idx}
-                  note={note}
-                  onDelete={() => deleteNote(note.id)}
-                />
-            ))}
+            {(() => {
+              // Séparer les notes ouvertes et fermées
+              const openNotes = notes.filter(note => note.openTime && !note.closedTime);
+              const closedNotes = notes.filter(note => note.closedTime);
+
+              return (
+                <>
+                  {/* Section Notes Ouvertes */}
+                  {openNotes.length > 0 && (
+                    <>
+                      <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionHeaderText}>📂 Ouvert ({openNotes.length})</Text>
+                      </View>
+                      {openNotes.map((note, idx) => (
+                        <SwipeableNoteCard
+                          key={note.id || idx}
+                          note={note}
+                          onDelete={() => deleteNote(note.id)}
+                          onClose={() => closeNote(note.id)}
+                        />
+                      ))}
+                    </>
+                  )}
+
+                  {/* Section Notes Fermées */}
+                  {closedNotes.length > 0 && (
+                    <>
+                      <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionHeaderText}>✅ Fermé ({closedNotes.length})</Text>
+                      </View>
+                      {closedNotes.map((note, idx) => (
+                        <SwipeableNoteCard
+                          key={note.id || idx}
+                          note={note}
+                          onDelete={() => deleteNote(note.id)}
+                          onClose={() => closeNote(note.id)}
+                        />
+                      ))}
+                    </>
+                  )}
+                </>
+              );
+            })()}
 
             {/* Bouton “＋” cercle pour ouvrir */}
             {!showForm && (
@@ -564,6 +678,21 @@ const styles = StyleSheet.create({
 
   calendarContainer: { marginBottom: 24 },
 
+  sectionHeader: {
+    backgroundColor: '#f26463',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  sectionHeaderText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+
   noteCard: {
     borderWidth: 1,
     borderColor: '#f26463',
@@ -573,29 +702,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     backgroundColor: '#fff',
     position: 'relative',
-    overflow: 'hidden',
+    overflow: 'visible',
   },
   badge: {
     position: 'absolute',
-    top: 8,
-    left: 20,
+    top: -10,
+    left: 16,
     backgroundColor: '#f26463',
     paddingHorizontal: 12,
     paddingVertical: 4,
-    borderRadius: 15,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
     maxWidth: 120,
+    zIndex: 100,
+    elevation: 10,
   },
-  badgeText: { 
-    color: '#fff', 
-    fontWeight: '600', 
+  badgeText: {
+    color: '#fff',
+    fontWeight: '600',
     fontSize: 12,
     textAlign: 'center',
   },
 
   noteContent: {
-    marginTop: 8,
+    marginTop: 10,
     paddingHorizontal: 8,
   },
   noteRow: {
@@ -720,7 +851,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     marginTop: 20,
     marginBottom: 16,
-    overflow: 'hidden',
+    overflow: 'visible',
     borderRadius: 30,
   },
   deleteButtonBackground: {
@@ -741,5 +872,18 @@ const styles = StyleSheet.create({
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  openNoteHighlight: {
+    fontWeight: 'bold',
+    color: '#f26463',
+  },
+  tapHint: {
+    marginTop: 8,
+    alignItems: 'center',
+  },
+  tapHintText: {
+    fontSize: 11,
+    color: '#999',
+    fontStyle: 'italic',
   },
 });

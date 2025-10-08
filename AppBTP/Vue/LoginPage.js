@@ -6,12 +6,12 @@ import {
     TouchableOpacity,
     View,
     Text,
-    SafeAreaView,
     ActivityIndicator,
     Image,
     TextInput,
     Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useForm, Controller } from 'react-hook-form';
 import axios from 'axios';
 import Storage from '../utils/Storage';

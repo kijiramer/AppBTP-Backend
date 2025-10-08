@@ -14,11 +14,26 @@ const app = express();
 // Cookie parser pour lire les cookies httpOnly
 app.use(cookieParser());
 
-// Configuration CORS pour permettre les requêtes depuis le navigateur
-// NOTE: when using cookies (HttpOnly) you must set a specific origin and allow credentials
-const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:3000';
+// Configuration CORS pour permettre les requêtes depuis le navigateur et Vercel
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:5173',
+  'https://appbtp-webapp.vercel.app'
+];
+
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', CLIENT_ORIGIN);
+  const origin = req.headers.origin;
+  
+  // Permettre localhost et domaines Vercel
+  const isLocalhost = origin && (origin.includes('localhost') || origin.includes('127.0.0.1'));
+  const isVercel = origin && (origin.includes('vercel.app') || origin.includes('netlify.app'));
+  const isAllowed = allowedOrigins.includes(origin);
+  
+  if (isAllowed || isLocalhost || isVercel || process.env.NODE_ENV === 'production') {
+    res.header('Access-Control-Allow-Origin', origin || '*');
+  }
+  
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cookie');
   res.header('Access-Control-Allow-Credentials', 'true');
@@ -30,17 +45,21 @@ app.use((req, res, next) => {
   }
 });
 
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Connect to MongoDB
 connectDB();
 
 // Route racine
 app.get('/', (req, res) => {
+  console.log('Root route accessed from origin:', req.headers.origin);
   res.json({
     message: 'Bienvenue sur l\'API AppBTP',
     version: '1.0.0',
     status: 'running',
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    environment: process.env.NODE_ENV || 'development',
     endpoints: {
       auth: {
         login: 'POST /login',
@@ -214,7 +233,7 @@ app.post('/login', async (req, res) => {
     sameSite: 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
   });
-  return res.status(200).json({ success: true });
+  return res.status(200).json({ success: true, token });
 });
 
 app.post('/signup', async (req, res) => {
@@ -246,7 +265,7 @@ app.post('/signup', async (req, res) => {
     sameSite: 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
   });
-  return res.status(200).json({ success: true });
+  return res.status(200).json({ success: true, token });
 });
 
 // Admin middleware
@@ -487,6 +506,64 @@ app.delete('/notes/:id', async (req, res) => {
   }
 });
 
+// Mettre à jour une note (par exemple, ajouter l'heure de fermeture)
+app.put('/notes/:id', async (req, res) => {
+  console.log('PUT /notes/:id - Request received');
+  console.log('Note ID:', req.params.id);
+  console.log('Body:', req.body);
+
+  const header = req.get('Authorization');
+  if (!header) {
+    console.log('No authorization header');
+    return res.status(401).json({ success: false, message: 'You are not authorized.' });
+  }
+
+  const token = header.split(' ')[1];
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    console.log('Token verified, user ID:', payload.id);
+
+    const user = await User.findById(payload.id);
+    if (!user) {
+      console.log('User not found');
+      throw new Error('Invalid user.');
+    }
+
+    const { id } = req.params;
+    const { closedTime } = req.body;
+
+    console.log('Looking for note with ID:', id, 'and userId:', user._id);
+
+    // Vérifier que la note appartient à l'utilisateur
+    const note = await Note.findOne({ _id: id, userId: user._id });
+
+    if (!note) {
+      console.log('Note not found for user');
+      // Essayer de trouver la note sans filtrer par userId pour déboguer
+      const noteExists = await Note.findById(id);
+      if (noteExists) {
+        console.log('Note exists but belongs to user:', noteExists.userId);
+      } else {
+        console.log('Note does not exist at all');
+      }
+      return res.status(404).json({ success: false, message: 'Note not found or not authorized' });
+    }
+
+    console.log('Note found, updating closedTime to:', closedTime);
+
+    // Mettre à jour la note
+    note.closedTime = closedTime;
+    await note.save();
+
+    console.log('Note updated successfully:', id);
+    res.json({ success: true, message: 'Note updated successfully', note });
+  } catch (err) {
+    console.error('Error updating note:', err.message);
+    console.error('Stack:', err.stack);
+    res.status(500).json({ success: false, message: 'Error updating note', error: err.message });
+  }
+});
+
 // Routes pour les constatations
 // Créer une nouvelle constatation
 app.post('/constatations', async (req, res) => {
@@ -503,9 +580,11 @@ app.post('/constatations', async (req, res) => {
       throw new Error('Invalid user.');
     }
 
-    const { city, building, task, company, imageAvant, imageApres, selectedDate } = req.body;
-    
+    const { reportNumber, chantierName, city, building, task, company, imageAvant, imageApres, selectedDate, endDate } = req.body;
+
     const constatation = new Constatation({
+      reportNumber,
+      chantierName,
       city,
       building,
       task,
@@ -513,6 +592,7 @@ app.post('/constatations', async (req, res) => {
       imageAvant,
       imageApres,
       selectedDate: new Date(selectedDate),
+      endDate: endDate ? new Date(endDate) : undefined,
       userId: user._id
     });
 
@@ -563,31 +643,73 @@ app.get('/constatations', async (req, res) => {
   }
 });
 
+// Supprimer une constatation
+app.delete('/constatations/:id', async (req, res) => {
+  const header = req.get('Authorization');
+  if (!header) {
+    return res.status(401).json({ success: false, message: 'You are not authorized.' });
+  }
+
+  const token = header.split(' ')[1];
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(payload.id);
+    if (!user) {
+      throw new Error('Invalid user.');
+    }
+
+    const constatationId = req.params.id;
+    const constatation = await Constatation.findById(constatationId);
+
+    if (!constatation) {
+      return res.status(404).json({ success: false, message: 'Constatation not found' });
+    }
+
+    // Vérifier que l'utilisateur est le propriétaire de la constatation
+    if (constatation.userId.toString() !== user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'You are not authorized to delete this constatation' });
+    }
+
+    await Constatation.findByIdAndDelete(constatationId);
+    console.log('Constatation deleted successfully:', constatationId);
+    res.json({ success: true, message: 'Constatation deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting constatation:', err.message);
+    res.status(500).json({ success: false, message: 'Error deleting constatation', error: err.message });
+  }
+});
+
 // Logout : clear token cookie
 app.post('/logout', (req, res) => {
   res.clearCookie('token', { path: '/' });
   return res.json({ success: true, message: 'Logged out' });
 });
 
-const PORT = process.env.PORT || 8081;
-const HOST = process.env.HOST || '0.0.0.0';
+// Configuration pour Vercel (serverless) et développement local
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 8081;
+  const HOST = process.env.HOST || '0.0.0.0';
 
-const server = app.listen(PORT, HOST, () => {
-  console.log(`Express server is running on port ${PORT}.`);
-});
+  const server = app.listen(PORT, HOST, () => {
+    console.log(`Express server is running on port ${PORT}.`);
+  });
 
-server.on('error', (err) => {
-  if (err && err.code === 'EADDRINUSE') {
-    console.error(`Error: Port ${PORT} is already in use. Kill the process using it or change PORT.`);
-  } else {
-    console.error('Server error:', err);
-  }
-});
+  server.on('error', (err) => {
+    if (err && err.code === 'EADDRINUSE') {
+      console.error(`Error: Port ${PORT} is already in use. Kill the process using it or change PORT.`);
+    } else {
+      console.error('Server error:', err);
+    }
+  });
 
-process.on('unhandledRejection', (reason) => {
-  console.error('Unhandled Rejection at:', reason);
-});
+  process.on('unhandledRejection', (reason) => {
+    console.error('Unhandled Rejection at:', reason);
+  });
 
-process.on('uncaughtException', (err) => {
-  console.error('Uncaught Exception:', err);
-});
+  process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception:', err);
+  });
+}
+
+// Export pour Vercel
+module.exports = app;

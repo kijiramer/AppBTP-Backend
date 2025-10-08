@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { StyleSheet, View, Image, Text, TouchableOpacity } from 'react-native';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import logo from '../assets/LogoTest.jpg';
+import { MaterialIcons } from '@expo/vector-icons';
+import logo from '../assets/logo.jpg';
 import { TabContext } from '../Controleur/TabContext';
 
 export default function Header({ navigation, isHomePage, city, building, task }) {

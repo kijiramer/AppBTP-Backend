@@ -1,6 +1,7 @@
 // Effectif.js
 import React, { useState } from 'react';
-import { StyleSheet, SafeAreaView, ScrollView, View, Text, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { StyleSheet, ScrollView, View, Text, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
 import moment from 'moment';
 import Storage from '../utils/Storage';

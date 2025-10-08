@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, SafeAreaView, TouchableOpacity, ScrollView, Image, Text } from 'react-native';
+import { StyleSheet, View, TouchableOpacity, ScrollView, Image, Text } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Header from './Header';
 import { API_BASE_URL } from '../config';
 import bannerImage from '../assets/Banner.jpg';

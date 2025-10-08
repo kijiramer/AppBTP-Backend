@@ -4,17 +4,17 @@ import {
   Alert,
   Keyboard,
   TouchableOpacity,
-  SafeAreaView,
   View,
   Text,
   ActivityIndicator,
   TextInput,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useForm, Controller } from 'react-hook-form';
 import axios from 'axios';
 import Storage from '../utils/Storage';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import FeatherIcon from 'react-native-vector-icons/Feather';
+import { Feather as FeatherIcon } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import useNavigationCustom from '../Controleur/useNavigationCustom';
 import { API_BASE_URL } from '../config';
