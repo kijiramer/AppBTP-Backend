@@ -1,5 +1,5 @@
 // Effectif.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, ScrollView, View, Text, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
@@ -7,16 +7,20 @@ import moment from 'moment';
 import Storage from '../utils/Storage';
 import Header from './Header';
 import ScreenWrapper from '../Controleur/ScreenWrapper';
+import { displayCalendarScreen } from './Components/Calendar';
 import { API_BASE_URL } from '../config';
+
+moment.locale('fr');
 
 export default function Effectif({ route, navigation }) {
   const { city, building, task } = route.params;
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [effectifs, setEffectifs] = useState([]);
   const [form, setForm] = useState({
     floor: '1er',
     apartment: '1',
     company: 'Entreprise A',
     nombrePersonnes: '',
-    selectedDate: new Date(),
   });
   const [showForm, setShowForm] = useState(false);
   const [showFloorPicker, setShowFloorPicker] = useState(false);
@@ -25,6 +29,32 @@ export default function Effectif({ route, navigation }) {
   const companies = ['Entreprise A', 'Entreprise B', 'Entreprise C'];
 
   const updateForm = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
+
+  // Fonction pour récupérer les effectifs
+  const fetchEffectifs = async () => {
+    try {
+      const token = await Storage.getItem('token');
+      if (!token) return;
+
+      const response = await fetch(`${API_BASE_URL}/effectifs?city=${city}&building=${building}&task=${task}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setEffectifs(data.effectifs || []);
+      }
+    } catch (err) {
+      console.error('Erreur lors du chargement des effectifs:', err);
+    }
+  };
+
+  // Charger les effectifs au montage et quand la date change
+  useEffect(() => {
+    fetchEffectifs();
+  }, [selectedDate]);
 
   const handleSubmit = async () => {
     if (!form.nombrePersonnes || isNaN(form.nombrePersonnes)) {
@@ -40,11 +70,12 @@ export default function Effectif({ route, navigation }) {
       const effectifData = {
         city,
         building,
+        task,
         floor: form.floor,
         apartment: form.apartment,
         company: form.company,
         nombrePersonnes: Number(form.nombrePersonnes),
-        selectedDate: form.selectedDate,
+        selectedDate: selectedDate.toISOString(),
       };
   const response = await fetch(`${API_BASE_URL}/effectif`, {
         method: 'POST',
@@ -63,8 +94,9 @@ export default function Effectif({ route, navigation }) {
           apartment: '1',
           company: 'Entreprise A',
           nombrePersonnes: '',
-          selectedDate: new Date(),
         });
+        // Recharger les effectifs
+        fetchEffectifs();
       } else {
         Alert.alert('Erreur', resJson.message || 'Erreur lors de l\'enregistrement');
       }
@@ -84,7 +116,49 @@ export default function Effectif({ route, navigation }) {
           task={task}
         />
         <ScrollView style={styles.content}>
-          {/* Bouton “＋” cercle pour ouvrir le formulaire */}
+          {/* Calendrier */}
+          <View style={styles.calendarContainer}>
+            {displayCalendarScreen(selectedDate, setSelectedDate, [])}
+          </View>
+
+          {/* Effectifs existants pour la date sélectionnée */}
+          {effectifs.filter(e => moment(e.selectedDate).format('YYYY-MM-DD') === moment(selectedDate).format('YYYY-MM-DD')).length > 0 && (
+            <>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionHeaderText}>
+                  📊 Effectifs ({effectifs.filter(e => moment(e.selectedDate).format('YYYY-MM-DD') === moment(selectedDate).format('YYYY-MM-DD')).length})
+                </Text>
+              </View>
+              {effectifs
+                .filter(e => moment(e.selectedDate).format('YYYY-MM-DD') === moment(selectedDate).format('YYYY-MM-DD'))
+                .map((effectif, idx) => (
+                  <View key={effectif._id || idx} style={styles.effectifCard}>
+                    {/* Badge Entreprise */}
+                    <View style={styles.badge}>
+                      <Text style={styles.badgeText}>
+                        {effectif.company}
+                      </Text>
+                    </View>
+
+                    <View style={styles.effectifContent}>
+                      <View style={styles.effectifRowHorizontal}>
+                        <Text style={styles.effectifField}>
+                          Étage : {effectif.floor}
+                        </Text>
+                        <Text style={styles.effectifField}>
+                          Appart : {effectif.apartment}
+                        </Text>
+                      </View>
+                      <Text style={styles.effectifField}>
+                        Nombre de personnes : {effectif.nombrePersonnes}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+            </>
+          )}
+
+          {/* Bouton "＋" cercle pour ouvrir le formulaire */}
           {!showForm && (
             <TouchableOpacity
               style={styles.toggleCircle}
@@ -228,6 +302,9 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
   },
+  calendarContainer: {
+    marginBottom: 24,
+  },
   toggleCircle: {
     width: 50,
     height: 50,
@@ -317,5 +394,66 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '500',
+  },
+  // Styles pour l'affichage des effectifs
+  sectionHeader: {
+    backgroundColor: '#f26463',
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 12,
+  },
+  sectionHeaderText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  effectifCard: {
+    borderWidth: 1,
+    borderColor: '#f26463',
+    borderRadius: 30,
+    paddingTop: 30,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    marginTop: 15,
+    marginBottom: 16,
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  badge: {
+    position: 'absolute',
+    top: -10,
+    left: 20,
+    backgroundColor: '#f26463',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  effectifContent: {
+    paddingTop: 8,
+  },
+  effectifRow: {
+    flexDirection: 'column',
+    gap: 8,
+  },
+  effectifRowHorizontal: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  effectifField: {
+    fontSize: 14,
+    color: '#333',
+    marginBottom: 4,
   },
 });

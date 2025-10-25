@@ -81,6 +81,7 @@ export default function Constatation({ route, navigation }) {
 
             if (response.data.success) {
                 setConstatations(response.data.constatations.map(constatation => ({
+                    id: constatation._id,
                     company: constatation.company,
                     avant: constatation.imageAvant,
                     apres: constatation.imageApres,
@@ -495,7 +496,7 @@ export default function Constatation({ route, navigation }) {
 
                     {/* Liste des constatations */}
                     {constatations.map((c, i) => (
-                        <View key={i} style={styles.card}>
+                        <View key={c.id || i} style={styles.card}>
                             {/* Badge Entreprise */}
                             <View style={styles.badge}>
                                 <Text style={styles.badgeText}>{c.company}</Text>
@@ -649,6 +650,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         borderRadius: 12,
         padding: 12,
+        marginTop: 15,
         marginBottom: 16,
         borderWidth: 1,
         borderColor: '#f26463',
