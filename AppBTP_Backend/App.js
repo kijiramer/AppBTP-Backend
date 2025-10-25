@@ -19,7 +19,8 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
   'http://localhost:5173',
-  'https://appbtp-webapp.vercel.app'
+  'https://appbtp-webapp.vercel.app',
+  'https://app-btp-webapp.vercel.app'
 ];
 
 app.use((req, res, next) => {
@@ -503,64 +504,6 @@ app.delete('/notes/:id', async (req, res) => {
   } catch (err) {
     console.error('Error deleting note:', err.message);
     res.status(500).json({ success: false, message: 'Error deleting note', error: err.message });
-  }
-});
-
-// Mettre à jour une note (par exemple, ajouter l'heure de fermeture)
-app.put('/notes/:id', async (req, res) => {
-  console.log('PUT /notes/:id - Request received');
-  console.log('Note ID:', req.params.id);
-  console.log('Body:', req.body);
-
-  const header = req.get('Authorization');
-  if (!header) {
-    console.log('No authorization header');
-    return res.status(401).json({ success: false, message: 'You are not authorized.' });
-  }
-
-  const token = header.split(' ')[1];
-  try {
-    const payload = jwt.verify(token, JWT_SECRET);
-    console.log('Token verified, user ID:', payload.id);
-
-    const user = await User.findById(payload.id);
-    if (!user) {
-      console.log('User not found');
-      throw new Error('Invalid user.');
-    }
-
-    const { id } = req.params;
-    const { closedTime } = req.body;
-
-    console.log('Looking for note with ID:', id, 'and userId:', user._id);
-
-    // Vérifier que la note appartient à l'utilisateur
-    const note = await Note.findOne({ _id: id, userId: user._id });
-
-    if (!note) {
-      console.log('Note not found for user');
-      // Essayer de trouver la note sans filtrer par userId pour déboguer
-      const noteExists = await Note.findById(id);
-      if (noteExists) {
-        console.log('Note exists but belongs to user:', noteExists.userId);
-      } else {
-        console.log('Note does not exist at all');
-      }
-      return res.status(404).json({ success: false, message: 'Note not found or not authorized' });
-    }
-
-    console.log('Note found, updating closedTime to:', closedTime);
-
-    // Mettre à jour la note
-    note.closedTime = closedTime;
-    await note.save();
-
-    console.log('Note updated successfully:', id);
-    res.json({ success: true, message: 'Note updated successfully', note });
-  } catch (err) {
-    console.error('Error updating note:', err.message);
-    console.error('Stack:', err.stack);
-    res.status(500).json({ success: false, message: 'Error updating note', error: err.message });
   }
 });
 
