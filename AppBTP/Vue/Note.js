@@ -9,8 +9,6 @@ import {
   Switch,
   Dimensions,
   Alert,
-  Animated,
-  PanResponder,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
@@ -18,7 +16,6 @@ import moment from 'moment';
 import 'moment/locale/fr';
 import axios from 'axios';
 import Storage from '../utils/Storage';
-import { Ionicons } from '@expo/vector-icons';
 
 import Header from './Header';
 import ScreenWrapper from '../Controleur/ScreenWrapper';
@@ -35,7 +32,6 @@ export default function Note({ route, navigation }) {
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [swipedNoteId, setSwipedNoteId] = useState(null);
   const [form, setForm] = useState({
     floor: '1er',
     apartment: '1',
@@ -159,52 +155,6 @@ export default function Note({ route, navigation }) {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Supprimer une note
-  const deleteNote = async (noteId) => {
-    Alert.alert(
-      'Supprimer la note',
-      'Êtes-vous sûr de vouloir supprimer cette note ?',
-      [
-        {
-          text: 'Annuler',
-          style: 'cancel',
-        },
-        {
-          text: 'Supprimer',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setLoading(true);
-              const token = await Storage.getItem('token');
-              if (!token) {
-                Alert.alert('Erreur', 'Vous devez être connecté');
-                return;
-              }
-
-              const response = await axios.delete(`${API_BASE_URL}/notes/${noteId}`, {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              });
-
-              if (response.data.success) {
-                // Supprimer la note de l'état local
-                setNotes(prev => prev.filter(note => note.id !== noteId));
-                // Rafraîchir les dates marquées pour le calendrier
-                loadNoteDates();
-              }
-            } catch (err) {
-              console.error('Error deleting note:', err);
-              Alert.alert('Erreur', 'Impossible de supprimer la note');
-            } finally {
-              setLoading(false);
-            }
-          },
-        },
-      ]
-    );
   };
 
   // Fermer une note (ajouter l'heure de fermeture)
@@ -335,83 +285,13 @@ export default function Note({ route, navigation }) {
   // Liste des dates avec notes (YYYY-MM-DD)
   const datesWithNotes = noteDates;
 
-  // Fonction pour fermer toutes les notes swipées
-  const closeSwipedNotes = () => {
-    setSwipedNoteId(null);
-  };
-
-  // Composant pour une note avec swipe
-  const SwipeableNoteCard = ({ note, onDelete, onClose }) => {
-    const translateX = useRef(new Animated.Value(0)).current;
-    const isThisNoteSwipedLeft = swipedNoteId === note.id;
+  // Composant pour une note
+  const NoteCard = ({ note, onClose }) => {
     const isNoteOpen = note.openTime && !note.closedTime;
 
-    // Fermer automatiquement si une autre note est swipée
-    useEffect(() => {
-      if (swipedNoteId !== note.id && swipedNoteId !== null) {
-        Animated.spring(translateX, {
-          toValue: 0,
-          useNativeDriver: false,
-          tension: 150,
-          friction: 8,
-        }).start();
-      }
-    }, [swipedNoteId, note.id, translateX]);
-
-    const panResponder = PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        return Math.abs(gestureState.dx) > 20 && 
-               Math.abs(gestureState.dx) > Math.abs(gestureState.dy) * 3 &&
-               Math.abs(gestureState.dy) < 30;
-      },
-      onPanResponderGrant: () => {
-        translateX.setOffset(translateX._value);
-        translateX.setValue(0);
-      },
-      onPanResponderMove: (_, gestureState) => {
-        // Vérifier que le mouvement reste principalement horizontal
-        if (Math.abs(gestureState.dy) > Math.abs(gestureState.dx)) {
-          return; // Annuler si trop vertical
-        }
-        
-        if (gestureState.dx < 0 && gestureState.dx > -80) { // Limiter le swipe
-          translateX.setValue(gestureState.dx);
-        }
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        translateX.flattenOffset();
-        
-        // Vérifier une dernière fois que c'était un swipe horizontal
-        if (Math.abs(gestureState.dy) > Math.abs(gestureState.dx)) {
-          return;
-        }
-        
-        // Juste marquer comme swipé si assez à gauche, sans animation
-        const currentValue = translateX._value;
-        if (currentValue < -30) {
-          setSwipedNoteId(note.id);
-        } else if (currentValue > -10) {
-          setSwipedNoteId(null);
-        }
-        
-        // Pas d'animation - reste où c'est !
-      },
-    });
-
     return (
-      <View style={styles.swipeContainer}>
-        {/* Bouton de suppression en arrière-plan */}
-        <View style={styles.deleteButtonBackground}>
-          <TouchableOpacity style={styles.deleteButton} onPress={onDelete}>
-            <Ionicons name="trash" size={18} color="#fff" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Note avec swipe */}
-        <Animated.View
-          style={[styles.noteCard, { transform: [{ translateX }], zIndex: 1 }]}
-          {...panResponder.panHandlers}
-        >
+      <View style={styles.noteContainer}>
+        <View style={styles.noteCard}>
           {/* Badge Entreprise */}
           <View style={styles.badge}>
             <Text style={styles.badgeText}>
@@ -446,7 +326,7 @@ export default function Note({ route, navigation }) {
               )}
             </View>
           </TouchableOpacity>
-        </Animated.View>
+        </View>
       </View>
     );
   };
@@ -465,7 +345,6 @@ export default function Note({ route, navigation }) {
           <ScrollView
               ref={scrollViewRef}
               contentContainerStyle={styles.contentContainer}
-              onTouchStart={closeSwipedNotes}
           >
             {/* Calendrier */}
             <View style={styles.calendarContainer}>
@@ -487,10 +366,9 @@ export default function Note({ route, navigation }) {
                         <Text style={styles.sectionHeaderText}>📂 Ouvert ({openNotes.length})</Text>
                       </View>
                       {openNotes.map((note, idx) => (
-                        <SwipeableNoteCard
+                        <NoteCard
                           key={note.id || idx}
                           note={note}
-                          onDelete={() => deleteNote(note.id)}
                           onClose={() => closeNote(note.id)}
                         />
                       ))}
@@ -504,10 +382,9 @@ export default function Note({ route, navigation }) {
                         <Text style={styles.sectionHeaderText}>✅ Fermé ({closedNotes.length})</Text>
                       </View>
                       {closedNotes.map((note, idx) => (
-                        <SwipeableNoteCard
+                        <NoteCard
                           key={note.id || idx}
                           note={note}
-                          onDelete={() => deleteNote(note.id)}
                           onClose={() => closeNote(note.id)}
                         />
                       ))}
@@ -846,32 +723,11 @@ const styles = StyleSheet.create({
   },
   switchLabel: { marginRight: 6, fontSize: 13 },
 
-  // Styles pour le swipe-to-delete
-  swipeContainer: {
-    position: 'relative',
+  // Styles pour le conteneur de note
+  noteContainer: {
     marginTop: 20,
     marginBottom: 16,
-    overflow: 'visible',
-    borderRadius: 30,
-  },
-  deleteButtonBackground: {
-    position: 'absolute',
-    right: 0,
-    top: 0,
-    width: 60,
-    height: '100%',
-    backgroundColor: '#ff4444',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderTopRightRadius: 30,
-    borderBottomRightRadius: 30,
-    zIndex: 0,
-  },
-  deleteButton: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
+    paddingTop: 15,
   },
   openNoteHighlight: {
     fontWeight: 'bold',
