@@ -1,5 +1,5 @@
 // Effectif.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, ScrollView, View, Text, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
@@ -9,11 +9,14 @@ import Header from './Header';
 import ScreenWrapper from '../Controleur/ScreenWrapper';
 import { displayCalendarScreen } from './Components/Calendar';
 import { API_BASE_URL } from '../config';
+import useScrollToForm from '../component/ScrollToForm';
 
 moment.locale('fr');
 
 export default function Effectif({ route, navigation }) {
   const { city, building, task } = route.params;
+  const scrollViewRef = useRef(null);
+  const handleFormLayout = useScrollToForm(scrollViewRef);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [effectifs, setEffectifs] = useState([]);
   const [form, setForm] = useState({
@@ -105,6 +108,8 @@ export default function Effectif({ route, navigation }) {
     }
   };
 
+  
+
   return (
     <ScreenWrapper>
       <SafeAreaView style={styles.safeArea}>
@@ -115,7 +120,7 @@ export default function Effectif({ route, navigation }) {
           building={building}
           task={task}
         />
-        <ScrollView style={styles.content}>
+  <ScrollView ref={scrollViewRef} style={styles.content}>
           {/* Calendrier */}
           <View style={styles.calendarContainer}>
             {displayCalendarScreen(selectedDate, setSelectedDate, [])}
@@ -170,7 +175,7 @@ export default function Effectif({ route, navigation }) {
 
           {/* Formulaire Effectif */}
           {showForm && (
-            <View style={styles.formCard}>
+            <View style={styles.formCard} onLayout={handleFormLayout}>
               <TouchableOpacity
                 style={styles.closeFormBtn}
                 onPress={() => setShowForm(false)}

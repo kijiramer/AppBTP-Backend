@@ -45,7 +45,12 @@
       "Bash(vercel:*)",
       "Bash(/usr/local/bin/vercel /Users/mehdiakounad/Desktop/ApplicationBTP/WebApp --prod --yes)",
       "Bash(bash:*)",
-      "Bash(export:*)"
+      "Bash(export:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(cat:*)",
+      "Bash(git rm:*)"
     ],
     "deny": []
   }
