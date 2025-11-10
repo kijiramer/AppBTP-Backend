@@ -684,6 +684,53 @@ app.get('/constatations', async (req, res) => {
   }
 });
 
+// Mettre à jour une constatation
+app.put('/constatations/:id', async (req, res) => {
+  const header = req.get('Authorization');
+  if (!header) {
+    return res.status(401).json({ success: false, message: 'You are not authorized.' });
+  }
+
+  const token = header.split(' ')[1];
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(payload.id);
+    if (!user) {
+      throw new Error('Invalid user.');
+    }
+
+    const constatationId = req.params.id;
+    const updateData = req.body;
+
+    // Mettre à jour la constatation
+    const updatedConstatation = await Constatation.findByIdAndUpdate(
+      constatationId,
+      {
+        $set: {
+          intituleMission: updateData.intituleMission,
+          chantierName: updateData.chantierName,
+          company: updateData.company,
+          city: updateData.city,
+          building: updateData.building,
+          task: updateData.task,
+          selectedDate: updateData.selectedDate,
+          endDate: updateData.endDate
+        }
+      },
+      { new: true }
+    );
+
+    if (!updatedConstatation) {
+      return res.status(404).json({ success: false, message: 'Constatation not found' });
+    }
+
+    res.json({ success: true, constatation: updatedConstatation });
+  } catch (err) {
+    console.error('Error updating constatation:', err.message);
+    res.status(500).json({ success: false, message: 'Error updating constatation', error: err.message });
+  }
+});
+
 // Supprimer une constatation
 app.delete('/constatations/:id', async (req, res) => {
   const header = req.get('Authorization');
