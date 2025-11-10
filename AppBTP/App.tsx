@@ -2,9 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import * as SplashScreen from 'expo-splash-screen';
-// Temporary shim to avoid expo-font startup issues in local dev
-// Remove when expo-font issues are resolved.
-const { useFonts } = require('./expo-font-shim');
+import { useFonts } from 'expo-font';
 import Storage from './utils/Storage';
 import LoginPage from "./Vue/LoginPage";
 import SignUp from "./Vue/SignUp";
@@ -17,6 +15,7 @@ import Constatation from './Vue/Constatation';
 import Effectif from './Vue/Effectif';
 import PrivacyPolicy from './Vue/PrivacyPolicy';
 import { TabProvider } from './Controleur/TabContext';
+import ErrorBoundary from './Controleur/ErrorBoundary';
 import axios from 'axios';
 import { API_BASE_URL } from './config';
 import { View, ActivityIndicator } from 'react-native';
@@ -26,7 +25,7 @@ const Stack = createStackNavigator();
 SplashScreen.preventAutoHideAsync();
 
 export default function App() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     'Quicksand-Bold': require('./assets/fonts/Quicksand-Bold.ttf'),
   });
 
@@ -37,10 +36,11 @@ export default function App() {
   const loadUser = useCallback(async (token: string) => {
     try {
       setLoading(true);
-  const response = await axios.get(`${API_BASE_URL}/user`, {
+      const response = await axios.get(`${API_BASE_URL}/user`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+        timeout: 10000, // Timeout de 10 secondes
       });
 
       const { data } = response;
@@ -49,6 +49,7 @@ export default function App() {
       }
     } catch (err) {
       console.log("Error loading user:", err);
+      // Ne pas bloquer l'app si l'API ne répond pas
     } finally {
       setLoading(false);
     }
@@ -56,45 +57,53 @@ export default function App() {
 
   useEffect(() => {
     const checkToken = async () => {
-      const token = await Storage.getItem('token');
-      if (token) {
-        await loadUser(token);
+      try {
+        const token = await Storage.getItem('token');
+        if (token) {
+          await loadUser(token);
+        }
+      } catch (err) {
+        console.log("Error checking token:", err);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
     checkToken();
   }, [loadUser]);
 
   useEffect(() => {
-    if (!isLoading && fontsLoaded) {
+    if (!isLoading && (fontsLoaded || fontError)) {
       SplashScreen.hideAsync(); // Fermer l'écran de démarrage après le chargement des polices et la vérification du token
     }
-  }, [isLoading, fontsLoaded]);
+  }, [isLoading, fontsLoaded, fontError]);
 
-  if (isLoading || !fontsLoaded) {
+  // Afficher le loader pendant le chargement
+  if (isLoading || (!fontsLoaded && !fontError)) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
         <ActivityIndicator size="large" color="#F85F6A" />
       </View>
-    ); 
+    );
   }
 
   return (
-    <TabProvider>
-      <NavigationContainer>
-      <Stack.Navigator initialRouteName={initialRoute}>
-        <Stack.Screen name="LoginPage" component={LoginPage} options={{ headerShown: false }} />
-        <Stack.Screen name="SignUp" component={SignUp} options={{ headerShown: false }} />
-        <Stack.Screen name="HomePage" component={HomePage} options={{ headerShown: false }} />
-        <Stack.Screen name="Profile" component={Profile} options={{ headerShown: false }} />
-        <Stack.Screen name="Chantier" component={Chantier} options={{ headerShown: false }} />
-        <Stack.Screen name="Batiment" component={Batiment} options={{ headerShown: false }} />
-        <Stack.Screen name="Note" component={Note} options={{ headerShown: false }} />
-        <Stack.Screen name="Constatation" component={Constatation} options={{ headerShown: false }} />
-        <Stack.Screen name="Effectif" component={Effectif} options={{ headerShown: false }} />
-  <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicy} options={{ headerShown: false }} />
-      </Stack.Navigator>
-    </NavigationContainer>
-    </TabProvider>
+    <ErrorBoundary>
+      <TabProvider>
+        <NavigationContainer>
+          <Stack.Navigator initialRouteName={initialRoute}>
+            <Stack.Screen name="LoginPage" component={LoginPage} options={{ headerShown: false }} />
+            <Stack.Screen name="SignUp" component={SignUp} options={{ headerShown: false }} />
+            <Stack.Screen name="HomePage" component={HomePage} options={{ headerShown: false }} />
+            <Stack.Screen name="Profile" component={Profile} options={{ headerShown: false }} />
+            <Stack.Screen name="Chantier" component={Chantier} options={{ headerShown: false }} />
+            <Stack.Screen name="Batiment" component={Batiment} options={{ headerShown: false }} />
+            <Stack.Screen name="Note" component={Note} options={{ headerShown: false }} />
+            <Stack.Screen name="Constatation" component={Constatation} options={{ headerShown: false }} />
+            <Stack.Screen name="Effectif" component={Effectif} options={{ headerShown: false }} />
+            <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicy} options={{ headerShown: false }} />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </TabProvider>
+    </ErrorBoundary>
   );
 }

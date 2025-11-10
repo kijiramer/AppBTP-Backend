@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, ScrollView, View, Text, TouchableOpacity, Image, Dimensions, Alert, TextInput } from 'react-native';
+import { StyleSheet, ScrollView, View, Text, TouchableOpacity, Image, Dimensions, Alert, TextInput, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { Picker } from '@react-native-picker/picker';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system';
 import axios from 'axios';
 import Storage from '../utils/Storage';
 import { API_BASE_URL } from '../config';
@@ -12,11 +13,11 @@ import { API_BASE_URL } from '../config';
 import Header from './Header';
 import ScreenWrapper from '../Controleur/ScreenWrapper';
 import { displayCalendarScreen } from './Components/Calendar';
+import useScrollToForm from '../component/ScrollToForm';
 
 export default function Constatation({ route, navigation }) {
     const { city, building, task } = route.params;
     const scrollViewRef = useRef(null);
-    const windowHeight = Dimensions.get('window').height;
 
     const [constatations, setConstatations] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -25,17 +26,28 @@ export default function Constatation({ route, navigation }) {
     const [showForm, setShowForm] = useState(false);
     const [showCompanyPicker, setShowCompanyPicker] = useState(false);
     const [hasLibraryPermission, setHasLibraryPermission] = useState(null);
+    const [hasCameraPermission, setHasCameraPermission] = useState(null);
+    const [showImageSourceModal, setShowImageSourceModal] = useState(false);
+    const [currentImageType, setCurrentImageType] = useState(null);
 
     const companies = ['Entreprise A', 'Entreprise B', 'Entreprise C'];
 
-    // Demande de permission à l'ouverture du composant
+    // Demande de permissions à l'ouverture du composant
     useEffect(() => {
         (async () => {
-            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-            const granted = status === 'granted';
-            setHasLibraryPermission(granted);
-            if (!granted) {
-                alert("Permission refusée pour accéder à la photothèque");
+            // Permission pour la galerie
+            const libraryStatus = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            setHasLibraryPermission(libraryStatus.status === 'granted');
+
+            // Permission pour la caméra
+            const cameraStatus = await ImagePicker.requestCameraPermissionsAsync();
+            setHasCameraPermission(cameraStatus.status === 'granted');
+
+            if (libraryStatus.status !== 'granted' && cameraStatus.status !== 'granted') {
+                Alert.alert(
+                    "Permissions requises",
+                    "L'application nécessite l'accès à la caméra et à la galerie pour fonctionner correctement."
+                );
             }
         })();
     }, []);
@@ -43,9 +55,17 @@ export default function Constatation({ route, navigation }) {
     const updateForm = (field, value) =>
         setForm(prev => ({ ...prev, [field]: value }));
 
-    const pickImage = async (type) => {
+    const openImageSourceModal = (type) => {
+        setCurrentImageType(type);
+        setShowImageSourceModal(true);
+    };
+
+    const pickImageFromGallery = async () => {
         if (hasLibraryPermission === false) {
-            alert("Pas de permission pour la photothèque");
+            Alert.alert(
+                "Permission refusée",
+                "Veuillez autoriser l'accès à la galerie dans les paramètres de l'application."
+            );
             return;
         }
 
@@ -53,13 +73,42 @@ export default function Constatation({ route, navigation }) {
             const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ['images'],
                 quality: 0.7,
+                allowsEditing: true,
             });
 
             if (!result.canceled) {
-                setForm(prev => ({ ...prev, [type]: result.assets[0].uri }));
+                setForm(prev => ({ ...prev, [currentImageType]: result.assets[0].uri }));
+                setShowImageSourceModal(false);
             }
         } catch (e) {
             console.warn("Erreur sélection image: ", e);
+            Alert.alert("Erreur", "Impossible de sélectionner l'image");
+        }
+    };
+
+    const takePhoto = async () => {
+        if (hasCameraPermission === false) {
+            Alert.alert(
+                "Permission refusée",
+                "Veuillez autoriser l'accès à la caméra dans les paramètres de l'application."
+            );
+            return;
+        }
+
+        try {
+            const result = await ImagePicker.launchCameraAsync({
+                mediaTypes: ['images'],
+                quality: 0.7,
+                allowsEditing: true,
+            });
+
+            if (!result.canceled) {
+                setForm(prev => ({ ...prev, [currentImageType]: result.assets[0].uri }));
+                setShowImageSourceModal(false);
+            }
+        } catch (e) {
+            console.warn("Erreur prise photo: ", e);
+            Alert.alert("Erreur", "Impossible de prendre la photo");
         }
     };
 
@@ -85,6 +134,8 @@ export default function Constatation({ route, navigation }) {
                     company: constatation.company,
                     avant: constatation.imageAvant,
                     apres: constatation.imageApres,
+                    chantierName: constatation.chantierName,
+                    reportNumber: constatation.reportNumber,
                 })));
             }
         } catch (err) {
@@ -160,13 +211,7 @@ export default function Constatation({ route, navigation }) {
         }
     };
 
-    const handleFormLayout = (e) => {
-        const { y, height } = e.nativeEvent.layout;
-        const offset = y - (windowHeight / 2 - height / 2);
-        if (scrollViewRef.current) {
-            scrollViewRef.current.scrollTo({ y: offset > 0 ? offset : 0, animated: true });
-        }
-    };
+    const handleFormLayout = useScrollToForm(scrollViewRef);
 
     const exportToPDF = async () => {
         if (constatations.length === 0) {
@@ -177,23 +222,17 @@ export default function Constatation({ route, navigation }) {
         try {
             setLoading(true);
 
-            // Fonction helper pour convertir une URI en base64
+            // Fonction helper pour convertir une URI en base64 (React Native compatible)
             const convertUriToBase64 = async (uri) => {
-                return new Promise((resolve, reject) => {
-                    const xhr = new XMLHttpRequest();
-                    xhr.onload = function() {
-                        const reader = new FileReader();
-                        reader.onloadend = function() {
-                            resolve(reader.result);
-                        };
-                        reader.onerror = reject;
-                        reader.readAsDataURL(xhr.response);
-                    };
-                    xhr.onerror = reject;
-                    xhr.open('GET', uri);
-                    xhr.responseType = 'blob';
-                    xhr.send();
-                });
+                try {
+                    const base64 = await FileSystem.readAsStringAsync(uri, {
+                        encoding: FileSystem.EncodingType.Base64,
+                    });
+                    return `data:image/jpeg;base64,${base64}`;
+                } catch (error) {
+                    console.error('Error converting URI to base64:', error);
+                    throw error;
+                }
             };
 
             // Récupérer le logo et le convertir en base64
@@ -228,11 +267,16 @@ export default function Constatation({ route, navigation }) {
                 return;
             }
 
-            // Obtenir les informations du premier constatation pour le promoteur
-            const firstConstatation = validConstatations[0];
-            const promoteur = firstConstatation.company || 'N/A';
+            // Récupérer les informations depuis les constatations déjà chargées
+            const chantierName = validConstatations[0]?.chantierName || building || city;
+            const promoteur = validConstatations[0]?.company || 'N/A';
 
-            // Générer le HTML strictement identique au format RapportPhoto.jsx de la WebApp
+            console.log('Informations PDF:', { chantierName, promoteur, building, city });
+
+            // Calculer le nombre de pages (3 paires par page)
+            const totalPages = Math.ceil(validConstatations.length / 3);
+
+            // Générer le HTML avec la mise en page verticale comme le PDF de référence
             const htmlContent = `
 <!DOCTYPE html>
 <html>
@@ -242,7 +286,7 @@ export default function Constatation({ route, navigation }) {
     <style>
         @page {
             size: A4;
-            margin: 20mm;
+            margin: 15mm;
         }
         * {
             margin: 0;
@@ -250,65 +294,64 @@ export default function Constatation({ route, navigation }) {
             box-sizing: border-box;
         }
         body {
-            font-family: Helvetica, Arial, sans-serif;
-            padding: 20px;
+            font-family: Arial, Helvetica, sans-serif;
             background: white;
             color: #000;
+        }
+        .page {
+            page-break-after: always;
+            padding: 20px;
+        }
+        .page:last-child {
+            page-break-after: auto;
         }
         /* Logo centré en haut */
         .logo-container {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         .logo-container img {
-            width: 180px;
-            height: 90px;
+            width: 160px;
+            height: 80px;
             object-fit: contain;
         }
-        /* Titre principal (Police Times, centré, souligné) */
+        /* Titre principal */
         .main-title {
             text-align: center;
             font-family: 'Times New Roman', Times, serif;
-            font-size: 22px;
+            font-size: 20px;
             font-weight: bold;
-            margin-bottom: 5px;
+            margin-bottom: 20px;
+            text-decoration: underline;
         }
-        .title-underline {
-            width: 100%;
-            height: 2px;
-            background: #000;
-            margin: 0 auto 30px auto;
-        }
-        /* Tableau d'informations avec bordure arrondie */
+        /* Encadré d'informations */
         .info-box {
             width: 100%;
-            max-width: 480px;
-            margin: 0 auto 40px auto;
-            border: 1.5px solid #000;
-            border-radius: 8px;
-            overflow: hidden;
+            margin: 0 auto 30px auto;
+            border: 2px solid #000;
+            border-radius: 10px;
+            padding: 15px;
         }
         .info-line {
-            padding: 10px 12px;
-            font-size: 10.5px;
-            border-bottom: 1.5px solid #000;
+            font-size: 11px;
+            margin-bottom: 5px;
         }
         .info-line:last-child {
-            border-bottom: none;
+            margin-bottom: 0;
         }
         .info-line.bold {
             font-weight: bold;
         }
-        /* Container des photos */
+        /* Section photos - disposition VERTICALE */
         .photos-section {
-            margin-top: 30px;
+            margin-top: 20px;
         }
-        /* Paire de photos (Avant → Après) */
-        .photo-row {
+        /* Paire de photos AVANT/APRÈS (disposition horizontale dans chaque paire) */
+        .photo-pair {
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-bottom: 50px;
+            margin-bottom: 30px;
             page-break-inside: avoid;
         }
         .photo-block {
@@ -316,75 +359,84 @@ export default function Constatation({ route, navigation }) {
         }
         .photo-title {
             font-weight: bold;
-            font-size: 11px;
+            font-size: 13px;
             margin-bottom: 8px;
             text-transform: uppercase;
         }
         .photo-block img {
-            width: 210px;
-            height: 150px;
+            width: 240px;
+            height: 180px;
             object-fit: cover;
-            border: 1px solid #ccc;
+            border: 1px solid #999;
         }
         .arrow-separator {
-            font-size: 36px;
+            font-size: 40px;
             font-weight: bold;
-            margin: 0 25px;
+            margin: 0 20px;
             color: #000;
         }
         /* Pied de page */
         .footer {
             text-align: center;
             font-size: 10px;
-            color: #666;
-            margin-top: 50px;
+            color: #333;
+            margin-top: 30px;
         }
     </style>
 </head>
 <body>
-    <!-- Logo centré -->
-    <div class="logo-container">
-        <img src="${logoBase64}" alt="Logo" />
-    </div>
+${Array.from({ length: totalPages }, (_, pageIndex) => {
+    const startIndex = pageIndex * 3;
+    const endIndex = Math.min(startIndex + 3, validConstatations.length);
+    const pagePairs = validConstatations.slice(startIndex, endIndex);
 
-    <!-- Titre principal avec soulignement -->
-    <div class="main-title">Rapport Photo d'Intervention - ${city}</div>
-    <div class="title-underline"></div>
+    return `
+    <div class="page">
+        <!-- Logo centré -->
+        <div class="logo-container">
+            <img src="${logoBase64}" alt="Logo" />
+        </div>
 
-    <!-- Tableau d'informations -->
-    <div class="info-box">
-        <div class="info-line bold">
-            PROMOTEUR: ${promoteur.toUpperCase()} - VILLE: ${city.toUpperCase()}
-        </div>
-        <div class="info-line">
-            Mission: ${task}
-        </div>
-        <div class="info-line">
-            Intervention le: ${selectedDate.toLocaleDateString('fr-FR')}
-        </div>
-    </div>
+        <!-- Titre principal -->
+        <div class="main-title">Rapport Photo d'Intervention - ${chantierName}</div>
 
-    <!-- Section photos -->
-    <div class="photos-section">
-        ${validConstatations.map((c, index) => `
-        <div class="photo-row">
-            <div class="photo-block">
-                <div class="photo-title">Avant</div>
-                <img src="${c.avantBase64}" alt="Photo avant ${index + 1}" />
+        <!-- Encadré d'informations -->
+        <div class="info-box">
+            <div class="info-line bold">
+                PROMOTEUR: ${promoteur.toUpperCase()} - VILLE: ${city.toUpperCase()}
             </div>
-            <div class="arrow-separator">→</div>
-            <div class="photo-block">
-                <div class="photo-title">Après</div>
-                <img src="${c.apresBase64}" alt="Photo après ${index + 1}" />
+            <div class="info-line">
+                Mission: ${task}
+            </div>
+            <div class="info-line">
+                Intervention le: ${selectedDate.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
             </div>
         </div>
-        `).join('')}
-    </div>
 
-    <!-- Pied de page -->
-    <div class="footer">
-        Page 1 / 1
+        <!-- Section photos (3 paires par page maximum, disposition verticale) -->
+        <div class="photos-section">
+            ${pagePairs.map((c, index) => `
+            <div class="photo-pair">
+                <div class="photo-block">
+                    <div class="photo-title">AVANT</div>
+                    <img src="${c.avantBase64}" alt="Photo avant ${startIndex + index + 1}" />
+                </div>
+                <div class="arrow-separator">→</div>
+                <div class="photo-block">
+                    <div class="photo-title">APRÈS</div>
+                    <img src="${c.apresBase64}" alt="Photo après ${startIndex + index + 1}" />
+                </div>
+            </div>
+            `).join('')}
+        </div>
+
+        <!-- Pied de page -->
+        <div class="footer">
+            Page ${pageIndex + 1} / ${totalPages}
+        </div>
     </div>
+    `;
+}).join('')}
 </body>
 </html>
             `;
@@ -588,7 +640,7 @@ export default function Constatation({ route, navigation }) {
                             <Text style={styles.label}>Photo Avant :</Text>
                             <TouchableOpacity
                                 style={styles.photoButton}
-                                onPress={() => pickImage('avant')}
+                                onPress={() => openImageSourceModal('avant')}
                             >
                                 <Text style={styles.photoButtonText}>
                                     {form.avant ? 'Changer photo' : 'Choisir photo'}
@@ -600,7 +652,7 @@ export default function Constatation({ route, navigation }) {
                             <Text style={styles.label}>Photo Après :</Text>
                             <TouchableOpacity
                                 style={styles.photoButton}
-                                onPress={() => pickImage('apres')}
+                                onPress={() => openImageSourceModal('apres')}
                             >
                                 <Text style={styles.photoButtonText}>
                                     {form.apres ? 'Changer photo' : 'Choisir photo'}
@@ -618,6 +670,47 @@ export default function Constatation({ route, navigation }) {
                         </View>
                     )}
                 </ScrollView>
+
+                {/* Modal de sélection de source d'image */}
+                <Modal
+                    visible={showImageSourceModal}
+                    transparent={true}
+                    animationType="fade"
+                    onRequestClose={() => setShowImageSourceModal(false)}
+                >
+                    <TouchableOpacity
+                        style={styles.modalOverlay}
+                        activeOpacity={1}
+                        onPress={() => setShowImageSourceModal(false)}
+                    >
+                        <View style={styles.modalContent}>
+                            <Text style={styles.modalTitle}>Choisir une photo</Text>
+
+                            <TouchableOpacity
+                                style={styles.modalButton}
+                                onPress={takePhoto}
+                            >
+                                <Text style={styles.modalButtonIcon}>📷</Text>
+                                <Text style={styles.modalButtonText}>Prendre une photo</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={styles.modalButton}
+                                onPress={pickImageFromGallery}
+                            >
+                                <Text style={styles.modalButtonIcon}>🖼️</Text>
+                                <Text style={styles.modalButtonText}>Choisir depuis la galerie</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[styles.modalButton, styles.modalCancelButton]}
+                                onPress={() => setShowImageSourceModal(false)}
+                            >
+                                <Text style={styles.modalCancelText}>Annuler</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </TouchableOpacity>
+                </Modal>
             </SafeAreaView>
         </ScreenWrapper>
     );
@@ -762,5 +855,62 @@ const styles = StyleSheet.create({
         fontWeight: '500',
         marginBottom: 4,
         color: '#666',
+    },
+
+    // Styles pour le modal
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContent: {
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 20,
+        width: '80%',
+        maxWidth: 400,
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        textAlign: 'center',
+        marginBottom: 20,
+        color: '#333',
+    },
+    modalButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f26463',
+        padding: 15,
+        borderRadius: 8,
+        marginBottom: 12,
+        elevation: 2,
+    },
+    modalButtonIcon: {
+        fontSize: 24,
+        marginRight: 12,
+    },
+    modalButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '500',
+    },
+    modalCancelButton: {
+        backgroundColor: '#ddd',
+        marginTop: 8,
+        justifyContent: 'center',
+    },
+    modalCancelText: {
+        color: '#333',
+        fontSize: 16,
+        fontWeight: '500',
+        textAlign: 'center',
+        flex: 1,
     },
 });

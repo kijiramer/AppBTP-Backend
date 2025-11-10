@@ -8,11 +8,11 @@ import Storage from '../utils/Storage';
 import Header from './Header';
 import ScreenWrapper from '../Controleur/ScreenWrapper';
 import { displayCalendarScreen } from './Components/Calendar';
+import useScrollToForm from '../component/ScrollToForm';
 
 export default function Constatation({ route, navigation }) {
     const { city, building, task } = route.params;
     const scrollViewRef = useRef(null);
-    const windowHeight = Dimensions.get('window').height;
 
     const [constatations, setConstatations] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -144,13 +144,7 @@ export default function Constatation({ route, navigation }) {
         }
     };
 
-    const handleFormLayout = (e) => {
-        const { y, height } = e.nativeEvent.layout;
-        const offset = y - (windowHeight / 2 - height / 2);
-        if (scrollViewRef.current) {
-            scrollViewRef.current.scrollTo({ y: offset > 0 ? offset : 0, animated: true });
-        }
-    };
+    const handleFormLayout = useScrollToForm(scrollViewRef);
 
     useEffect(() => {
         if (!showForm) setShowCompanyPicker(false);

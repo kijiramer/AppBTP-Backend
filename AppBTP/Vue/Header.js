@@ -1,12 +1,15 @@
 import React, { useState, useContext, useEffect } from 'react';
+import MobileBreadcrumb from './MobileBreadcrumb';
 import { StyleSheet, View, Image, Text, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import logo from '../assets/logo.jpg';
 import { TabContext } from '../Controleur/TabContext';
+import { API_BASE_URL } from '../config';
 
 export default function Header({ navigation, isHomePage, city, building, task }) {
   const { activeTab, setActiveTab } = useContext(TabContext);
   const [tabItems, setTabItems] = useState([]);
+  const [cityItems, setCityItems] = useState([]);
 
   useEffect(() => {
     const items = [];
@@ -16,11 +19,109 @@ export default function Header({ navigation, isHomePage, city, building, task })
     setTabItems(items);
   }, [city, building, task]);
 
+  // Try to fetch a list of cities from the API to populate breadcrumb menus.
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        // fetch cities and buildings in parallel
+        const [resCities, resBuildings] = await Promise.all([
+          fetch(`${API_BASE_URL}/cities`),
+          fetch(`${API_BASE_URL}/buildings`),
+        ]);
+
+        if (!mounted) return;
+
+        const pages = ['Notes', 'Constatations', 'Effectifs'];
+
+        let cities = [];
+        if (resCities.ok) {
+          const data = await resCities.json();
+          // Accept both { cities: [...] } or direct array
+          cities = Array.isArray(data.cities) ? data.cities : Array.isArray(data) ? data : data.cities || [];
+        }
+
+        let buildings = [];
+        if (resBuildings.ok) {
+          const dataB = await resBuildings.json();
+          buildings = Array.isArray(dataB) ? dataB : dataB.buildings || [];
+        }
+
+        // Build nested structure: city -> buildings -> pages
+        const mapped = (cities.length ? cities : [city, 'Saint Ouen', 'Paris 17eme'].filter(Boolean)).map((c) => {
+          const cityName = c.name || c;
+          const bForCity = buildings.filter(b => (b.city && (b.city === cityName || b.city === (c.name || c))) || (b.name && b.name.includes(cityName)));
+
+          const buildingNodes = (bForCity.length ? bForCity : []).map(b => {
+            const bName = b.name || b.building || String(b);
+            return {
+              label: bName,
+              children: pages.map(p => ({
+                label: p,
+                route: p === 'Notes' ? 'Note' : p === 'Constatations' ? 'Constatation' : 'Effectif',
+                params: { city: cityName, building: bName, task: p },
+              })),
+            };
+          });
+
+          // If no buildings found, still expose pages at city level
+          const cityChildren = buildingNodes.length > 0 ? buildingNodes : pages.map(p => ({
+            label: p,
+            route: p === 'Notes' ? 'Note' : p === 'Constatations' ? 'Constatation' : 'Effectif',
+            params: { city: cityName, task: p },
+          }));
+
+          return { label: cityName, children: cityChildren };
+        });
+
+        setCityItems(mapped);
+        return;
+      } catch (e) {
+        // ignore and fallback below
+      }
+
+      // fallback: build a small static list containing current city + examples
+      const fallbackCities = [city, 'Saint Ouen', 'Paris 17eme'].filter(Boolean);
+      const pages = ['Notes', 'Constatations', 'Effectifs'];
+      setCityItems(fallbackCities.map((c) => ({
+        label: c,
+        children: pages.map(p => ({
+          label: p,
+          route: p === 'Notes' ? 'Note' : p === 'Constatations' ? 'Constatation' : 'Effectif',
+          params: { city: c, task: p },
+        })),
+      })));
+    })();
+    return () => { mounted = false; };
+  }, [city]);
+
   useEffect(() => {
     if (tabItems.length > 0 && !activeTab) {
       setActiveTab(tabItems[0].name);
     }
   }, [tabItems, activeTab, setActiveTab]);
+
+  // Build breadcrumb segments from tabItems. Provide menus when possible.
+  const segments = [];
+  // City level
+  if (tabItems.length > 0) {
+    segments.push({ label: tabItems[0].name, items: cityItems });
+  }
+  // Building level (if present)
+  if (tabItems.length > 1) {
+    segments.push({ label: tabItems[1].name, items: [] });
+  }
+  // Task/last level: provide quick pages menu
+  if (tabItems.length > 2) {
+    segments.push({
+      label: tabItems[2].name,
+      items: [
+        { label: 'Notes', route: 'Note', params: { city, building, task: 'Notes' } },
+        { label: 'Constatations', route: 'Constatation', params: { city, building, task: 'Constatations' } },
+        { label: 'Effectifs', route: 'Effectif', params: { city, building, task: 'Effectifs' } },
+      ],
+    });
+  }
 
   const renderTabs = (items) => {
     return (
@@ -72,7 +173,11 @@ export default function Header({ navigation, isHomePage, city, building, task })
         )}
       </View>
 
-      {!isHomePage && renderTabs(tabItems)}
+      {!isHomePage && (
+        <>
+          <MobileBreadcrumb segments={segments} navigation={navigation} />
+        </>
+      )}
     </View>
   );
 }

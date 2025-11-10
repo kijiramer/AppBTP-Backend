@@ -21,13 +21,13 @@ import Header from './Header';
 import ScreenWrapper from '../Controleur/ScreenWrapper';
 import { displayCalendarScreen } from './Components/Calendar';
 import { API_BASE_URL } from '../config';
+import useScrollToForm from '../component/ScrollToForm';
 
 moment.locale('fr');
 
 export default function Note({ route, navigation }) {
   const { city, building, task } = route.params;
   const scrollViewRef = useRef(null);
-  const windowHeight = Dimensions.get('window').height;
 
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -221,17 +221,8 @@ export default function Note({ route, navigation }) {
     );
   };
 
-  // Quand le formulaire apparaît, on centre automatiquement
-  const handleFormLayout = e => {
-    const { y, height } = e.nativeEvent.layout;
-    const offset = y - (windowHeight / 2 - height / 2);
-    if (scrollViewRef.current) {
-      scrollViewRef.current.scrollTo({
-        y: offset > 0 ? offset : 0,
-        animated: true,
-      });
-    }
-  };
+  // handler centralisé pour centrer le formulaire dans le ScrollView
+  const handleFormLayout = useScrollToForm(scrollViewRef);
 
   useEffect(() => {
     if (!showForm) {

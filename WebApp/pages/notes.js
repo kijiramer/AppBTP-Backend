@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import useScrollOnOpen from '../src/hooks/useScrollOnOpen';
 import { Container, Row, Col, Card, Form, Button, Modal, Alert, Spinner } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'next/router';
@@ -16,6 +17,8 @@ export default function Notes() {
   
   const { user, token } = useAuth();
   const router = useRouter();
+  const topRef = useRef(null);
+  useScrollOnOpen(showModal, topRef, { behavior: 'smooth', block: 'start' });
 
   useEffect(() => {
     if (!user && !loading) {
@@ -109,6 +112,14 @@ export default function Notes() {
   const handleNewNote = () => {
     setCurrentNote({ title: '', content: '', id: null });
     setError('');
+    // scroll the page to the top of the form/modal area then open
+    try {
+      if (topRef && topRef.current && typeof topRef.current.scrollIntoView === 'function') {
+        topRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } catch (e) {}
     setShowModal(true);
   };
 
@@ -126,6 +137,8 @@ export default function Notes() {
     <>
       <Header />
       <Container fluid className="page-container">
+        {/* anchor for scrolling when opening the form/modal */}
+        <div ref={topRef} />
         <Row className="mb-4">
           <Col>
             <div className="d-flex justify-content-between align-items-center">

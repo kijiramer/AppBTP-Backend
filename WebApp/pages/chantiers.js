@@ -3,6 +3,7 @@ import { Container, Row, Col, Card, Button, Spinner, Breadcrumb } from 'react-bo
 import { useAuth } from '../context/AuthContext';
 import { useRouter } from 'next/router';
 import Header from '../components/Header';
+import SmartBreadcrumb from '../components/SmartBreadcrumb';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
 
@@ -67,12 +68,18 @@ export default function Chantiers() {
         {/* Breadcrumb */}
         <Row className="mb-3">
           <Col>
-            <Breadcrumb>
-              <Breadcrumb.Item onClick={handleBackTocities} style={{ cursor: 'pointer' }}>
-                Villes
-              </Breadcrumb.Item>
-              <Breadcrumb.Item active>{city}</Breadcrumb.Item>
-            </Breadcrumb>
+            <SmartBreadcrumb
+              levels={[
+                { label: 'Villes', path: '/dashboard', items: [{ label: 'Toutes les villes', path: '/dashboard' }] },
+                { label: city || '—', active: true, items: [
+                  { label: 'Chantiers', path: `/chantiers?city=${encodeURIComponent(city || '')}` },
+                  { label: 'Bâtiments', path: `/batiments?city=${encodeURIComponent(city || '')}` },
+                  { label: 'Notes', path: `/notes?city=${encodeURIComponent(city || '')}` },
+                  { label: 'Constatations', path: `/constatations?city=${encodeURIComponent(city || '')}` },
+                  { label: 'Effectifs', path: `/effectifs?city=${encodeURIComponent(city || '')}` },
+                ]},
+              ]}
+            />
           </Col>
         </Row>
 
