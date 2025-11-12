@@ -1,7 +1,8 @@
 // Effectif.js
-import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, ScrollView, View, Text, TouchableOpacity, TextInput, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, Text, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Picker } from '@react-native-picker/picker';
 import moment from 'moment';
 import Storage from '../utils/Storage';
@@ -9,16 +10,11 @@ import Header from './Header';
 import ScreenWrapper from '../Controleur/ScreenWrapper';
 import { displayCalendarScreen } from './Components/Calendar';
 import { API_BASE_URL } from '../config';
-import useScrollToForm from '../component/ScrollToForm';
 
 moment.locale('fr');
 
 export default function Effectif({ route, navigation }) {
   const { city, building, task } = route.params;
-  const scrollViewRef = useRef(null);
-  const nombrePersonnesInputRef = useRef(null);
-  const formPositionY = useRef(0);
-  const handleFormLayout = useScrollToForm(scrollViewRef);
 
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [effectifs, setEffectifs] = useState([]);
@@ -33,24 +29,6 @@ export default function Effectif({ route, navigation }) {
   const [showAptPicker, setShowAptPicker] = useState(false);
   const [showCompanyPicker, setShowCompanyPicker] = useState(false);
   const companies = ['Entreprise A', 'Entreprise B', 'Entreprise C'];
-
-  // Fonction pour scroller vers le formulaire quand un champ obtient le focus
-  const scrollToInput = () => {
-    if (scrollViewRef.current && formPositionY.current) {
-      setTimeout(() => {
-        scrollViewRef.current.scrollTo({
-          y: Math.max(0, formPositionY.current - 100),
-          animated: true,
-        });
-      }, 100);
-    }
-  };
-
-  // Stocker la position du formulaire
-  const handleFormLayoutCustom = (event) => {
-    formPositionY.current = event.nativeEvent.layout.y;
-    handleFormLayout(event); // Appeler aussi le handler original
-  };
 
   const updateForm = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
 
@@ -141,7 +119,13 @@ export default function Effectif({ route, navigation }) {
           building={building}
           task={task}
         />
-  <ScrollView ref={scrollViewRef} style={styles.content}>
+  <KeyboardAwareScrollView
+            style={styles.content}
+            enableOnAndroid={true}
+            enableAutomaticScroll={true}
+            extraScrollHeight={100}
+            keyboardShouldPersistTaps="handled"
+          >
           {/* Calendrier */}
           <View style={styles.calendarContainer}>
             {displayCalendarScreen(selectedDate, setSelectedDate, [])}
@@ -315,7 +299,7 @@ export default function Effectif({ route, navigation }) {
               </TouchableOpacity>
             </View>
           )}
-        </ScrollView>
+        </KeyboardAwareScrollView>
       </SafeAreaView>
     </ScreenWrapper>
   );
