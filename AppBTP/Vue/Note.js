@@ -28,6 +28,10 @@ moment.locale('fr');
 export default function Note({ route, navigation }) {
   const { city, building, task } = route.params;
   const scrollViewRef = useRef(null);
+  const floorInputRef = useRef(null);
+  const apartmentInputRef = useRef(null);
+  const companyInputRef = useRef(null);
+  const formViewRef = useRef(null);
 
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -42,6 +46,24 @@ export default function Note({ route, navigation }) {
     closedTime: '',
   });
   const [showForm, setShowForm] = useState(false);
+
+  // Fonction pour scroller vers le champ actif
+  const scrollToInput = (inputRef) => {
+    if (formViewRef.current && scrollViewRef.current) {
+      setTimeout(() => {
+        formViewRef.current.measureLayout(
+          scrollViewRef.current.getScrollableNode(),
+          (x, y, width, height) => {
+            scrollViewRef.current.scrollTo({
+              y: Math.max(0, y - 100),
+              animated: true,
+            });
+          },
+          (error) => console.log('Measure error:', error)
+        );
+      }, 100);
+    }
+  };
 
   // Charger les dernières valeurs saisies
   useEffect(() => {
@@ -416,7 +438,7 @@ export default function Note({ route, navigation }) {
 
             {/* Formulaire */}
             {showForm && (
-                <View style={styles.formCard} onLayout={handleFormLayout}>
+                <View style={styles.formCard} ref={formViewRef} onLayout={handleFormLayout}>
                   {/* Bouton ✕ */}
                   <TouchableOpacity
                       style={styles.closeFormBtn}
@@ -429,20 +451,24 @@ export default function Note({ route, navigation }) {
                   <View style={styles.formRow}>
                     <Text style={styles.label}>Étage :</Text>
                     <TextInput
+                        ref={floorInputRef}
                         style={styles.textInput}
                         value={form.floor}
                         onChangeText={v => updateForm('floor', v)}
                         placeholder="Ex: 1"
                         keyboardType="numeric"
+                        onFocus={() => scrollToInput(floorInputRef)}
                     />
 
                     <Text style={[styles.label, { marginLeft: 12 }]}>Appart :</Text>
                     <TextInput
+                        ref={apartmentInputRef}
                         style={styles.textInput}
                         value={form.apartment}
                         onChangeText={v => updateForm('apartment', v)}
                         placeholder="Ex: 101"
                         keyboardType="numeric"
+                        onFocus={() => scrollToInput(apartmentInputRef)}
                     />
 
                     <TouchableOpacity
@@ -457,10 +483,12 @@ export default function Note({ route, navigation }) {
                   <View style={styles.companyRow}>
                     <Text style={styles.label}>Entreprise :</Text>
                     <TextInput
+                        ref={companyInputRef}
                         style={[styles.textInput, { flex: 1 }]}
                         value={form.company}
                         onChangeText={v => updateForm('company', v)}
                         placeholder="Nom de l'entreprise"
+                        onFocus={() => scrollToInput(companyInputRef)}
                     />
                   </View>
 
