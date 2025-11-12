@@ -31,7 +31,7 @@ export default function Note({ route, navigation }) {
   const floorInputRef = useRef(null);
   const apartmentInputRef = useRef(null);
   const companyInputRef = useRef(null);
-  const formViewRef = useRef(null);
+  const formPositionY = useRef(0);
 
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -47,22 +47,22 @@ export default function Note({ route, navigation }) {
   });
   const [showForm, setShowForm] = useState(false);
 
-  // Fonction pour scroller vers le champ actif
-  const scrollToInput = (inputRef) => {
-    if (formViewRef.current && scrollViewRef.current) {
+  // Fonction pour scroller vers le formulaire quand un champ obtient le focus
+  const scrollToInput = () => {
+    if (scrollViewRef.current && formPositionY.current) {
       setTimeout(() => {
-        formViewRef.current.measureLayout(
-          scrollViewRef.current.getScrollableNode(),
-          (x, y, width, height) => {
-            scrollViewRef.current.scrollTo({
-              y: Math.max(0, y - 100),
-              animated: true,
-            });
-          },
-          (error) => console.log('Measure error:', error)
-        );
+        scrollViewRef.current.scrollTo({
+          y: Math.max(0, formPositionY.current - 100),
+          animated: true,
+        });
       }, 100);
     }
+  };
+
+  // Stocker la position du formulaire
+  const handleFormLayoutCustom = (event) => {
+    formPositionY.current = event.nativeEvent.layout.y;
+    handleFormLayout(event); // Appeler aussi le handler original
   };
 
   // Charger les dernières valeurs saisies
@@ -438,7 +438,7 @@ export default function Note({ route, navigation }) {
 
             {/* Formulaire */}
             {showForm && (
-                <View style={styles.formCard} ref={formViewRef} onLayout={handleFormLayout}>
+                <View style={styles.formCard} onLayout={handleFormLayoutCustom}>
                   {/* Bouton ✕ */}
                   <TouchableOpacity
                       style={styles.closeFormBtn}

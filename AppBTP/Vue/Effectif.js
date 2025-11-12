@@ -17,7 +17,7 @@ export default function Effectif({ route, navigation }) {
   const { city, building, task } = route.params;
   const scrollViewRef = useRef(null);
   const nombrePersonnesInputRef = useRef(null);
-  const formViewRef = useRef(null);
+  const formPositionY = useRef(0);
   const handleFormLayout = useScrollToForm(scrollViewRef);
 
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -34,22 +34,22 @@ export default function Effectif({ route, navigation }) {
   const [showCompanyPicker, setShowCompanyPicker] = useState(false);
   const companies = ['Entreprise A', 'Entreprise B', 'Entreprise C'];
 
-  // Fonction pour scroller vers le champ actif
+  // Fonction pour scroller vers le formulaire quand un champ obtient le focus
   const scrollToInput = () => {
-    if (formViewRef.current && scrollViewRef.current) {
+    if (scrollViewRef.current && formPositionY.current) {
       setTimeout(() => {
-        formViewRef.current.measureLayout(
-          scrollViewRef.current.getScrollableNode(),
-          (x, y) => {
-            scrollViewRef.current.scrollTo({
-              y: Math.max(0, y - 100),
-              animated: true,
-            });
-          },
-          (error) => console.log('Measure error:', error)
-        );
+        scrollViewRef.current.scrollTo({
+          y: Math.max(0, formPositionY.current - 100),
+          animated: true,
+        });
       }, 100);
     }
+  };
+
+  // Stocker la position du formulaire
+  const handleFormLayoutCustom = (event) => {
+    formPositionY.current = event.nativeEvent.layout.y;
+    handleFormLayout(event); // Appeler aussi le handler original
   };
 
   const updateForm = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
@@ -196,7 +196,7 @@ export default function Effectif({ route, navigation }) {
 
           {/* Formulaire Effectif */}
           {showForm && (
-            <View style={styles.formCard} ref={formViewRef} onLayout={handleFormLayout}>
+            <View style={styles.formCard} onLayout={handleFormLayoutCustom}>
               <TouchableOpacity
                 style={styles.closeFormBtn}
                 onPress={() => setShowForm(false)}
