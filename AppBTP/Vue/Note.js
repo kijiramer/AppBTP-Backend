@@ -40,26 +40,46 @@ export default function Note({ route, navigation }) {
     closedTime: '',
   });
   const [showForm, setShowForm] = useState(false);
+  const [floorSuggestions, setFloorSuggestions] = useState([]);
+  const [apartmentSuggestions, setApartmentSuggestions] = useState([]);
+  const [companySuggestions, setCompanySuggestions] = useState([]);
+  const [showFloorSuggestions, setShowFloorSuggestions] = useState(false);
+  const [showApartmentSuggestions, setShowApartmentSuggestions] = useState(false);
+  const [showCompanySuggestions, setShowCompanySuggestions] = useState(false);
 
-  // Charger les dernières valeurs saisies
+  // Charger l'historique des valeurs saisies
   useEffect(() => {
-    const loadSavedValues = async () => {
+    const loadHistory = async () => {
       try {
-        const savedFloor = await AsyncStorage.getItem('note_last_floor');
-        const savedApartment = await AsyncStorage.getItem('note_last_apartment');
-        const savedCompany = await AsyncStorage.getItem('note_last_company');
+        const floorHistory = await AsyncStorage.getItem('note_floor_history');
+        const apartmentHistory = await AsyncStorage.getItem('note_apartment_history');
+        const companyHistory = await AsyncStorage.getItem('note_company_history');
 
-        setForm(prev => ({
-          ...prev,
-          floor: savedFloor || '',
-          apartment: savedApartment || '',
-          company: savedCompany || '',
-        }));
+        if (floorHistory) {
+          const floors = JSON.parse(floorHistory);
+          setFloorSuggestions(floors.sort((a, b) => {
+            const numA = parseInt(a) || 0;
+            const numB = parseInt(b) || 0;
+            return numA - numB;
+          }));
+        }
+        if (apartmentHistory) {
+          const apartments = JSON.parse(apartmentHistory);
+          setApartmentSuggestions(apartments.sort((a, b) => {
+            const numA = parseInt(a) || 0;
+            const numB = parseInt(b) || 0;
+            return numA - numB;
+          }));
+        }
+        if (companyHistory) {
+          const companies = JSON.parse(companyHistory);
+          setCompanySuggestions(companies.sort());
+        }
       } catch (error) {
-        console.error('Error loading saved values:', error);
+        console.error('Error loading history:', error);
       }
     };
-    loadSavedValues();
+    loadHistory();
   }, []);
 
   const updateForm = (field, value) =>
@@ -142,10 +162,29 @@ export default function Note({ route, navigation }) {
       });
 
       if (response.data.success) {
-        // Sauvegarder les valeurs pour la prochaine fois
-        await AsyncStorage.setItem('note_last_floor', form.floor);
-        await AsyncStorage.setItem('note_last_apartment', form.apartment);
-        await AsyncStorage.setItem('note_last_company', form.company);
+        // Sauvegarder dans l'historique
+        const updateHistory = async (key, value, suggestions, setSuggestions) => {
+          const newSuggestions = [...suggestions];
+          if (!newSuggestions.includes(value)) {
+            newSuggestions.push(value);
+            await AsyncStorage.setItem(key, JSON.stringify(newSuggestions));
+
+            // Trier les suggestions
+            if (key.includes('floor') || key.includes('apartment')) {
+              setSuggestions(newSuggestions.sort((a, b) => {
+                const numA = parseInt(a) || 0;
+                const numB = parseInt(b) || 0;
+                return numA - numB;
+              }));
+            } else {
+              setSuggestions(newSuggestions.sort());
+            }
+          }
+        };
+
+        await updateHistory('note_floor_history', form.floor, floorSuggestions, setFloorSuggestions);
+        await updateHistory('note_apartment_history', form.apartment, apartmentSuggestions, setApartmentSuggestions);
+        await updateHistory('note_company_history', form.company, companySuggestions, setCompanySuggestions);
 
         // Ajouter la nouvelle note à l'état local
         setNotes(prev => [
@@ -426,22 +465,62 @@ export default function Note({ route, navigation }) {
                   {/* Ligne Étage/Appart/+ */}
                   <View style={styles.formRow}>
                     <Text style={styles.label}>Étage :</Text>
-                    <TextInput
-                        style={styles.textInput}
-                        value={form.floor}
-                        onChangeText={v => updateForm('floor', v)}
-                        placeholder="Ex: 1"
-                        keyboardType="numeric"
-                    />
+                    <View style={{ flex: 1 }}>
+                      <TextInput
+                          style={styles.textInput}
+                          value={form.floor}
+                          onChangeText={v => updateForm('floor', v)}
+                          placeholder="Ex: 1"
+                          keyboardType="numeric"
+                          onFocus={() => setShowFloorSuggestions(true)}
+                          onBlur={() => setTimeout(() => setShowFloorSuggestions(false), 200)}
+                      />
+                      {showFloorSuggestions && floorSuggestions.length > 0 && (
+                        <View style={styles.suggestionsContainer}>
+                          {floorSuggestions.map((suggestion, idx) => (
+                            <TouchableOpacity
+                              key={idx}
+                              style={styles.suggestionItem}
+                              onPress={() => {
+                                updateForm('floor', suggestion);
+                                setShowFloorSuggestions(false);
+                              }}
+                            >
+                              <Text style={styles.suggestionText}>{suggestion}</Text>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+                      )}
+                    </View>
 
                     <Text style={[styles.label, { marginLeft: 12 }]}>Appart :</Text>
-                    <TextInput
-                        style={styles.textInput}
-                        value={form.apartment}
-                        onChangeText={v => updateForm('apartment', v)}
-                        placeholder="Ex: 101"
-                        keyboardType="numeric"
-                    />
+                    <View style={{ flex: 1 }}>
+                      <TextInput
+                          style={styles.textInput}
+                          value={form.apartment}
+                          onChangeText={v => updateForm('apartment', v)}
+                          placeholder="Ex: 101"
+                          keyboardType="numeric"
+                          onFocus={() => setShowApartmentSuggestions(true)}
+                          onBlur={() => setTimeout(() => setShowApartmentSuggestions(false), 200)}
+                      />
+                      {showApartmentSuggestions && apartmentSuggestions.length > 0 && (
+                        <View style={styles.suggestionsContainer}>
+                          {apartmentSuggestions.map((suggestion, idx) => (
+                            <TouchableOpacity
+                              key={idx}
+                              style={styles.suggestionItem}
+                              onPress={() => {
+                                updateForm('apartment', suggestion);
+                                setShowApartmentSuggestions(false);
+                              }}
+                            >
+                              <Text style={styles.suggestionText}>{suggestion}</Text>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+                      )}
+                    </View>
 
                     <TouchableOpacity
                         style={styles.addButton}
@@ -454,12 +533,32 @@ export default function Note({ route, navigation }) {
                   {/* Champ Entreprise */}
                   <View style={styles.companyRow}>
                     <Text style={styles.label}>Entreprise :</Text>
-                    <TextInput
-                        style={[styles.textInput, { flex: 1 }]}
-                        value={form.company}
-                        onChangeText={v => updateForm('company', v)}
-                        placeholder="Nom de l'entreprise"
-                    />
+                    <View style={{ flex: 1 }}>
+                      <TextInput
+                          style={[styles.textInput, { flex: 1 }]}
+                          value={form.company}
+                          onChangeText={v => updateForm('company', v)}
+                          placeholder="Nom de l'entreprise"
+                          onFocus={() => setShowCompanySuggestions(true)}
+                          onBlur={() => setTimeout(() => setShowCompanySuggestions(false), 200)}
+                      />
+                      {showCompanySuggestions && companySuggestions.length > 0 && (
+                        <View style={styles.suggestionsContainer}>
+                          {companySuggestions.map((suggestion, idx) => (
+                            <TouchableOpacity
+                              key={idx}
+                              style={styles.suggestionItem}
+                              onPress={() => {
+                                updateForm('company', suggestion);
+                                setShowCompanySuggestions(false);
+                              }}
+                            >
+                              <Text style={styles.suggestionText}>{suggestion}</Text>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+                      )}
+                    </View>
                   </View>
 
                   {/* Switches */}
@@ -651,5 +750,33 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#999',
     fontStyle: 'italic',
+  },
+
+  // Styles pour les suggestions
+  suggestionsContainer: {
+    position: 'absolute',
+    top: 40,
+    left: 4,
+    right: 4,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 6,
+    maxHeight: 150,
+    zIndex: 1000,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  suggestionItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  suggestionText: {
+    fontSize: 14,
+    color: '#333',
   },
 });
