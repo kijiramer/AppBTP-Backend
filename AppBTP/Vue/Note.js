@@ -1,5 +1,5 @@
 // Note.js
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   StyleSheet,
   ScrollView,
@@ -7,14 +7,14 @@ import {
   Text,
   TouchableOpacity,
   Switch,
-  Dimensions,
   Alert,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Picker } from '@react-native-picker/picker';
 import moment from 'moment';
 import 'moment/locale/fr';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Storage from '../utils/Storage';
 
 import Header from './Header';
@@ -33,20 +33,36 @@ export default function Note({ route, navigation }) {
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [form, setForm] = useState({
-    floor: '1er',
-    apartment: '1',
-    company: 'Entreprise A',
+    floor: '',
+    apartment: '',
+    company: '',
     open: false,
     closed: false,
     openTime: '',
     closedTime: '',
   });
   const [showForm, setShowForm] = useState(false);
-  const [showFloorPicker, setShowFloorPicker] = useState(false);
-  const [showAptPicker, setShowAptPicker] = useState(false);
-  const [showCompanyPicker, setShowCompanyPicker] = useState(false);
 
-  const companies = ['Entreprise A', 'Entreprise B', 'Entreprise C'];
+  // Charger les dernières valeurs saisies
+  useEffect(() => {
+    const loadSavedValues = async () => {
+      try {
+        const savedFloor = await AsyncStorage.getItem('note_last_floor');
+        const savedApartment = await AsyncStorage.getItem('note_last_apartment');
+        const savedCompany = await AsyncStorage.getItem('note_last_company');
+
+        setForm(prev => ({
+          ...prev,
+          floor: savedFloor || '',
+          apartment: savedApartment || '',
+          company: savedCompany || '',
+        }));
+      } catch (error) {
+        console.error('Error loading saved values:', error);
+      }
+    };
+    loadSavedValues();
+  }, []);
 
   const updateForm = (field, value) =>
       setForm(prev => ({ ...prev, [field]: value }));
@@ -95,9 +111,15 @@ export default function Note({ route, navigation }) {
   };
 
   const addNote = async () => {
+    // Validation
+    if (!form.floor.trim() || !form.apartment.trim() || !form.company.trim()) {
+      Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+
     try {
       setLoading(true);
-  const token = await Storage.getItem('token');
+      const token = await Storage.getItem('token');
       if (!token) {
         Alert.alert('Erreur', 'Vous devez être connecté');
         return;
@@ -105,7 +127,7 @@ export default function Note({ route, navigation }) {
 
       const noteData = {
         city,
-        building, 
+        building,
         task,
         floor: form.floor,
         apartment: form.apartment,
@@ -115,13 +137,18 @@ export default function Note({ route, navigation }) {
         selectedDate: selectedDate.toISOString(),
       };
 
-  const response = await axios.post(`${API_BASE_URL}/notes`, noteData, {
+      const response = await axios.post(`${API_BASE_URL}/notes`, noteData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
       if (response.data.success) {
+        // Sauvegarder les valeurs pour la prochaine fois
+        await AsyncStorage.setItem('note_last_floor', form.floor);
+        await AsyncStorage.setItem('note_last_apartment', form.apartment);
+        await AsyncStorage.setItem('note_last_company', form.company);
+
         // Ajouter la nouvelle note à l'état local
         setNotes(prev => [
           {
@@ -135,10 +162,10 @@ export default function Note({ route, navigation }) {
           ...prev,
         ]);
 
-        // Réinitialiser le formulaire
+        // Réinitialiser le formulaire mais garder les valeurs
         setForm({
-          floor: '1er',
-          apartment: '1',
+          floor: form.floor,
+          apartment: form.apartment,
           company: form.company,
           open: false,
           closed: false,
@@ -223,14 +250,6 @@ export default function Note({ route, navigation }) {
 
   // handler centralisé pour centrer le formulaire dans le ScrollView
   const handleFormLayout = useScrollToForm(scrollViewRef);
-
-  useEffect(() => {
-    if (!showForm) {
-      setShowFloorPicker(false);
-      setShowAptPicker(false);
-      setShowCompanyPicker(false);
-    }
-  }, [showForm]);
 
   // Charger les notes au montage du composant et quand la date change
   useEffect(() => {
@@ -409,28 +428,22 @@ export default function Note({ route, navigation }) {
                   {/* Ligne Étage/Appart/+ */}
                   <View style={styles.formRow}>
                     <Text style={styles.label}>Étage :</Text>
-                    <TouchableOpacity
-                        style={styles.inputBtn}
-                        onPress={() => {
-                          setShowFloorPicker(d => !d);
-                          setShowAptPicker(false);
-                          setShowCompanyPicker(false);
-                        }}
-                    >
-                      <Text>{form.floor}</Text>
-                    </TouchableOpacity>
+                    <TextInput
+                        style={styles.textInput}
+                        value={form.floor}
+                        onChangeText={v => updateForm('floor', v)}
+                        placeholder="Ex: 1"
+                        keyboardType="numeric"
+                    />
 
                     <Text style={[styles.label, { marginLeft: 12 }]}>Appart :</Text>
-                    <TouchableOpacity
-                        style={styles.inputBtn}
-                        onPress={() => {
-                          setShowAptPicker(d => !d);
-                          setShowFloorPicker(false);
-                          setShowCompanyPicker(false);
-                        }}
-                    >
-                      <Text>{form.apartment}</Text>
-                    </TouchableOpacity>
+                    <TextInput
+                        style={styles.textInput}
+                        value={form.apartment}
+                        onChangeText={v => updateForm('apartment', v)}
+                        placeholder="Ex: 101"
+                        keyboardType="numeric"
+                    />
 
                     <TouchableOpacity
                         style={styles.addButton}
@@ -440,85 +453,15 @@ export default function Note({ route, navigation }) {
                     </TouchableOpacity>
                   </View>
 
-                  {/* Picker Étages */}
-                  {showFloorPicker && (
-                      <>
-                        <View style={styles.pickerContainer}>
-                          <Picker
-                              selectedValue={form.floor}
-                              onValueChange={v => updateForm('floor', v)}
-                          >
-                            <Picker.Item label="1er" value="1er" />
-                            <Picker.Item label="2ème" value="2ème" />
-                            <Picker.Item label="3ème" value="3ème" />
-                          </Picker>
-                        </View>
-                        <TouchableOpacity
-                            style={styles.okButton}
-                            onPress={() => setShowFloorPicker(false)}
-                        >
-                          <Text style={styles.okButtonText}>OK</Text>
-                        </TouchableOpacity>
-                      </>
-                  )}
-
-                  {/* Picker Appart */}
-                  {showAptPicker && (
-                      <>
-                        <View style={styles.pickerContainer}>
-                          <Picker
-                              selectedValue={form.apartment}
-                              onValueChange={v => updateForm('apartment', v)}
-                          >
-                            {[...Array(20)].map((_, i) => (
-                                <Picker.Item key={i} label={`${i + 1}`} value={`${i + 1}`} />
-                            ))}
-                          </Picker>
-                        </View>
-                        <TouchableOpacity
-                            style={styles.okButton}
-                            onPress={() => setShowAptPicker(false)}
-                        >
-                          <Text style={styles.okButtonText}>OK</Text>
-                        </TouchableOpacity>
-                      </>
-                  )}
-
-                  {/* Picker Entreprise */}
-                  {showCompanyPicker && (
-                      <>
-                        <View style={styles.pickerContainer}>
-                          <Picker
-                              selectedValue={form.company}
-                              onValueChange={v => updateForm('company', v)}
-                          >
-                            {companies.map(c => (
-                                <Picker.Item key={c} label={c} value={c} />
-                            ))}
-                          </Picker>
-                        </View>
-                        <TouchableOpacity
-                            style={styles.okButton}
-                            onPress={() => setShowCompanyPicker(false)}
-                        >
-                          <Text style={styles.okButtonText}>OK</Text>
-                        </TouchableOpacity>
-                      </>
-                  )}
-
                   {/* Champ Entreprise */}
                   <View style={styles.companyRow}>
                     <Text style={styles.label}>Entreprise :</Text>
-                    <TouchableOpacity
-                        style={styles.inputBtn}
-                        onPress={() => {
-                          setShowCompanyPicker(d => !d);
-                          setShowFloorPicker(false);
-                          setShowAptPicker(false);
-                        }}
-                    >
-                      <Text>{form.company}</Text>
-                    </TouchableOpacity>
+                    <TextInput
+                        style={[styles.textInput, { flex: 1 }]}
+                        value={form.company}
+                        onChangeText={v => updateForm('company', v)}
+                        placeholder="Nom de l'entreprise"
+                    />
                   </View>
 
                   {/* Switches */}
@@ -657,7 +600,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   label: { fontSize: 14, fontWeight: '500', color: '#333' },
-  inputBtn: {
+  textInput: {
     flex: 1,
     minWidth: 60,
     marginHorizontal: 4,
@@ -667,6 +610,7 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
     borderRadius: 6,
     backgroundColor: '#fff',
+    fontSize: 14,
   },
   addButton: {
     backgroundColor: '#f26463',
@@ -675,32 +619,9 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
+    marginLeft: 8,
   },
   addText: { color: '#fff', fontSize: 20 },
-
-  pickerContainer: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 6,
-    marginHorizontal: 4,
-    marginTop: 8,
-  },
-
-  okButton: {
-    alignSelf: 'center',
-    backgroundColor: '#f26463',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 6,
-    marginTop: 16,
-    marginBottom: 12,
-  },
-  okButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '500',
-  },
 
   switchRow: {
     flexDirection: 'row',
