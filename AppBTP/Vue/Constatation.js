@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, ScrollView, View, Text, TouchableOpacity, Image, Dimensions, Alert, TextInput, Modal } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Image, Dimensions, Alert, TextInput, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import * as ImagePicker from 'expo-image-picker';
 import { Picker } from '@react-native-picker/picker';
 import * as Print from 'expo-print';
@@ -13,14 +14,9 @@ import { API_BASE_URL } from '../config';
 import Header from './Header';
 import ScreenWrapper from '../Controleur/ScreenWrapper';
 import { displayCalendarScreen } from './Components/Calendar';
-import useScrollToForm from '../component/ScrollToForm';
 
 export default function Constatation({ route, navigation }) {
     const { city, building, task } = route.params;
-    const scrollViewRef = useRef(null);
-    const reportNumberInputRef = useRef(null);
-    const chantierNameInputRef = useRef(null);
-    const formPositionY = useRef(0);
 
     const [constatations, setConstatations] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -32,24 +28,6 @@ export default function Constatation({ route, navigation }) {
     const [hasCameraPermission, setHasCameraPermission] = useState(null);
     const [showImageSourceModal, setShowImageSourceModal] = useState(false);
     const [currentImageType, setCurrentImageType] = useState(null);
-
-    // Fonction pour scroller vers le formulaire quand un champ obtient le focus
-    const scrollToInput = () => {
-        if (scrollViewRef.current && formPositionY.current) {
-            setTimeout(() => {
-                scrollViewRef.current.scrollTo({
-                    y: Math.max(0, formPositionY.current - 100),
-                    animated: true,
-                });
-            }, 100);
-        }
-    };
-
-    // Stocker la position du formulaire
-    const handleFormLayoutCustom = (event) => {
-        formPositionY.current = event.nativeEvent.layout.y;
-        handleFormLayout(event); // Appeler aussi le handler original
-    };
 
     const companies = ['Entreprise A', 'Entreprise B', 'Entreprise C'];
 
@@ -548,7 +526,13 @@ ${Array.from({ length: totalPages }, (_, pageIndex) => {
                     task={task}
                 />
 
-                <ScrollView ref={scrollViewRef} contentContainerStyle={styles.contentContainer}>
+                <KeyboardAwareScrollView
+                    contentContainerStyle={styles.contentContainer}
+                    enableOnAndroid={true}
+                    enableAutomaticScroll={true}
+                    extraScrollHeight={100}
+                    keyboardShouldPersistTaps="handled"
+                >
                     {/* Calendrier */}
                     <View style={styles.calendarContainer}>
                         {displayCalendarScreen(selectedDate, setSelectedDate, datesWithConstatations)}
@@ -694,7 +678,7 @@ ${Array.from({ length: totalPages }, (_, pageIndex) => {
                             </TouchableOpacity>
                         </View>
                     )}
-                </ScrollView>
+                </KeyboardAwareScrollView>
 
                 {/* Modal de sélection de source d'image */}
                 <Modal
