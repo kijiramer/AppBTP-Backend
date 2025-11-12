@@ -607,12 +607,13 @@ app.put('/notes/:id', async (req, res) => {
 
 // Routes pour les constatations
 // Créer une nouvelle constatation
+// Supporte deux types: Rapport Photo (anciens champs) et Constatation simple (nouveaux champs)
 app.post('/constatations', async (req, res) => {
   const header = req.get('Authorization');
   if (!header) {
     return res.status(401).json({ success: false, message: 'You are not authorized.' });
   }
-  
+
   const token = header.split(' ')[1];
   try {
     const payload = jwt.verify(token, JWT_SECRET);
@@ -621,21 +622,38 @@ app.post('/constatations', async (req, res) => {
       throw new Error('Invalid user.');
     }
 
-    const { reportNumber, chantierName, city, building, task, company, imageAvant, imageApres, selectedDate, endDate } = req.body;
+    // Support pour les deux types de constatations
+    const {
+      // Champs pour Rapport Photo (anciens)
+      reportNumber, chantierName, company, imageAvant, imageApres,
+      // Champs pour Constatation simple (nouveaux)
+      floor, apartment, description, image,
+      // Champs communs
+      city, building, task, selectedDate, endDate
+    } = req.body;
 
-    const constatation = new Constatation({
-      reportNumber,
-      chantierName,
+    const constatationData = {
       city,
       building,
       task,
-      company,
-      imageAvant,
-      imageApres,
       selectedDate: new Date(selectedDate),
       endDate: endDate ? new Date(endDate) : undefined,
       userId: user._id
-    });
+    };
+
+    // Ajouter les champs spécifiques selon le type
+    if (reportNumber !== undefined) constatationData.reportNumber = reportNumber;
+    if (chantierName) constatationData.chantierName = chantierName;
+    if (company) constatationData.company = company;
+    if (imageAvant) constatationData.imageAvant = imageAvant;
+    if (imageApres) constatationData.imageApres = imageApres;
+
+    if (floor) constatationData.floor = floor;
+    if (apartment) constatationData.apartment = apartment;
+    if (description) constatationData.description = description;
+    if (image) constatationData.image = image;
+
+    const constatation = new Constatation(constatationData);
 
     await constatation.save();
     console.log('Constatation created successfully:', constatation);
@@ -702,21 +720,26 @@ app.put('/constatations/:id', async (req, res) => {
     const constatationId = req.params.id;
     const updateData = req.body;
 
+    // Construire l'objet de mise à jour avec tous les champs possibles
+    const updateFields = {};
+    if (updateData.intituleMission !== undefined) updateFields.intituleMission = updateData.intituleMission;
+    if (updateData.chantierName !== undefined) updateFields.chantierName = updateData.chantierName;
+    if (updateData.company !== undefined) updateFields.company = updateData.company;
+    if (updateData.city !== undefined) updateFields.city = updateData.city;
+    if (updateData.building !== undefined) updateFields.building = updateData.building;
+    if (updateData.task !== undefined) updateFields.task = updateData.task;
+    if (updateData.selectedDate !== undefined) updateFields.selectedDate = updateData.selectedDate;
+    if (updateData.endDate !== undefined) updateFields.endDate = updateData.endDate;
+    // Nouveaux champs pour Constatation simple
+    if (updateData.floor !== undefined) updateFields.floor = updateData.floor;
+    if (updateData.apartment !== undefined) updateFields.apartment = updateData.apartment;
+    if (updateData.description !== undefined) updateFields.description = updateData.description;
+    if (updateData.image !== undefined) updateFields.image = updateData.image;
+
     // Mettre à jour la constatation
     const updatedConstatation = await Constatation.findByIdAndUpdate(
       constatationId,
-      {
-        $set: {
-          intituleMission: updateData.intituleMission,
-          chantierName: updateData.chantierName,
-          company: updateData.company,
-          city: updateData.city,
-          building: updateData.building,
-          task: updateData.task,
-          selectedDate: updateData.selectedDate,
-          endDate: updateData.endDate
-        }
-      },
+      { $set: updateFields },
       { new: true }
     );
 
@@ -764,6 +787,169 @@ app.delete('/constatations/:id', async (req, res) => {
   } catch (err) {
     console.error('Error deleting constatation:', err.message);
     res.status(500).json({ success: false, message: 'Error deleting constatation', error: err.message });
+  }
+});
+
+// Routes pour les rapports photos (alias de constatations pour l'app mobile)
+// Ces routes utilisent le même modèle Constatation en backend
+// Créer un nouveau rapport photo
+app.post('/rapportsPhotos', async (req, res) => {
+  const header = req.get('Authorization');
+  if (!header) {
+    return res.status(401).json({ success: false, message: 'You are not authorized.' });
+  }
+
+  const token = header.split(' ')[1];
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(payload.id);
+    if (!user) {
+      throw new Error('Invalid user.');
+    }
+
+    const { reportNumber, chantierName, city, building, task, company, imageAvant, imageApres, selectedDate, endDate } = req.body;
+
+    const rapportPhoto = new Constatation({
+      reportNumber,
+      chantierName,
+      city,
+      building,
+      task,
+      company,
+      imageAvant,
+      imageApres,
+      selectedDate: new Date(selectedDate),
+      endDate: endDate ? new Date(endDate) : undefined,
+      userId: user._id
+    });
+
+    await rapportPhoto.save();
+    console.log('Rapport photo created successfully:', rapportPhoto);
+    res.json({ success: true, rapportPhoto });
+  } catch (err) {
+    console.error('Error creating rapport photo:', err.message);
+    res.status(500).json({ success: false, message: 'Error creating rapport photo', error: err.message });
+  }
+});
+
+// Récupérer les rapports photos d'un utilisateur pour un context spécifique
+app.get('/rapportsPhotos', async (req, res) => {
+  const header = req.get('Authorization');
+  if (!header) {
+    return res.status(401).json({ success: false, message: 'You are not authorized.' });
+  }
+
+  const token = header.split(' ')[1];
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(payload.id);
+    if (!user) {
+      throw new Error('Invalid user.');
+    }
+
+    const { city, building, task, selectedDate } = req.query;
+
+    const filter = { userId: user._id };
+    if (city) filter.city = city;
+    if (building) filter.building = building;
+    if (task) filter.task = task;
+    if (selectedDate) {
+      const startOfDay = new Date(selectedDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(selectedDate);
+      endOfDay.setHours(23, 59, 59, 999);
+      filter.selectedDate = { $gte: startOfDay, $lte: endOfDay };
+    }
+
+    const rapportsPhotos = await Constatation.find(filter).sort({ createdAt: -1 });
+    console.log('Rapports photos fetched successfully:', rapportsPhotos);
+    res.json({ success: true, rapportsPhotos });
+  } catch (err) {
+    console.error('Error fetching rapports photos:', err.message);
+    res.status(500).json({ success: false, message: 'Error fetching rapports photos', error: err.message });
+  }
+});
+
+// Mettre à jour un rapport photo
+app.put('/rapportsPhotos/:id', async (req, res) => {
+  const header = req.get('Authorization');
+  if (!header) {
+    return res.status(401).json({ success: false, message: 'You are not authorized.' });
+  }
+
+  const token = header.split(' ')[1];
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(payload.id);
+    if (!user) {
+      throw new Error('Invalid user.');
+    }
+
+    const rapportPhotoId = req.params.id;
+    const updateData = req.body;
+
+    // Mettre à jour le rapport photo
+    const updatedRapportPhoto = await Constatation.findByIdAndUpdate(
+      rapportPhotoId,
+      {
+        $set: {
+          intituleMission: updateData.intituleMission,
+          chantierName: updateData.chantierName,
+          company: updateData.company,
+          city: updateData.city,
+          building: updateData.building,
+          task: updateData.task,
+          selectedDate: updateData.selectedDate,
+          endDate: updateData.endDate
+        }
+      },
+      { new: true }
+    );
+
+    if (!updatedRapportPhoto) {
+      return res.status(404).json({ success: false, message: 'Rapport photo not found' });
+    }
+
+    res.json({ success: true, rapportPhoto: updatedRapportPhoto });
+  } catch (err) {
+    console.error('Error updating rapport photo:', err.message);
+    res.status(500).json({ success: false, message: 'Error updating rapport photo', error: err.message });
+  }
+});
+
+// Supprimer un rapport photo
+app.delete('/rapportsPhotos/:id', async (req, res) => {
+  const header = req.get('Authorization');
+  if (!header) {
+    return res.status(401).json({ success: false, message: 'You are not authorized.' });
+  }
+
+  const token = header.split(' ')[1];
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(payload.id);
+    if (!user) {
+      throw new Error('Invalid user.');
+    }
+
+    const rapportPhotoId = req.params.id;
+    const rapportPhoto = await Constatation.findById(rapportPhotoId);
+
+    if (!rapportPhoto) {
+      return res.status(404).json({ success: false, message: 'Rapport photo not found' });
+    }
+
+    // Vérifier que l'utilisateur est le propriétaire du rapport photo
+    if (rapportPhoto.userId.toString() !== user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'You are not authorized to delete this rapport photo' });
+    }
+
+    await Constatation.findByIdAndDelete(rapportPhotoId);
+    console.log('Rapport photo deleted successfully:', rapportPhotoId);
+    res.json({ success: true, message: 'Rapport photo deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting rapport photo:', err.message);
+    res.status(500).json({ success: false, message: 'Error deleting rapport photo', error: err.message });
   }
 });
 

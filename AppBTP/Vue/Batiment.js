@@ -14,7 +14,8 @@ export default function Batiment({ route, navigation }) {
 
   const tasks = [
     { name: 'Notes', icon: 'assignment' },
-    { name: 'Constatation', icon: 'remove-red-eye' },
+    { name: 'Rapport Photo', icon: 'remove-red-eye' },
+    { name: 'Constatation', icon: 'warning' },
     { name: 'Effectif', icon: 'group' }
   ];
 
@@ -39,6 +40,9 @@ export default function Batiment({ route, navigation }) {
     switch (task.name) {
         case 'Notes':
             navigation.navigate('Note', { city, building, task: task.name });
+            break;
+        case 'Rapport Photo':
+            navigation.navigate('RapportPhoto', { city, building, task: task.name });
             break;
         case 'Constatation':
             navigation.navigate('Constatation', { city, building, task: task.name });
