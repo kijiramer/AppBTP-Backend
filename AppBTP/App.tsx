@@ -11,6 +11,7 @@ import Profile from './Vue/Profile';
 import Chantier from './Vue/Chantier';
 import Batiment from './Vue/Batiment';
 import Note from './Vue/Note';
+import RapportPhoto from './Vue/RapportPhoto';
 import Constatation from './Vue/Constatation';
 import Effectif from './Vue/Effectif';
 import PrivacyPolicy from './Vue/PrivacyPolicy';
@@ -98,6 +99,7 @@ export default function App() {
             <Stack.Screen name="Chantier" component={Chantier} options={{ headerShown: false }} />
             <Stack.Screen name="Batiment" component={Batiment} options={{ headerShown: false }} />
             <Stack.Screen name="Note" component={Note} options={{ headerShown: false }} />
+            <Stack.Screen name="RapportPhoto" component={RapportPhoto} options={{ headerShown: false }} />
             <Stack.Screen name="Constatation" component={Constatation} options={{ headerShown: false }} />
             <Stack.Screen name="Effectif" component={Effectif} options={{ headerShown: false }} />
             <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicy} options={{ headerShown: false }} />

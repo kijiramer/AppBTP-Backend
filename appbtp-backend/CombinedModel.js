@@ -81,11 +81,14 @@ const noteSchema = new mongoose.Schema({
 
 const Note = mongoose.model('Note', noteSchema);
 
-// Constatation schema
+// Constatation schema - Flexible pour supporter deux types de constatations
+// Type 1: Rapport Photo (reportNumber, chantierName, company, imageAvant, imageApres)
+// Type 2: Constatation simple (floor, apartment, description, image)
 const constatationSchema = new mongoose.Schema({
+  // Champs pour Rapport Photo (optionnels)
   reportNumber: {
     type: Number,
-    required: true
+    required: false
   },
   intituleMission: {
     type: String,
@@ -93,8 +96,38 @@ const constatationSchema = new mongoose.Schema({
   },
   chantierName: {
     type: String,
-    required: true
+    required: false
   },
+  company: {
+    type: String,
+    required: false
+  },
+  imageAvant: {
+    type: String,
+    required: false
+  },
+  imageApres: {
+    type: String,
+    required: false
+  },
+  // Champs pour Constatation simple (optionnels)
+  floor: {
+    type: String,
+    required: false
+  },
+  apartment: {
+    type: String,
+    required: false
+  },
+  description: {
+    type: String,
+    required: false
+  },
+  image: {
+    type: String,
+    required: false
+  },
+  // Champs communs
   city: {
     type: String,
     required: true
@@ -104,18 +137,6 @@ const constatationSchema = new mongoose.Schema({
     required: true
   },
   task: {
-    type: String,
-    required: true
-  },
-  company: {
-    type: String,
-    required: true
-  },
-  imageAvant: {
-    type: String,
-    required: true
-  },
-  imageApres: {
     type: String,
     required: true
   },

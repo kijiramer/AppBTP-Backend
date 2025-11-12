@@ -1,12 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Image, Dimensions, Alert, TextInput, Modal } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, Text, TouchableOpacity, Image, Alert, TextInput, Modal, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
-import { Picker } from '@react-native-picker/picker';
-import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system';
 import axios from 'axios';
 import Storage from '../utils/Storage';
 import { API_BASE_URL } from '../config';
@@ -21,24 +18,63 @@ export default function Constatation({ route, navigation }) {
     const [constatations, setConstatations] = useState([]);
     const [loading, setLoading] = useState(false);
     const [selectedDate, setSelectedDate] = useState(new Date());
-    const [form, setForm] = useState({ avant: null, apres: null, company: 'Entreprise A', reportNumber: '', chantierName: '' });
+    const [form, setForm] = useState({
+        photo: null,
+        floor: '',
+        apartment: '',
+        description: ''
+    });
     const [showForm, setShowForm] = useState(false);
-    const [showCompanyPicker, setShowCompanyPicker] = useState(false);
     const [hasLibraryPermission, setHasLibraryPermission] = useState(null);
     const [hasCameraPermission, setHasCameraPermission] = useState(null);
     const [showImageSourceModal, setShowImageSourceModal] = useState(false);
-    const [currentImageType, setCurrentImageType] = useState(null);
 
-    const companies = ['Entreprise A', 'Entreprise B', 'Entreprise C'];
+    // Suggestions pour autocomplete
+    const [floorSuggestions, setFloorSuggestions] = useState([]);
+    const [apartmentSuggestions, setApartmentSuggestions] = useState([]);
+    const [showFloorSuggestions, setShowFloorSuggestions] = useState(false);
+    const [showApartmentSuggestions, setShowApartmentSuggestions] = useState(false);
+
+    // État pour les dates avec constatations (pour le calendrier)
+    const [datesWithConstatations, setDatesWithConstatations] = useState([]);
+    const [allConstatations, setAllConstatations] = useState([]);
+
+    // Charger l'historique des valeurs saisies
+    useEffect(() => {
+        const loadHistory = async () => {
+            try {
+                const floorHistory = await AsyncStorage.getItem('constatation_floor_history');
+                const apartmentHistory = await AsyncStorage.getItem('constatation_apartment_history');
+
+                if (floorHistory) {
+                    const floors = JSON.parse(floorHistory);
+                    setFloorSuggestions(floors.sort((a, b) => {
+                        const numA = parseInt(a) || 0;
+                        const numB = parseInt(b) || 0;
+                        return numA - numB;
+                    }));
+                }
+                if (apartmentHistory) {
+                    const apartments = JSON.parse(apartmentHistory);
+                    setApartmentSuggestions(apartments.sort((a, b) => {
+                        const numA = parseInt(a) || 0;
+                        const numB = parseInt(b) || 0;
+                        return numA - numB;
+                    }));
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+            }
+        };
+        loadHistory();
+    }, []);
 
     // Demande de permissions à l'ouverture du composant
     useEffect(() => {
         (async () => {
-            // Permission pour la galerie
             const libraryStatus = await ImagePicker.requestMediaLibraryPermissionsAsync();
             setHasLibraryPermission(libraryStatus.status === 'granted');
 
-            // Permission pour la caméra
             const cameraStatus = await ImagePicker.requestCameraPermissionsAsync();
             setHasCameraPermission(cameraStatus.status === 'granted');
 
@@ -51,11 +87,20 @@ export default function Constatation({ route, navigation }) {
         })();
     }, []);
 
+    // Charger les constatations au montage et quand la date change
+    useEffect(() => {
+        loadConstatations();
+    }, [city, building, task, selectedDate]);
+
+    // Charger toutes les dates avec constatations pour le calendrier
+    useEffect(() => {
+        fetchAllConstatations();
+    }, [city, building, task]);
+
     const updateForm = (field, value) =>
         setForm(prev => ({ ...prev, [field]: value }));
 
-    const openImageSourceModal = (type) => {
-        setCurrentImageType(type);
+    const openImageSourceModal = () => {
         setShowImageSourceModal(true);
     };
 
@@ -76,7 +121,7 @@ export default function Constatation({ route, navigation }) {
             });
 
             if (!result.canceled) {
-                setForm(prev => ({ ...prev, [currentImageType]: result.assets[0].uri }));
+                updateForm('photo', result.assets[0].uri);
                 setShowImageSourceModal(false);
             }
         } catch (e) {
@@ -102,7 +147,7 @@ export default function Constatation({ route, navigation }) {
             });
 
             if (!result.canceled) {
-                setForm(prev => ({ ...prev, [currentImageType]: result.assets[0].uri }));
+                updateForm('photo', result.assets[0].uri);
                 setShowImageSourceModal(false);
             }
         } catch (e) {
@@ -116,43 +161,70 @@ export default function Constatation({ route, navigation }) {
         try {
             setLoading(true);
             const token = await Storage.getItem('token');
-            if (!token) {
-                Alert.alert('Erreur', 'Vous devez être connecté');
-                return;
-            }
+            if (!token) return;
 
-            const response = await axios.get(`${API_BASE_URL}/constatations?city=${city}&building=${building}&task=${task}&selectedDate=${selectedDate.toISOString()}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+            const dateStr = selectedDate.toISOString().split('T')[0];
+            const response = await axios.get(
+                `${API_BASE_URL}/constatations?city=${city}&building=${building}&task=${task}&selectedDate=${dateStr}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
 
             if (response.data.success) {
-                setConstatations(response.data.constatations.map(constatation => ({
-                    id: constatation._id,
-                    company: constatation.company,
-                    avant: constatation.imageAvant,
-                    apres: constatation.imageApres,
-                    chantierName: constatation.chantierName,
-                    reportNumber: constatation.reportNumber,
-                })));
+                const constList = response.data.constatations || [];
+                setConstatations(constList);
             }
         } catch (err) {
             console.error('Error loading constatations:', err);
-            Alert.alert('Erreur', 'Impossible de charger les constatations');
         } finally {
             setLoading(false);
         }
     };
 
+    // Fonction pour charger toutes les constatations (pour marquer les dates)
+    const fetchAllConstatations = async () => {
+        try {
+            const token = await Storage.getItem('token');
+            if (!token) return;
+
+            const response = await axios.get(
+                `${API_BASE_URL}/constatations?city=${city}&building=${building}&task=${task}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            if (response.data.success) {
+                const allConsts = response.data.constatations || [];
+                setAllConstatations(allConsts);
+
+                // Extraire les dates uniques
+                const uniqueDates = [...new Set(
+                    allConsts.map(c => {
+                        const date = new Date(c.selectedDate);
+                        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+                    })
+                )];
+                setDatesWithConstatations(uniqueDates);
+            }
+        } catch (err) {
+            console.error('Error fetching all constatations:', err);
+        }
+    };
+
     const addConstatation = async () => {
-        if (!form.avant || !form.apres) {
-            Alert.alert('Erreur', 'Veuillez sélectionner les deux photos (avant et après)');
+        // Validation
+        if (!form.photo) {
+            Alert.alert('Erreur', 'Veuillez ajouter une photo');
             return;
         }
-
-        if (!form.reportNumber || !form.chantierName) {
-            Alert.alert('Erreur', 'Veuillez remplir le numéro de rapport et le nom du chantier');
+        if (!form.floor.trim() || !form.apartment.trim()) {
+            Alert.alert('Erreur', 'Veuillez remplir l\'étage et l\'appartement');
             return;
         }
 
@@ -165,14 +237,13 @@ export default function Constatation({ route, navigation }) {
             }
 
             const constatationData = {
-                reportNumber: parseInt(form.reportNumber, 10),
-                chantierName: form.chantierName,
+                floor: form.floor,
+                apartment: form.apartment,
+                description: form.description,
                 city,
                 building,
                 task,
-                company: form.company,
-                imageAvant: form.avant,
-                imageApres: form.apres,
+                image: form.photo,
                 selectedDate: selectedDate.toISOString(),
             };
 
@@ -183,21 +254,31 @@ export default function Constatation({ route, navigation }) {
             });
 
             if (response.data.success) {
-                // Ajouter la nouvelle constatation à l'état local
-                setConstatations(prev => [
-                    {
-                        company: form.company,
-                        avant: form.avant,
-                        apres: form.apres,
-                    },
-                    ...prev,
-                ]);
+                // Sauvegarder dans l'historique
+                const updateHistory = async (key, value, suggestions, setSuggestions) => {
+                    const newSuggestions = [...suggestions];
+                    if (!newSuggestions.includes(value)) {
+                        newSuggestions.push(value);
+                        await AsyncStorage.setItem(key, JSON.stringify(newSuggestions));
+
+                        // Trier les suggestions
+                        setSuggestions(newSuggestions.sort((a, b) => {
+                            const numA = parseInt(a) || 0;
+                            const numB = parseInt(b) || 0;
+                            return numA - numB;
+                        }));
+                    }
+                };
+
+                await updateHistory('constatation_floor_history', form.floor, floorSuggestions, setFloorSuggestions);
+                await updateHistory('constatation_apartment_history', form.apartment, apartmentSuggestions, setApartmentSuggestions);
 
                 // Réinitialiser le formulaire
-                setForm({ avant: null, apres: null, company: form.company, reportNumber: '', chantierName: '' });
+                setForm({ photo: null, floor: '', apartment: '', description: '' });
                 setShowForm(false);
 
-                // Rafraîchir les dates avec constatations pour mettre à jour les pastilles
+                // Rafraîchir les constatations
+                loadConstatations();
                 fetchAllConstatations();
 
                 Alert.alert('Succès', 'Constatation ajoutée avec succès');
@@ -210,310 +291,41 @@ export default function Constatation({ route, navigation }) {
         }
     };
 
-    const handleFormLayout = useScrollToForm(scrollViewRef);
+    const deleteConstatation = (id) => {
+        Alert.alert(
+            'Confirmation',
+            'Voulez-vous vraiment supprimer cette constatation ?',
+            [
+                { text: 'Annuler', style: 'cancel' },
+                {
+                    text: 'Supprimer',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            setLoading(true);
+                            const token = await Storage.getItem('token');
+                            const response = await axios.delete(`${API_BASE_URL}/constatations/${id}`, {
+                                headers: {
+                                    Authorization: `Bearer ${token}`,
+                                },
+                            });
 
-    const exportToPDF = async () => {
-        if (constatations.length === 0) {
-            Alert.alert('Erreur', 'Aucune constatation à exporter');
-            return;
-        }
-
-        try {
-            setLoading(true);
-
-            // Fonction helper pour convertir une URI en base64 (React Native compatible)
-            const convertUriToBase64 = async (uri) => {
-                try {
-                    const base64 = await FileSystem.readAsStringAsync(uri, {
-                        encoding: FileSystem.EncodingType.Base64,
-                    });
-                    return `data:image/jpeg;base64,${base64}`;
-                } catch (error) {
-                    console.error('Error converting URI to base64:', error);
-                    throw error;
-                }
-            };
-
-            // Récupérer le logo et le convertir en base64
-            const { Asset } = require('expo-asset');
-            const logoAsset = Asset.fromModule(require('../assets/logo.jpg'));
-            await logoAsset.downloadAsync();
-            const logoBase64 = await convertUriToBase64(logoAsset.localUri || logoAsset.uri);
-
-            // Convertir toutes les images des constatations en base64
-            const constatationsWithBase64 = await Promise.all(
-                constatations.map(async (c) => {
-                    try {
-                        const avantBase64 = await convertUriToBase64(c.avant);
-                        const apresBase64 = await convertUriToBase64(c.apres);
-                        return {
-                            ...c,
-                            avantBase64,
-                            apresBase64
-                        };
-                    } catch (error) {
-                        console.error('Erreur conversion image:', error);
-                        return null;
-                    }
-                })
-            );
-
-            // Filtrer les constatations nulles (erreur de conversion)
-            const validConstatations = constatationsWithBase64.filter(c => c !== null);
-
-            if (validConstatations.length === 0) {
-                Alert.alert('Erreur', 'Impossible de charger les images');
-                return;
-            }
-
-            // Récupérer les informations depuis les constatations déjà chargées
-            const chantierName = validConstatations[0]?.chantierName || building || city;
-            const promoteur = validConstatations[0]?.company || 'N/A';
-
-            console.log('Informations PDF:', { chantierName, promoteur, building, city });
-
-            // Calculer le nombre de pages (3 paires par page)
-            const totalPages = Math.ceil(validConstatations.length / 3);
-
-            // Générer le HTML avec la mise en page verticale comme le PDF de référence
-            const htmlContent = `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        @page {
-            size: A4;
-            margin: 15mm;
-        }
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-            background: white;
-            color: #000;
-        }
-        .page {
-            page-break-after: always;
-            padding: 20px;
-        }
-        .page:last-child {
-            page-break-after: auto;
-        }
-        /* Logo centré en haut */
-        .logo-container {
-            text-align: center;
-            margin-bottom: 15px;
-        }
-        .logo-container img {
-            width: 160px;
-            height: 80px;
-            object-fit: contain;
-        }
-        /* Titre principal */
-        .main-title {
-            text-align: center;
-            font-family: 'Times New Roman', Times, serif;
-            font-size: 20px;
-            font-weight: bold;
-            margin-bottom: 20px;
-            text-decoration: underline;
-        }
-        /* Encadré d'informations */
-        .info-box {
-            width: 100%;
-            margin: 0 auto 30px auto;
-            border: 2px solid #000;
-            border-radius: 10px;
-            padding: 15px;
-        }
-        .info-line {
-            font-size: 11px;
-            margin-bottom: 5px;
-        }
-        .info-line:last-child {
-            margin-bottom: 0;
-        }
-        .info-line.bold {
-            font-weight: bold;
-        }
-        /* Section photos - disposition VERTICALE */
-        .photos-section {
-            margin-top: 20px;
-        }
-        /* Paire de photos AVANT/APRÈS (disposition horizontale dans chaque paire) */
-        .photo-pair {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 30px;
-            page-break-inside: avoid;
-        }
-        .photo-block {
-            text-align: center;
-        }
-        .photo-title {
-            font-weight: bold;
-            font-size: 13px;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-        }
-        .photo-block img {
-            width: 240px;
-            height: 180px;
-            object-fit: cover;
-            border: 1px solid #999;
-        }
-        .arrow-separator {
-            font-size: 40px;
-            font-weight: bold;
-            margin: 0 20px;
-            color: #000;
-        }
-        /* Pied de page */
-        .footer {
-            text-align: center;
-            font-size: 10px;
-            color: #333;
-            margin-top: 30px;
-        }
-    </style>
-</head>
-<body>
-${Array.from({ length: totalPages }, (_, pageIndex) => {
-    const startIndex = pageIndex * 3;
-    const endIndex = Math.min(startIndex + 3, validConstatations.length);
-    const pagePairs = validConstatations.slice(startIndex, endIndex);
-
-    return `
-    <div class="page">
-        <!-- Logo centré -->
-        <div class="logo-container">
-            <img src="${logoBase64}" alt="Logo" />
-        </div>
-
-        <!-- Titre principal -->
-        <div class="main-title">Rapport Photo d'Intervention - ${chantierName}</div>
-
-        <!-- Encadré d'informations -->
-        <div class="info-box">
-            <div class="info-line bold">
-                PROMOTEUR: ${promoteur.toUpperCase()} - VILLE: ${city.toUpperCase()}
-            </div>
-            <div class="info-line">
-                Mission: ${task}
-            </div>
-            <div class="info-line">
-                Intervention le: ${selectedDate.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-            </div>
-        </div>
-
-        <!-- Section photos (3 paires par page maximum, disposition verticale) -->
-        <div class="photos-section">
-            ${pagePairs.map((c, index) => `
-            <div class="photo-pair">
-                <div class="photo-block">
-                    <div class="photo-title">AVANT</div>
-                    <img src="${c.avantBase64}" alt="Photo avant ${startIndex + index + 1}" />
-                </div>
-                <div class="arrow-separator">→</div>
-                <div class="photo-block">
-                    <div class="photo-title">APRÈS</div>
-                    <img src="${c.apresBase64}" alt="Photo après ${startIndex + index + 1}" />
-                </div>
-            </div>
-            `).join('')}
-        </div>
-
-        <!-- Pied de page -->
-        <div class="footer">
-            Page ${pageIndex + 1} / ${totalPages}
-        </div>
-    </div>
-    `;
-}).join('')}
-</body>
-</html>
-            `;
-
-            // Créer le PDF
-            const { uri } = await Print.printToFileAsync({
-                html: htmlContent,
-                width: 595, // A4 width in points
-                height: 842 // A4 height in points
-            });
-
-            // Nom du fichier
-            const fileName = `rapport-intervention-${city}-${selectedDate.toLocaleDateString('fr-FR').replace(/\//g, '-')}.pdf`;
-
-            // Partager le PDF
-            if (await Sharing.isAvailableAsync()) {
-                await Sharing.shareAsync(uri, {
-                    mimeType: 'application/pdf',
-                    dialogTitle: fileName,
-                    UTI: 'com.adobe.pdf'
-                });
-                Alert.alert('Succès', 'PDF exporté avec succès');
-            } else {
-                Alert.alert('Erreur', 'Le partage n\'est pas disponible sur cet appareil');
-            }
-        } catch (err) {
-            console.error('Error exporting PDF:', err);
-            Alert.alert('Erreur', `Impossible d'exporter le PDF: ${err.message}`);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        if (!showForm) setShowCompanyPicker(false);
-    }, [showForm]);
-
-    // Charger les constatations au montage du composant et quand la date change
-    useEffect(() => {
-        loadConstatations();
-    }, [city, building, task, selectedDate]);
-
-    // Charger toutes les constatations pour marquer les dates avec pastilles
-    const [allConstatations, setAllConstatations] = useState([]);
-    const [datesWithConstatations, setDatesWithConstatations] = useState([]);
-
-    const fetchAllConstatations = async () => {
-        try {
-            const token = await Storage.getItem('token');
-            if (!token) return;
-
-            const response = await axios.get(`${API_BASE_URL}/constatations?city=${city}&building=${building}&task=${task}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
+                            if (response.data.success) {
+                                loadConstatations();
+                                fetchAllConstatations();
+                                Alert.alert('Succès', 'Constatation supprimée');
+                            }
+                        } catch (err) {
+                            console.error('Error deleting constatation:', err);
+                            Alert.alert('Erreur', 'Impossible de supprimer la constatation');
+                        } finally {
+                            setLoading(false);
+                        }
+                    },
                 },
-            });
-
-            if (response.data.success) {
-                const allConsts = response.data.constatations || [];
-                setAllConstatations(allConsts);
-
-                // Extraire les dates uniques avec constatations
-                const uniqueDates = [...new Set(
-                    allConsts.map(c => {
-                        const date = new Date(c.selectedDate);
-                        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-                    })
-                )];
-                setDatesWithConstatations(uniqueDates);
-            }
-        } catch (err) {
-            console.error('Error loading all constatations:', err);
-        }
+            ]
+        );
     };
-
-    useEffect(() => {
-        fetchAllConstatations();
-    }, [city, building, task]);
 
     return (
         <ScreenWrapper>
@@ -530,49 +342,48 @@ ${Array.from({ length: totalPages }, (_, pageIndex) => {
                     contentContainerStyle={styles.contentContainer}
                     enableOnAndroid={true}
                     enableAutomaticScroll={true}
-                    extraScrollHeight={100}
+                    extraScrollHeight={20}
                     keyboardShouldPersistTaps="handled"
+                    enableResetScrollToCoords={false}
                 >
                     {/* Calendrier */}
                     <View style={styles.calendarContainer}>
                         {displayCalendarScreen(selectedDate, setSelectedDate, datesWithConstatations)}
                     </View>
 
-                    {/* Bouton Export PDF */}
+                    {/* Liste des constatations existantes */}
                     {constatations.length > 0 && (
-                        <TouchableOpacity
-                            style={styles.exportButton}
-                            onPress={exportToPDF}
-                            disabled={loading}
-                        >
-                            <Text style={styles.exportButtonText}>
-                                {loading ? 'Export en cours...' : '📄 Exporter en PDF'}
-                            </Text>
-                        </TouchableOpacity>
+                        <View style={styles.listContainer}>
+                            <Text style={styles.sectionTitle}>Constatations du jour</Text>
+                            {constatations.map((constat, idx) => (
+                                <View key={idx} style={styles.constatCard}>
+                                    <View style={styles.constatRow}>
+                                        {/* Photo */}
+                                        <Image source={{ uri: constat.image }} style={styles.constatImage} />
+
+                                        {/* Texte à droite */}
+                                        <View style={styles.constatTextContainer}>
+                                            <Text style={styles.constatLabel}>Étage: {constat.floor}</Text>
+                                            <Text style={styles.constatLabel}>Appart: {constat.apartment}</Text>
+                                            {constat.description ? (
+                                                <Text style={styles.constatDescription}>{constat.description}</Text>
+                                            ) : null}
+                                        </View>
+                                    </View>
+
+                                    {/* Bouton supprimer */}
+                                    <TouchableOpacity
+                                        style={styles.deleteButton}
+                                        onPress={() => deleteConstatation(constat._id)}
+                                    >
+                                        <Text style={styles.deleteButtonText}>Supprimer</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            ))}
+                        </View>
                     )}
 
-                    {/* Liste des constatations */}
-                    {constatations.map((c, i) => (
-                        <View key={c.id || i} style={styles.card}>
-                            {/* Badge Entreprise */}
-                            <View style={styles.badge}>
-                                <Text style={styles.badgeText}>{c.company}</Text>
-                            </View>
-
-                            <View style={styles.imageRow}>
-                                <View style={styles.imageWrapper}>
-                                    <Text style={styles.imageLabel}>Avant</Text>
-                                    <Image source={{ uri: c.avant }} style={styles.image} />
-                                </View>
-                                <View style={styles.imageWrapper}>
-                                    <Text style={styles.imageLabel}>Après</Text>
-                                    <Image source={{ uri: c.apres }} style={styles.image} />
-                                </View>
-                            </View>
-                        </View>
-                    ))}
-
-                    {/* Bouton “＋” */}
+                    {/* Bouton pour afficher le formulaire */}
                     {!showForm && (
                         <TouchableOpacity
                             style={styles.toggleCircle}
@@ -582,10 +393,10 @@ ${Array.from({ length: totalPages }, (_, pageIndex) => {
                         </TouchableOpacity>
                     )}
 
-                    {/* Formulaire */}
+                    {/* Formulaire d'ajout */}
                     {showForm && (
-                        <View style={styles.formCard} onLayout={handleFormLayoutCustom}>
-                            {/* Bouton ✕ */}
+                        <View style={styles.formCard}>
+                            {/* Bouton fermer */}
                             <TouchableOpacity
                                 style={styles.closeFormBtn}
                                 onPress={() => setShowForm(false)}
@@ -593,132 +404,148 @@ ${Array.from({ length: totalPages }, (_, pageIndex) => {
                                 <Text style={styles.closeFormText}>✕</Text>
                             </TouchableOpacity>
 
-                            {/* Numéro de rapport */}
-                            <Text style={styles.label}>Numéro de rapport :</Text>
-                            <TextInput
-                                ref={reportNumberInputRef}
-                                style={styles.textInput}
-                                placeholder="Ex: 123"
-                                keyboardType="numeric"
-                                value={form.reportNumber}
-                                onChangeText={v => updateForm('reportNumber', v)}
-                                onFocus={scrollToInput}
-                            />
+                            <Text style={styles.formTitle}>Nouvelle Constatation</Text>
 
-                            {/* Nom du chantier */}
-                            <Text style={styles.label}>Nom du chantier :</Text>
-                            <TextInput
-                                ref={chantierNameInputRef}
-                                style={styles.textInput}
-                                placeholder="Ex: Chantier XYZ"
-                                value={form.chantierName}
-                                onChangeText={v => updateForm('chantierName', v)}
-                                onFocus={scrollToInput}
-                            />
+                            {/* Photo */}
+                            <View style={styles.photoSection}>
+                                <Text style={styles.label}>Photo :</Text>
+                                <TouchableOpacity
+                                    style={styles.photoButton}
+                                    onPress={openImageSourceModal}
+                                >
+                                    {form.photo ? (
+                                        <Image source={{ uri: form.photo }} style={styles.photoPreview} />
+                                    ) : (
+                                        <Text style={styles.photoButtonText}>Ajouter une photo</Text>
+                                    )}
+                                </TouchableOpacity>
+                            </View>
 
-                            {/* Choix Entreprise */}
-                            <Text style={styles.label}>Entreprise :</Text>
-                            <TouchableOpacity
-                                style={styles.inputBtn}
-                                onPress={() => setShowCompanyPicker(d => !d)}
-                            >
-                                <Text>{form.company}</Text>
-                            </TouchableOpacity>
-                            {showCompanyPicker && (
-                                <>
-                                    <View style={styles.pickerContainer}>
-                                        <Picker
-                                            selectedValue={form.company}
-                                            onValueChange={v => updateForm('company', v)}
-                                        >
-                                            {companies.map(c => (
-                                                <Picker.Item key={c} label={c} value={c} />
-                                            ))}
-                                        </Picker>
-                                    </View>
-                                    <TouchableOpacity
-                                        style={styles.okButton}
-                                        onPress={() => setShowCompanyPicker(false)}
-                                    >
-                                        <Text style={styles.okButtonText}>OK</Text>
-                                    </TouchableOpacity>
-                                </>
-                            )}
+                            {/* Étage */}
+                            <View style={styles.formRow}>
+                                <Text style={styles.label}>Étage :</Text>
+                                <View style={{ flex: 1 }}>
+                                    <TextInput
+                                        style={styles.textInput}
+                                        value={form.floor}
+                                        onChangeText={v => updateForm('floor', v)}
+                                        placeholder="Ex: 1"
+                                        keyboardType="numeric"
+                                        onFocus={() => setShowFloorSuggestions(true)}
+                                        onBlur={() => setTimeout(() => setShowFloorSuggestions(false), 200)}
+                                    />
+                                    {showFloorSuggestions && floorSuggestions.length > 0 && (
+                                        <View style={styles.suggestionsContainer}>
+                                            <ScrollView nestedScrollEnabled={true} keyboardShouldPersistTaps="handled">
+                                                {floorSuggestions.map((suggestion, idx) => (
+                                                    <TouchableOpacity
+                                                        key={idx}
+                                                        style={styles.suggestionItem}
+                                                        onPress={() => {
+                                                            updateForm('floor', suggestion);
+                                                            setShowFloorSuggestions(false);
+                                                        }}
+                                                    >
+                                                        <Text style={styles.suggestionText}>{suggestion}</Text>
+                                                    </TouchableOpacity>
+                                                ))}
+                                            </ScrollView>
+                                        </View>
+                                    )}
+                                </View>
+                            </View>
 
-                            {/* Sélection Avant */}
-                            <Text style={styles.label}>Photo Avant :</Text>
-                            <TouchableOpacity
-                                style={styles.photoButton}
-                                onPress={() => openImageSourceModal('avant')}
-                            >
-                                <Text style={styles.photoButtonText}>
-                                    {form.avant ? 'Changer photo' : 'Choisir photo'}
-                                </Text>
-                            </TouchableOpacity>
-                            {form.avant && <Image source={{ uri: form.avant }} style={styles.preview} />}
+                            {/* Appartement */}
+                            <View style={styles.formRow}>
+                                <Text style={styles.label}>Appartement :</Text>
+                                <View style={{ flex: 1 }}>
+                                    <TextInput
+                                        style={styles.textInput}
+                                        value={form.apartment}
+                                        onChangeText={v => updateForm('apartment', v)}
+                                        placeholder="Ex: 101"
+                                        keyboardType="numeric"
+                                        onFocus={() => setShowApartmentSuggestions(true)}
+                                        onBlur={() => setTimeout(() => setShowApartmentSuggestions(false), 200)}
+                                    />
+                                    {showApartmentSuggestions && apartmentSuggestions.length > 0 && (
+                                        <View style={styles.suggestionsContainer}>
+                                            <ScrollView nestedScrollEnabled={true} keyboardShouldPersistTaps="handled">
+                                                {apartmentSuggestions.map((suggestion, idx) => (
+                                                    <TouchableOpacity
+                                                        key={idx}
+                                                        style={styles.suggestionItem}
+                                                        onPress={() => {
+                                                            updateForm('apartment', suggestion);
+                                                            setShowApartmentSuggestions(false);
+                                                        }}
+                                                    >
+                                                        <Text style={styles.suggestionText}>{suggestion}</Text>
+                                                    </TouchableOpacity>
+                                                ))}
+                                            </ScrollView>
+                                        </View>
+                                    )}
+                                </View>
+                            </View>
 
-                            {/* Sélection Après */}
-                            <Text style={styles.label}>Photo Après :</Text>
-                            <TouchableOpacity
-                                style={styles.photoButton}
-                                onPress={() => openImageSourceModal('apres')}
-                            >
-                                <Text style={styles.photoButtonText}>
-                                    {form.apres ? 'Changer photo' : 'Choisir photo'}
-                                </Text>
-                            </TouchableOpacity>
-                            {form.apres && <Image source={{ uri: form.apres }} style={styles.preview} />}
+                            {/* Description */}
+                            <View style={styles.descriptionRow}>
+                                <Text style={styles.label}>Description :</Text>
+                                <TextInput
+                                    style={styles.textArea}
+                                    value={form.description}
+                                    onChangeText={v => updateForm('description', v)}
+                                    placeholder="Description de la constatation (optionnel)"
+                                    multiline
+                                    numberOfLines={4}
+                                />
+                            </View>
 
                             {/* Bouton Ajouter */}
                             <TouchableOpacity
-                                style={styles.validateButton}
+                                style={styles.submitButton}
                                 onPress={addConstatation}
+                                disabled={loading}
                             >
-                                <Text style={styles.validateText}>Valider</Text>
+                                <Text style={styles.submitButtonText}>
+                                    {loading ? 'Ajout en cours...' : 'Ajouter la constatation'}
+                                </Text>
                             </TouchableOpacity>
                         </View>
                     )}
                 </KeyboardAwareScrollView>
 
-                {/* Modal de sélection de source d'image */}
+                {/* Modal pour choisir source image */}
                 <Modal
                     visible={showImageSourceModal}
                     transparent={true}
-                    animationType="fade"
+                    animationType="slide"
                     onRequestClose={() => setShowImageSourceModal(false)}
                 >
-                    <TouchableOpacity
-                        style={styles.modalOverlay}
-                        activeOpacity={1}
-                        onPress={() => setShowImageSourceModal(false)}
-                    >
+                    <View style={styles.modalOverlay}>
                         <View style={styles.modalContent}>
-                            <Text style={styles.modalTitle}>Choisir une photo</Text>
-
-                            <TouchableOpacity
-                                style={styles.modalButton}
-                                onPress={takePhoto}
-                            >
-                                <Text style={styles.modalButtonIcon}>📷</Text>
-                                <Text style={styles.modalButtonText}>Prendre une photo</Text>
-                            </TouchableOpacity>
-
+                            <Text style={styles.modalTitle}>Choisir une source</Text>
                             <TouchableOpacity
                                 style={styles.modalButton}
                                 onPress={pickImageFromGallery}
                             >
-                                <Text style={styles.modalButtonIcon}>🖼️</Text>
-                                <Text style={styles.modalButtonText}>Choisir depuis la galerie</Text>
+                                <Text style={styles.modalButtonText}>Galerie</Text>
                             </TouchableOpacity>
-
+                            <TouchableOpacity
+                                style={styles.modalButton}
+                                onPress={takePhoto}
+                            >
+                                <Text style={styles.modalButtonText}>Prendre une photo</Text>
+                            </TouchableOpacity>
                             <TouchableOpacity
                                 style={[styles.modalButton, styles.modalCancelButton]}
                                 onPress={() => setShowImageSourceModal(false)}
                             >
-                                <Text style={styles.modalCancelText}>Annuler</Text>
+                                <Text style={styles.modalButtonText}>Annuler</Text>
                             </TouchableOpacity>
                         </View>
-                    </TouchableOpacity>
+                    </View>
                 </Modal>
             </SafeAreaView>
         </ScreenWrapper>
@@ -728,198 +555,261 @@ ${Array.from({ length: totalPages }, (_, pageIndex) => {
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#f9f9f9' },
     contentContainer: { padding: 16 },
-    calendarContainer: { marginBottom: 24 },
-
-    exportButton: {
-        backgroundColor: '#4caf50',
-        padding: 14,
-        borderRadius: 8,
-        alignItems: 'center',
-        marginBottom: 20,
-        elevation: 3,
+    calendarContainer: {
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 8,
+        marginBottom: 16,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 3,
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
     },
-    exportButtonText: {
-        color: '#fff',
+    sectionTitle: {
+        fontSize: 18,
         fontWeight: '600',
-        fontSize: 16,
+        color: '#333',
+        marginBottom: 12,
     },
-
-    card: {
+    listContainer: {
+        marginBottom: 16,
+    },
+    constatCard: {
         backgroundColor: '#fff',
         borderRadius: 12,
         padding: 12,
-        marginTop: 15,
-        marginBottom: 16,
-        borderWidth: 1,
-        borderColor: '#f26463',
-        position: 'relative',
+        marginBottom: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
     },
-    badge: {
-        position: 'absolute',
-        top: -10,
-        left: 16,
-        backgroundColor: '#f26463',
-        paddingHorizontal: 12,
-        paddingVertical: 4,
-        borderRadius: 20,
+    constatRow: {
+        flexDirection: 'row',
+        marginBottom: 8,
     },
-    badgeText: { color: '#fff', fontWeight: '600', fontSize: 12 },
-
-    cardTitle: { fontWeight: '600', marginBottom: 8, fontSize: 16, marginTop: 8 },
-    imageRow: { flexDirection: 'row', justifyContent: 'space-between' },
-    image: { width: '100%', height: 160, borderRadius: 8 },
-
+    constatImage: {
+        width: 120,
+        height: 120,
+        borderRadius: 8,
+        backgroundColor: '#e0e0e0',
+    },
+    constatTextContainer: {
+        flex: 1,
+        marginLeft: 12,
+        justifyContent: 'flex-start',
+    },
+    constatLabel: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: 4,
+    },
+    constatDescription: {
+        fontSize: 13,
+        color: '#666',
+        marginTop: 8,
+        lineHeight: 18,
+    },
+    deleteButton: {
+        backgroundColor: '#ff4444',
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 8,
+        alignSelf: 'flex-end',
+    },
+    deleteButtonText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: '600',
+    },
     toggleCircle: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
+        width: 56,
+        height: 56,
+        borderRadius: 28,
         backgroundColor: '#f26463',
-        justifyContent: 'center',
         alignItems: 'center',
+        justifyContent: 'center',
         alignSelf: 'center',
-        marginBottom: 24,
+        marginVertical: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
         elevation: 5,
     },
     toggleCircleText: {
         color: '#fff',
         fontSize: 28,
-        fontWeight: '600',
+        fontWeight: 'bold',
     },
-
     formCard: {
         backgroundColor: '#fff',
-        borderRadius: 8,
-        padding: 12,
-        marginBottom: 24,
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
         elevation: 3,
     },
-    closeFormBtn: { alignSelf: 'flex-end', marginBottom: 8 },
-    closeFormText: { fontSize: 18, color: '#f26463' },
-    label: { fontSize: 14, fontWeight: '500', marginTop: 12, color: '#333' },
-    textInput: {
-        marginTop: 4,
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 6,
-        padding: 8,
-        fontSize: 14,
+    closeFormBtn: {
+        position: 'absolute',
+        top: 8,
+        right: 8,
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: '#f0f0f0',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 10,
     },
-    inputBtn: {
-        marginTop: 4,
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 6,
-        padding: 8,
+    closeFormText: {
+        fontSize: 20,
+        color: '#666',
+        fontWeight: 'bold',
     },
-    pickerContainer: {
-        backgroundColor: '#fff',
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 6,
-        marginTop: 8,
+    formTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: 16,
+        textAlign: 'center',
     },
-    okButton: {
-        alignSelf: 'center',
-        backgroundColor: '#f26463',
-        paddingVertical: 8,
-        paddingHorizontal: 16,
-        borderRadius: 6,
-        marginTop: 16,
-        marginBottom: 12,
+    photoSection: {
+        marginBottom: 16,
     },
-    okButtonText: { color: '#fff', fontSize: 14, fontWeight: '500' },
     photoButton: {
-        backgroundColor: '#f26463',
-        padding: 10,
-        borderRadius: 6,
-        alignItems: 'center',
-        marginTop: 8,
-    },
-    photoButtonText: { color: '#fff', fontWeight: '600' },
-    preview: {
-        marginTop: 8,
-        width: '100%',
         height: 200,
+        backgroundColor: '#f0f0f0',
         borderRadius: 8,
-    },
-    validateButton: {
-        marginTop: 16,
-        backgroundColor: '#4caf50',
-        padding: 12,
-        borderRadius: 6,
         alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderStyle: 'dashed',
     },
-    validateText: { color: '#fff', fontWeight: '600' },
-
-    imageWrapper: {
-        width: '48%',
-        alignItems: 'center',
-    },
-    imageLabel: {
+    photoButtonText: {
         fontSize: 14,
-        fontWeight: '500',
-        marginBottom: 4,
         color: '#666',
     },
-
-    // Styles pour le modal
+    photoPreview: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 8,
+    },
+    formRow: {
+        marginBottom: 12,
+    },
+    descriptionRow: {
+        marginBottom: 16,
+    },
+    label: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: '#333',
+        marginBottom: 6,
+    },
+    textInput: {
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 8,
+        backgroundColor: '#fff',
+        fontSize: 14,
+    },
+    textArea: {
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 8,
+        backgroundColor: '#fff',
+        fontSize: 14,
+        minHeight: 100,
+        textAlignVertical: 'top',
+    },
+    submitButton: {
+        backgroundColor: '#f26463',
+        paddingVertical: 14,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    submitButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    suggestionsContainer: {
+        position: 'absolute',
+        top: 42,
+        left: 0,
+        right: 0,
+        backgroundColor: '#fff',
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderTopWidth: 0,
+        borderBottomLeftRadius: 8,
+        borderBottomRightRadius: 8,
+        maxHeight: 180,
+        zIndex: 10000,
+        elevation: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+        overflow: 'hidden',
+    },
+    suggestionItem: {
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#e8e8e8',
+        backgroundColor: '#fff',
+    },
+    suggestionText: {
+        fontSize: 15,
+        color: '#333',
+        fontWeight: '400',
+    },
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'rgba(0,0,0,0.5)',
         justifyContent: 'center',
         alignItems: 'center',
     },
     modalContent: {
+        width: '80%',
         backgroundColor: '#fff',
         borderRadius: 12,
         padding: 20,
-        width: '80%',
-        maxWidth: 400,
-        elevation: 5,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
+        alignItems: 'center',
     },
     modalTitle: {
         fontSize: 18,
         fontWeight: '600',
-        textAlign: 'center',
-        marginBottom: 20,
         color: '#333',
+        marginBottom: 20,
     },
     modalButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
+        width: '100%',
         backgroundColor: '#f26463',
-        padding: 15,
+        paddingVertical: 14,
         borderRadius: 8,
-        marginBottom: 12,
-        elevation: 2,
+        alignItems: 'center',
+        marginBottom: 10,
     },
-    modalButtonIcon: {
-        fontSize: 24,
-        marginRight: 12,
+    modalCancelButton: {
+        backgroundColor: '#999',
     },
     modalButtonText: {
         color: '#fff',
         fontSize: 16,
-        fontWeight: '500',
-    },
-    modalCancelButton: {
-        backgroundColor: '#ddd',
-        marginTop: 8,
-        justifyContent: 'center',
-    },
-    modalCancelText: {
-        color: '#333',
-        fontSize: 16,
-        fontWeight: '500',
-        textAlign: 'center',
-        flex: 1,
+        fontWeight: '600',
     },
 });
