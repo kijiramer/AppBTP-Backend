@@ -1,8 +1,7 @@
 // Note.js
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
-  ScrollView,
   View,
   Text,
   TouchableOpacity,
@@ -11,6 +10,7 @@ import {
   TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import moment from 'moment';
 import 'moment/locale/fr';
 import axios from 'axios';
@@ -21,17 +21,11 @@ import Header from './Header';
 import ScreenWrapper from '../Controleur/ScreenWrapper';
 import { displayCalendarScreen } from './Components/Calendar';
 import { API_BASE_URL } from '../config';
-import useScrollToForm from '../component/ScrollToForm';
 
 moment.locale('fr');
 
 export default function Note({ route, navigation }) {
   const { city, building, task } = route.params;
-  const scrollViewRef = useRef(null);
-  const floorInputRef = useRef(null);
-  const apartmentInputRef = useRef(null);
-  const companyInputRef = useRef(null);
-  const formPositionY = useRef(0);
 
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -46,24 +40,6 @@ export default function Note({ route, navigation }) {
     closedTime: '',
   });
   const [showForm, setShowForm] = useState(false);
-
-  // Fonction pour scroller vers le formulaire quand un champ obtient le focus
-  const scrollToInput = () => {
-    if (scrollViewRef.current && formPositionY.current) {
-      setTimeout(() => {
-        scrollViewRef.current.scrollTo({
-          y: Math.max(0, formPositionY.current - 100),
-          animated: true,
-        });
-      }, 100);
-    }
-  };
-
-  // Stocker la position du formulaire
-  const handleFormLayoutCustom = (event) => {
-    formPositionY.current = event.nativeEvent.layout.y;
-    handleFormLayout(event); // Appeler aussi le handler original
-  };
 
   // Charger les dernières valeurs saisies
   useEffect(() => {
@@ -270,9 +246,6 @@ export default function Note({ route, navigation }) {
     );
   };
 
-  // handler centralisé pour centrer le formulaire dans le ScrollView
-  const handleFormLayout = useScrollToForm(scrollViewRef);
-
   // Charger les notes au montage du composant et quand la date change
   useEffect(() => {
     loadNotes();
@@ -374,9 +347,12 @@ export default function Note({ route, navigation }) {
               task={task}
           />
 
-          <ScrollView
-              ref={scrollViewRef}
+          <KeyboardAwareScrollView
               contentContainerStyle={styles.contentContainer}
+              enableOnAndroid={true}
+              enableAutomaticScroll={true}
+              extraScrollHeight={100}
+              keyboardShouldPersistTaps="handled"
           >
             {/* Calendrier */}
             <View style={styles.calendarContainer}>
@@ -438,7 +414,7 @@ export default function Note({ route, navigation }) {
 
             {/* Formulaire */}
             {showForm && (
-                <View style={styles.formCard} onLayout={handleFormLayoutCustom}>
+                <View style={styles.formCard}>
                   {/* Bouton ✕ */}
                   <TouchableOpacity
                       style={styles.closeFormBtn}
@@ -451,24 +427,20 @@ export default function Note({ route, navigation }) {
                   <View style={styles.formRow}>
                     <Text style={styles.label}>Étage :</Text>
                     <TextInput
-                        ref={floorInputRef}
                         style={styles.textInput}
                         value={form.floor}
                         onChangeText={v => updateForm('floor', v)}
                         placeholder="Ex: 1"
                         keyboardType="numeric"
-                        onFocus={() => scrollToInput(floorInputRef)}
                     />
 
                     <Text style={[styles.label, { marginLeft: 12 }]}>Appart :</Text>
                     <TextInput
-                        ref={apartmentInputRef}
                         style={styles.textInput}
                         value={form.apartment}
                         onChangeText={v => updateForm('apartment', v)}
                         placeholder="Ex: 101"
                         keyboardType="numeric"
-                        onFocus={() => scrollToInput(apartmentInputRef)}
                     />
 
                     <TouchableOpacity
@@ -483,12 +455,10 @@ export default function Note({ route, navigation }) {
                   <View style={styles.companyRow}>
                     <Text style={styles.label}>Entreprise :</Text>
                     <TextInput
-                        ref={companyInputRef}
                         style={[styles.textInput, { flex: 1 }]}
                         value={form.company}
                         onChangeText={v => updateForm('company', v)}
                         placeholder="Nom de l'entreprise"
-                        onFocus={() => scrollToInput(companyInputRef)}
                     />
                   </View>
 
@@ -505,7 +475,7 @@ export default function Note({ route, navigation }) {
                   </View>
                 </View>
             )}
-          </ScrollView>
+          </KeyboardAwareScrollView>
         </SafeAreaView>
       </ScreenWrapper>
   );
