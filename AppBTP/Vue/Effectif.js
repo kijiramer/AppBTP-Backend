@@ -16,7 +16,10 @@ moment.locale('fr');
 export default function Effectif({ route, navigation }) {
   const { city, building, task } = route.params;
   const scrollViewRef = useRef(null);
+  const nombrePersonnesInputRef = useRef(null);
+  const formViewRef = useRef(null);
   const handleFormLayout = useScrollToForm(scrollViewRef);
+
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [effectifs, setEffectifs] = useState([]);
   const [form, setForm] = useState({
@@ -30,6 +33,24 @@ export default function Effectif({ route, navigation }) {
   const [showAptPicker, setShowAptPicker] = useState(false);
   const [showCompanyPicker, setShowCompanyPicker] = useState(false);
   const companies = ['Entreprise A', 'Entreprise B', 'Entreprise C'];
+
+  // Fonction pour scroller vers le champ actif
+  const scrollToInput = () => {
+    if (formViewRef.current && scrollViewRef.current) {
+      setTimeout(() => {
+        formViewRef.current.measureLayout(
+          scrollViewRef.current.getScrollableNode(),
+          (x, y) => {
+            scrollViewRef.current.scrollTo({
+              y: Math.max(0, y - 100),
+              animated: true,
+            });
+          },
+          (error) => console.log('Measure error:', error)
+        );
+      }, 100);
+    }
+  };
 
   const updateForm = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
 
@@ -175,7 +196,7 @@ export default function Effectif({ route, navigation }) {
 
           {/* Formulaire Effectif */}
           {showForm && (
-            <View style={styles.formCard} onLayout={handleFormLayout}>
+            <View style={styles.formCard} ref={formViewRef} onLayout={handleFormLayout}>
               <TouchableOpacity
                 style={styles.closeFormBtn}
                 onPress={() => setShowForm(false)}
@@ -278,11 +299,13 @@ export default function Effectif({ route, navigation }) {
               <View style={styles.formRow}>
                 <Text style={styles.label}>Nombre de personnes :</Text>
                 <TextInput
+                  ref={nombrePersonnesInputRef}
                   style={styles.inputBtn}
                   keyboardType="numeric"
                   value={form.nombrePersonnes}
                   onChangeText={v => updateForm('nombrePersonnes', v)}
                   placeholder="0"
+                  onFocus={scrollToInput}
                 />
               </View>
 

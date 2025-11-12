@@ -18,6 +18,9 @@ import useScrollToForm from '../component/ScrollToForm';
 export default function Constatation({ route, navigation }) {
     const { city, building, task } = route.params;
     const scrollViewRef = useRef(null);
+    const reportNumberInputRef = useRef(null);
+    const chantierNameInputRef = useRef(null);
+    const formViewRef = useRef(null);
 
     const [constatations, setConstatations] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -29,6 +32,24 @@ export default function Constatation({ route, navigation }) {
     const [hasCameraPermission, setHasCameraPermission] = useState(null);
     const [showImageSourceModal, setShowImageSourceModal] = useState(false);
     const [currentImageType, setCurrentImageType] = useState(null);
+
+    // Fonction pour scroller vers le champ actif
+    const scrollToInput = () => {
+        if (formViewRef.current && scrollViewRef.current) {
+            setTimeout(() => {
+                formViewRef.current.measureLayout(
+                    scrollViewRef.current.getScrollableNode(),
+                    (x, y) => {
+                        scrollViewRef.current.scrollTo({
+                            y: Math.max(0, y - 100),
+                            animated: true,
+                        });
+                    },
+                    (error) => console.log('Measure error:', error)
+                );
+            }, 100);
+        }
+    };
 
     const companies = ['Entreprise A', 'Entreprise B', 'Entreprise C'];
 
@@ -579,7 +600,7 @@ ${Array.from({ length: totalPages }, (_, pageIndex) => {
 
                     {/* Formulaire */}
                     {showForm && (
-                        <View style={styles.formCard} onLayout={handleFormLayout}>
+                        <View style={styles.formCard} ref={formViewRef} onLayout={handleFormLayout}>
                             {/* Bouton ✕ */}
                             <TouchableOpacity
                                 style={styles.closeFormBtn}
@@ -591,20 +612,24 @@ ${Array.from({ length: totalPages }, (_, pageIndex) => {
                             {/* Numéro de rapport */}
                             <Text style={styles.label}>Numéro de rapport :</Text>
                             <TextInput
+                                ref={reportNumberInputRef}
                                 style={styles.textInput}
                                 placeholder="Ex: 123"
                                 keyboardType="numeric"
                                 value={form.reportNumber}
                                 onChangeText={v => updateForm('reportNumber', v)}
+                                onFocus={scrollToInput}
                             />
 
                             {/* Nom du chantier */}
                             <Text style={styles.label}>Nom du chantier :</Text>
                             <TextInput
+                                ref={chantierNameInputRef}
                                 style={styles.textInput}
                                 placeholder="Ex: Chantier XYZ"
                                 value={form.chantierName}
                                 onChangeText={v => updateForm('chantierName', v)}
+                                onFocus={scrollToInput}
                             />
 
                             {/* Choix Entreprise */}
