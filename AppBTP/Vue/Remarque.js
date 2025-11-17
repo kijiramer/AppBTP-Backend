@@ -12,10 +12,10 @@ import Header from './Header';
 import ScreenWrapper from '../Controleur/ScreenWrapper';
 import { displayCalendarScreen } from './Components/Calendar';
 
-export default function Constatation({ route, navigation }) {
+export default function Remarque({ route, navigation }) {
     const { city, building, task } = route.params;
 
-    const [constatations, setConstatations] = useState([]);
+    const [remarques, setRemarques] = useState([]);
     const [loading, setLoading] = useState(false);
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [form, setForm] = useState({
@@ -45,16 +45,16 @@ export default function Constatation({ route, navigation }) {
         }
     }, [showForm]);
 
-    // État pour les dates avec constatations (pour le calendrier)
-    const [datesWithConstatations, setDatesWithConstatations] = useState([]);
-    const [allConstatations, setAllConstatations] = useState([]);
+    // État pour les dates avec remarques (pour le calendrier)
+    const [datesWithRemarques, setDatesWithRemarques] = useState([]);
+    const [allRemarques, setAllRemarques] = useState([]);
 
     // Charger l'historique des valeurs saisies
     useEffect(() => {
         const loadHistory = async () => {
             try {
-                const floorHistory = await AsyncStorage.getItem('constatation_floor_history');
-                const apartmentHistory = await AsyncStorage.getItem('constatation_apartment_history');
+                const floorHistory = await AsyncStorage.getItem('remarque_floor_history');
+                const apartmentHistory = await AsyncStorage.getItem('remarque_apartment_history');
 
                 if (floorHistory) {
                     const floors = JSON.parse(floorHistory);
@@ -97,14 +97,14 @@ export default function Constatation({ route, navigation }) {
         })();
     }, []);
 
-    // Charger les constatations au montage et quand la date change
+    // Charger les remarques au montage et quand la date change
     useEffect(() => {
-        loadConstatations();
+        loadRemarques();
     }, [city, building, task, selectedDate]);
 
-    // Charger toutes les dates avec constatations pour le calendrier
+    // Charger toutes les dates avec remarques pour le calendrier
     useEffect(() => {
-        fetchAllConstatations();
+        fetchAllRemarques();
     }, [city, building, task]);
 
     const updateForm = (field, value) =>
@@ -166,8 +166,8 @@ export default function Constatation({ route, navigation }) {
         }
     };
 
-    // Fonction pour charger les constatations depuis l'API
-    const loadConstatations = async () => {
+    // Fonction pour charger les remarques depuis l'API
+    const loadRemarques = async () => {
         try {
             setLoading(true);
             const token = await Storage.getItem('token');
@@ -175,7 +175,7 @@ export default function Constatation({ route, navigation }) {
 
             const dateStr = selectedDate.toISOString().split('T')[0];
             const response = await axios.get(
-                `${API_BASE_URL}/constatations?city=${city}&building=${building}&task=${task}&selectedDate=${dateStr}`,
+                `${API_BASE_URL}/remarques?city=${city}&building=${building}&task=${task}&selectedDate=${dateStr}`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -184,24 +184,24 @@ export default function Constatation({ route, navigation }) {
             );
 
             if (response.data.success) {
-                const constList = response.data.constatations || [];
-                setConstatations(constList);
+                const remarquesList = response.data.remarques || [];
+                setRemarques(remarquesList);
             }
         } catch (err) {
-            console.error('Error loading constatations:', err);
+            console.error('Error loading remarques:', err);
         } finally {
             setLoading(false);
         }
     };
 
-    // Fonction pour charger toutes les constatations (pour marquer les dates)
-    const fetchAllConstatations = async () => {
+    // Fonction pour charger toutes les remarques (pour marquer les dates)
+    const fetchAllRemarques = async () => {
         try {
             const token = await Storage.getItem('token');
             if (!token) return;
 
             const response = await axios.get(
-                `${API_BASE_URL}/constatations?city=${city}&building=${building}&task=${task}`,
+                `${API_BASE_URL}/remarques?city=${city}&building=${building}&task=${task}`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -210,24 +210,24 @@ export default function Constatation({ route, navigation }) {
             );
 
             if (response.data.success) {
-                const allConsts = response.data.constatations || [];
-                setAllConstatations(allConsts);
+                const allRem = response.data.remarques || [];
+                setAllRemarques(allRem);
 
                 // Extraire les dates uniques
                 const uniqueDates = [...new Set(
-                    allConsts.map(c => {
-                        const date = new Date(c.selectedDate);
+                    allRem.map(r => {
+                        const date = new Date(r.selectedDate);
                         return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
                     })
                 )];
-                setDatesWithConstatations(uniqueDates);
+                setDatesWithRemarques(uniqueDates);
             }
         } catch (err) {
-            console.error('Error fetching all constatations:', err);
+            console.error('Error fetching all remarques:', err);
         }
     };
 
-    const addConstatation = async () => {
+    const addRemarque = async () => {
         // Validation
         if (!form.photo) {
             Alert.alert('Erreur', 'Veuillez ajouter une photo');
@@ -246,7 +246,7 @@ export default function Constatation({ route, navigation }) {
                 return;
             }
 
-            const constatationData = {
+            const remarqueData = {
                 floor: form.floor,
                 apartment: form.apartment,
                 description: form.description,
@@ -257,7 +257,7 @@ export default function Constatation({ route, navigation }) {
                 selectedDate: selectedDate.toISOString(),
             };
 
-            const response = await axios.post(`${API_BASE_URL}/constatations`, constatationData, {
+            const response = await axios.post(`${API_BASE_URL}/remarques`, remarqueData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -280,31 +280,31 @@ export default function Constatation({ route, navigation }) {
                     }
                 };
 
-                await updateHistory('constatation_floor_history', form.floor, floorSuggestions, setFloorSuggestions);
-                await updateHistory('constatation_apartment_history', form.apartment, apartmentSuggestions, setApartmentSuggestions);
+                await updateHistory('remarque_floor_history', form.floor, floorSuggestions, setFloorSuggestions);
+                await updateHistory('remarque_apartment_history', form.apartment, apartmentSuggestions, setApartmentSuggestions);
 
                 // Réinitialiser le formulaire
                 setForm({ photo: null, floor: '', apartment: '', description: '' });
                 setShowForm(false);
 
-                // Rafraîchir les constatations
-                loadConstatations();
-                fetchAllConstatations();
+                // Rafraîchir les remarques
+                loadRemarques();
+                fetchAllRemarques();
 
-                Alert.alert('Succès', 'Constatation ajoutée avec succès');
+                Alert.alert('Succès', 'Remarque ajoutée avec succès');
             }
         } catch (err) {
-            console.error('Error adding constatation:', err);
-            Alert.alert('Erreur', 'Impossible d\'ajouter la constatation');
+            console.error('Error adding remarque:', err);
+            Alert.alert('Erreur', 'Impossible d\'ajouter la remarque');
         } finally {
             setLoading(false);
         }
     };
 
-    const deleteConstatation = (id) => {
+    const deleteRemarque = (id) => {
         Alert.alert(
             'Confirmation',
-            'Voulez-vous vraiment supprimer cette constatation ?',
+            'Voulez-vous vraiment supprimer cette remarque ?',
             [
                 { text: 'Annuler', style: 'cancel' },
                 {
@@ -314,20 +314,20 @@ export default function Constatation({ route, navigation }) {
                         try {
                             setLoading(true);
                             const token = await Storage.getItem('token');
-                            const response = await axios.delete(`${API_BASE_URL}/constatations/${id}`, {
+                            const response = await axios.delete(`${API_BASE_URL}/remarques/${id}`, {
                                 headers: {
                                     Authorization: `Bearer ${token}`,
                                 },
                             });
 
                             if (response.data.success) {
-                                loadConstatations();
-                                fetchAllConstatations();
-                                Alert.alert('Succès', 'Constatation supprimée');
+                                loadRemarques();
+                                fetchAllRemarques();
+                                Alert.alert('Succès', 'Remarque supprimée');
                             }
                         } catch (err) {
-                            console.error('Error deleting constatation:', err);
-                            Alert.alert('Erreur', 'Impossible de supprimer la constatation');
+                            console.error('Error deleting remarque:', err);
+                            Alert.alert('Erreur', 'Impossible de supprimer la remarque');
                         } finally {
                             setLoading(false);
                         }
@@ -359,25 +359,25 @@ export default function Constatation({ route, navigation }) {
                 >
                     {/* Calendrier */}
                     <View style={styles.calendarContainer}>
-                        {displayCalendarScreen(selectedDate, setSelectedDate, datesWithConstatations)}
+                        {displayCalendarScreen(selectedDate, setSelectedDate, datesWithRemarques)}
                     </View>
 
-                    {/* Liste des constatations existantes */}
-                    {constatations.length > 0 && (
+                    {/* Liste des remarques existantes */}
+                    {remarques.length > 0 && (
                         <View style={styles.listContainer}>
-                            <Text style={styles.sectionTitle}>Constatations du jour</Text>
-                            {constatations.map((constat, idx) => (
-                                <View key={idx} style={styles.constatCard}>
-                                    <View style={styles.constatRow}>
+                            <Text style={styles.sectionTitle}>Remarques du jour</Text>
+                            {remarques.map((remarque, idx) => (
+                                <View key={idx} style={styles.remarqueCard}>
+                                    <View style={styles.remarqueRow}>
                                         {/* Photo */}
-                                        <Image source={{ uri: constat.image }} style={styles.constatImage} />
+                                        <Image source={{ uri: remarque.image }} style={styles.remarqueImage} />
 
                                         {/* Texte à droite */}
-                                        <View style={styles.constatTextContainer}>
-                                            <Text style={styles.constatLabel}>Étage: {constat.floor}</Text>
-                                            <Text style={styles.constatLabel}>Appart: {constat.apartment}</Text>
-                                            {constat.description ? (
-                                                <Text style={styles.constatDescription}>{constat.description}</Text>
+                                        <View style={styles.remarqueTextContainer}>
+                                            <Text style={styles.remarqueLabel}>Étage: {remarque.floor}</Text>
+                                            <Text style={styles.remarqueLabel}>Appart: {remarque.apartment}</Text>
+                                            {remarque.description ? (
+                                                <Text style={styles.remarqueDescription}>{remarque.description}</Text>
                                             ) : null}
                                         </View>
                                     </View>
@@ -385,7 +385,7 @@ export default function Constatation({ route, navigation }) {
                                     {/* Bouton supprimer */}
                                     <TouchableOpacity
                                         style={styles.deleteButton}
-                                        onPress={() => deleteConstatation(constat._id)}
+                                        onPress={() => deleteRemarque(remarque._id)}
                                     >
                                         <Text style={styles.deleteButtonText}>Supprimer</Text>
                                     </TouchableOpacity>
@@ -425,7 +425,7 @@ export default function Constatation({ route, navigation }) {
 
                         <View style={styles.formCardOverlay}>
                             <ScrollView
-                                contentContainerStyle={{ padding: 16 }}
+                                contentContainerStyle={{ padding: 16, paddingBottom: 200 }}
                                 keyboardShouldPersistTaps="always"
                                 showsVerticalScrollIndicator={true}
                             >
@@ -437,7 +437,7 @@ export default function Constatation({ route, navigation }) {
                                     <Text style={styles.closeFormText}>✕</Text>
                                 </TouchableOpacity>
 
-                                <Text style={styles.formTitle}>Nouvelle Constatation</Text>
+                                <Text style={styles.formTitle}>Nouvelle Remarque</Text>
 
                                 {/* Photo */}
                                 <View style={styles.photoSection}>
@@ -539,7 +539,7 @@ export default function Constatation({ route, navigation }) {
                                         style={styles.textArea}
                                         value={form.description}
                                         onChangeText={v => updateForm('description', v)}
-                                        placeholder="Description de la constatation (optionnel)"
+                                        placeholder="Description de la remarque (optionnel)"
                                         placeholderTextColor="#999"
                                         multiline
                                         numberOfLines={4}
@@ -549,11 +549,11 @@ export default function Constatation({ route, navigation }) {
                                 {/* Bouton Ajouter */}
                                 <TouchableOpacity
                                     style={styles.submitButton}
-                                    onPress={addConstatation}
+                                    onPress={addRemarque}
                                     disabled={loading}
                                 >
                                     <Text style={styles.submitButtonText}>
-                                        {loading ? 'Ajout en cours...' : 'Ajouter la constatation'}
+                                        {loading ? 'Ajout en cours...' : 'Ajouter la remarque'}
                                     </Text>
                                 </TouchableOpacity>
                             </ScrollView>
@@ -620,7 +620,7 @@ const styles = StyleSheet.create({
     listContainer: {
         marginBottom: 16,
     },
-    constatCard: {
+    remarqueCard: {
         backgroundColor: '#fff',
         borderRadius: 12,
         padding: 12,
@@ -631,28 +631,49 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 3,
     },
-    constatRow: {
+    // Modal styles
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    overlayBackdrop: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.3)',
+    },
+    formCardOverlay: {
+        width: '92%',
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        maxHeight: '80%',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 10,
+    },
+    remarqueRow: {
         flexDirection: 'row',
         marginBottom: 8,
     },
-    constatImage: {
+    remarqueImage: {
         width: 120,
         height: 120,
         borderRadius: 8,
         backgroundColor: '#e0e0e0',
     },
-    constatTextContainer: {
+    remarqueTextContainer: {
         flex: 1,
         marginLeft: 12,
         justifyContent: 'flex-start',
     },
-    constatLabel: {
+    remarqueLabel: {
         fontSize: 14,
         fontWeight: '600',
         color: '#333',
         marginBottom: 4,
     },
-    constatDescription: {
+    remarqueDescription: {
         fontSize: 13,
         color: '#666',
         marginTop: 8,
@@ -690,26 +711,16 @@ const styles = StyleSheet.create({
         fontSize: 28,
         fontWeight: 'bold',
     },
-    // Modal styles
-    modalContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    overlayBackdrop: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0,0,0,0.3)',
-    },
-    formCardOverlay: {
-        width: '92%',
+    formCard: {
         backgroundColor: '#fff',
         borderRadius: 12,
-        maxHeight: '80%',
+        padding: 16,
+        marginBottom: 16,
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        elevation: 10,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
     },
     closeFormBtn: {
         position: 'absolute',

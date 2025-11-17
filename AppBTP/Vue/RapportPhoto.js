@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Image, Dimensions, Alert, TextInput, Modal, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Image, Dimensions, Alert, TextInput, Modal, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import axios from 'axios';
 import Storage from '../utils/Storage';
 import { API_BASE_URL } from '../config';
@@ -21,42 +21,56 @@ export default function RapportPhoto({ route, navigation }) {
     const [rapportsPhotos, setRapportsPhotos] = useState([]);
     const [loading, setLoading] = useState(false);
     const [selectedDate, setSelectedDate] = useState(new Date());
-    const [form, setForm] = useState({ avant: null, apres: null, company: '', reportNumber: '', chantierName: '' });
+    const [form, setForm] = useState({ avant: null, apres: null, batiment: building || '', intituleMission: '', chantierName: city || '', entreprise: '' });
     const [showForm, setShowForm] = useState(false);
     const [hasLibraryPermission, setHasLibraryPermission] = useState(null);
     const [hasCameraPermission, setHasCameraPermission] = useState(null);
     const [showImageSourceModal, setShowImageSourceModal] = useState(false);
     const [currentImageType, setCurrentImageType] = useState(null);
-    const [reportNumberSuggestions, setReportNumberSuggestions] = useState([]);
+    const [batimentSuggestions, setBatimentSuggestions] = useState([]);
+    const [intituleMissionSuggestions, setIntituleMissionSuggestions] = useState([]);
     const [chantierNameSuggestions, setChantierNameSuggestions] = useState([]);
-    const [companySuggestions, setCompanySuggestions] = useState([]);
-    const [showReportNumberSuggestions, setShowReportNumberSuggestions] = useState(false);
+    const [entrepriseSuggestions, setEntrepriseSuggestions] = useState([]);
+    const [showBatimentSuggestions, setShowBatimentSuggestions] = useState(false);
+    const [showIntituleMissionSuggestions, setShowIntituleMissionSuggestions] = useState(false);
     const [showChantierNameSuggestions, setShowChantierNameSuggestions] = useState(false);
-    const [showCompanySuggestions, setShowCompanySuggestions] = useState(false);
+    const [showEntrepriseSuggestions, setShowEntrepriseSuggestions] = useState(false);
+    const [expandedFolders, setExpandedFolders] = useState({});
+    const [scrollEnabled, setScrollEnabled] = useState(true);
+
+    // Désactiver le scroll quand le formulaire s'ouvre
+    useEffect(() => {
+        if (showForm) {
+            setScrollEnabled(false);
+        } else {
+            setScrollEnabled(true);
+        }
+    }, [showForm]);
 
     // Charger l'historique des valeurs saisies
     useEffect(() => {
         const loadHistory = async () => {
             try {
-                const reportNumberHistory = await AsyncStorage.getItem('rapportPhoto_reportNumber_history');
+                const batimentHistory = await AsyncStorage.getItem('rapportPhoto_batiment_history');
+                const intituleMissionHistory = await AsyncStorage.getItem('rapportPhoto_intituleMission_history');
                 const chantierNameHistory = await AsyncStorage.getItem('rapportPhoto_chantierName_history');
-                const companyHistory = await AsyncStorage.getItem('rapportPhoto_company_history');
+                const entrepriseHistory = await AsyncStorage.getItem('rapportPhoto_entreprise_history');
 
-                if (reportNumberHistory) {
-                    const reportNumbers = JSON.parse(reportNumberHistory);
-                    setReportNumberSuggestions(reportNumbers.sort((a, b) => {
-                        const numA = parseInt(a) || 0;
-                        const numB = parseInt(b) || 0;
-                        return numA - numB;
-                    }));
+                if (batimentHistory) {
+                    const batiments = JSON.parse(batimentHistory);
+                    setBatimentSuggestions(batiments.sort());
+                }
+                if (intituleMissionHistory) {
+                    const missions = JSON.parse(intituleMissionHistory);
+                    setIntituleMissionSuggestions(missions.sort());
                 }
                 if (chantierNameHistory) {
                     const chantierNames = JSON.parse(chantierNameHistory);
                     setChantierNameSuggestions(chantierNames.sort());
                 }
-                if (companyHistory) {
-                    const companies = JSON.parse(companyHistory);
-                    setCompanySuggestions(companies.sort());
+                if (entrepriseHistory) {
+                    const entreprises = JSON.parse(entrepriseHistory);
+                    setEntrepriseSuggestions(entreprises.sort());
                 }
             } catch (error) {
                 console.error('Error loading history:', error);
@@ -162,13 +176,14 @@ export default function RapportPhoto({ route, navigation }) {
             });
 
             if (response.data.success) {
-                setConstatations(response.data.rapportsPhotos.map(constatation => ({
+                setRapportsPhotos(response.data.rapportsPhotos.map(constatation => ({
                     id: constatation._id,
-                    company: constatation.company,
+                    batiment: constatation.batiment,
+                    intituleMission: constatation.intituleMission,
+                    chantierName: constatation.chantierName,
+                    entreprise: constatation.entreprise,
                     avant: constatation.imageAvant,
                     apres: constatation.imageApres,
-                    chantierName: constatation.chantierName,
-                    reportNumber: constatation.reportNumber,
                 })));
             }
         } catch (err) {
@@ -185,8 +200,8 @@ export default function RapportPhoto({ route, navigation }) {
             return;
         }
 
-        if (!form.reportNumber || !form.chantierName.trim() || !form.company.trim()) {
-            Alert.alert('Erreur', 'Veuillez remplir tous les champs (numéro de rapport, nom du chantier et entreprise)');
+        if (!form.batiment.trim() || !form.intituleMission.trim() || !form.chantierName.trim() || !form.entreprise.trim()) {
+            Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires');
             return;
         }
 
@@ -199,12 +214,13 @@ export default function RapportPhoto({ route, navigation }) {
             }
 
             const rapportPhotoData = {
-                reportNumber: parseInt(form.reportNumber, 10),
+                batiment: form.batiment,
+                intituleMission: form.intituleMission,
                 chantierName: form.chantierName,
+                entreprise: form.entreprise,
                 city,
                 building,
                 task,
-                company: form.company,
                 imageAvant: form.avant,
                 imageApres: form.apres,
                 selectedDate: selectedDate.toISOString(),
@@ -223,46 +239,28 @@ export default function RapportPhoto({ route, navigation }) {
                     if (!newSuggestions.includes(value)) {
                         newSuggestions.push(value);
                         await AsyncStorage.setItem(key, JSON.stringify(newSuggestions));
-
-                        // Trier les suggestions
-                        if (key.includes('reportNumber')) {
-                            setSuggestions(newSuggestions.sort((a, b) => {
-                                const numA = parseInt(a) || 0;
-                                const numB = parseInt(b) || 0;
-                                return numA - numB;
-                            }));
-                        } else {
-                            setSuggestions(newSuggestions.sort());
-                        }
+                        setSuggestions(newSuggestions.sort());
                     }
                 };
 
-                await updateHistory('rapportPhoto_reportNumber_history', form.reportNumber, reportNumberSuggestions, setReportNumberSuggestions);
+                await updateHistory('rapportPhoto_batiment_history', form.batiment, batimentSuggestions, setBatimentSuggestions);
+                await updateHistory('rapportPhoto_intituleMission_history', form.intituleMission, intituleMissionSuggestions, setIntituleMissionSuggestions);
                 await updateHistory('rapportPhoto_chantierName_history', form.chantierName, chantierNameSuggestions, setChantierNameSuggestions);
-                await updateHistory('rapportPhoto_company_history', form.company, companySuggestions, setCompanySuggestions);
+                await updateHistory('rapportPhoto_entreprise_history', form.entreprise, entrepriseSuggestions, setEntrepriseSuggestions);
 
-                // Ajouter la nouvelle constatation à l'état local
-                setConstatations(prev => [
-                    {
-                        company: form.company,
-                        avant: form.avant,
-                        apres: form.apres,
-                    },
-                    ...prev,
-                ]);
+                // Rafraîchir la liste complète
+                await loadRapportsPhotos();
+                await fetchAllRapportsPhotos();
 
-                // Réinitialiser le formulaire - vider tous les champs
-                setForm({ avant: null, apres: null, company: '', reportNumber: '', chantierName: '' });
+                // Réinitialiser le formulaire - vider tous les champs sauf chantierName (qui reste la ville)
+                setForm({ avant: null, apres: null, batiment: '', intituleMission: '', chantierName: city || '', entreprise: '' });
                 setShowForm(false);
 
-                // Rafraîchir les dates avec rapportsPhotos pour mettre à jour les pastilles
-                fetchAllRapportsPhotos();
-
-                Alert.alert('Succès', 'Constatation ajoutée avec succès');
+                Alert.alert('Succès', 'Rapport photo ajouté avec succès');
             }
         } catch (err) {
-            console.error('Error adding constatation:', err);
-            Alert.alert('Erreur', 'Impossible d\'ajouter la constatation');
+            console.error('Error adding rapport photo:', err);
+            Alert.alert('Erreur', 'Impossible d\'ajouter le rapport photo');
         } finally {
             setLoading(false);
         }
@@ -273,15 +271,15 @@ export default function RapportPhoto({ route, navigation }) {
             Alert.alert('Erreur', 'Aucune constatation à exporter');
             return;
         }
-
+    
         try {
             setLoading(true);
-
-            // Fonction helper pour convertir une URI en base64 (React Native compatible)
+    
+            // Fonction helper pour convertir une URI en base64
             const convertUriToBase64 = async (uri) => {
                 try {
                     const base64 = await FileSystem.readAsStringAsync(uri, {
-                        encoding: FileSystem.EncodingType.Base64,
+                        encoding: 'base64',
                     });
                     return `data:image/jpeg;base64,${base64}`;
                 } catch (error) {
@@ -289,223 +287,194 @@ export default function RapportPhoto({ route, navigation }) {
                     throw error;
                 }
             };
-
+    
             // Récupérer le logo et le convertir en base64
             const { Asset } = require('expo-asset');
             const logoAsset = Asset.fromModule(require('../assets/logo.jpg'));
             await logoAsset.downloadAsync();
             const logoBase64 = await convertUriToBase64(logoAsset.localUri || logoAsset.uri);
-
-            // Convertir toutes les images des rapportsPhotos en base64
-            const rapportsPhotosWithBase64 = await Promise.all(
-                rapportsPhotos.map(async (c) => {
+    
+            // Exporter tous les rapports photos disponibles (tous les dossiers)
+            const selectedRapports = rapportsPhotos;
+    
+            // Convertir toutes les images en base64
+            const rapportsWithBase64 = await Promise.all(
+                selectedRapports.map(async (c) => {
                     try {
                         const avantBase64 = await convertUriToBase64(c.avant);
                         const apresBase64 = await convertUriToBase64(c.apres);
-                        return {
-                            ...c,
-                            avantBase64,
-                            apresBase64
-                        };
+                        return { ...c, avantBase64, apresBase64 };
                     } catch (error) {
-                        console.error('Erreur conversion image:', error);
+                        console.error('Error converting images:', error);
                         return null;
                     }
                 })
             );
-
-            // Filtrer les rapportsPhotos nulles (erreur de conversion)
-            const validConstatations = rapportsPhotosWithBase64.filter(c => c !== null);
-
-            if (validConstatations.length === 0) {
+    
+            const validRapports = rapportsWithBase64.filter(c => c !== null);
+    
+            if (validRapports.length === 0) {
                 Alert.alert('Erreur', 'Impossible de charger les images');
                 return;
             }
-
-            // Récupérer les informations depuis les rapportsPhotos déjà chargées
-            const chantierName = validConstatations[0]?.chantierName || building || city;
-            const promoteur = validConstatations[0]?.company || 'N/A';
-
-            console.log('Informations PDF:', { chantierName, promoteur, building, city });
-
-            // Calculer le nombre de pages (3 paires par page)
-            const totalPages = Math.ceil(validConstatations.length / 3);
-
-            // Générer le HTML avec la mise en page verticale comme le PDF de référence
+    
+            // Grouper par chantier (city, building, entreprise, date)
+            const groupedByChantier = {};
+            validRapports.forEach((rapport) => {
+                // Utiliser entreprise ou company (rétrocompatibilité)
+                const entrepriseValue = rapport.entreprise || rapport.company || 'N/A';
+                const key = `${rapport.city}|${rapport.building}|${entrepriseValue}|${new Date(rapport.selectedDate).toLocaleDateString()}`;
+                if (!groupedByChantier[key]) {
+                    groupedByChantier[key] = {
+                        info: {
+                            intituleMission: rapport.intituleMission || 'Mission non spécifiée',
+                            chantierName: rapport.chantierName || rapport.city || 'N/A',
+                            city: rapport.city || 'N/A',
+                            building: rapport.building || 'N/A',
+                            entreprise: entrepriseValue,
+                            selectedDate: rapport.selectedDate
+                        },
+                        photos: []
+                    };
+                }
+                groupedByChantier[key].photos.push(rapport);
+            });
+    
+            // Générer le HTML comme la webapp
+            let htmlPages = '';
+            let currentPageNumber = 1;
+            let photosOnCurrentPage = 0;
+            const maxPhotosFirstPage = 3;
+            const maxPhotosOtherPages = 4;
+    
+            // Pour chaque groupe de chantier
+            const groups = Object.values(groupedByChantier);
+            for (let groupIndex = 0; groupIndex < groups.length; groupIndex++) {
+                const group = groups[groupIndex];
+    
+                // Header du groupe (tableau d'informations)
+                const groupHeader = `
+                    <div style="width: 420px; margin: 0 auto 25px auto; border: 2px solid #000; border-radius: 8px; padding: 0; overflow: hidden;">
+                        <div style="padding: 10px 8px; border-bottom: 1px solid #000;">
+                            <div style="font-size: 9pt; font-weight: bold;">
+                                PROMOTEUR: ${(group.info.entreprise || 'N/A').toUpperCase()} - VILLE: ${(group.info.city || 'N/A').toUpperCase()}
+                            </div>
+                        </div>
+                        <div style="padding: 10px 8px; border-bottom: 1px solid #000;">
+                            <div style="font-size: 9pt;">Mission: ${group.info.intituleMission || 'Mission non spécifiée'}</div>
+                        </div>
+                        <div style="padding: 10px 8px;">
+                            <div style="font-size: 9pt;">Intervention le: ${selectedDate.toLocaleDateString('fr-FR')}</div>
+                        </div>
+                    </div>
+                `;
+    
+                // Photos du groupe
+                for (let i = 0; i < group.photos.length; i++) {
+                    const rapport = group.photos[i];
+                    const maxPhotosOnPage = currentPageNumber === 1 ? maxPhotosFirstPage : maxPhotosOtherPages;
+    
+                    // Nouvelle page si nécessaire
+                    if (photosOnCurrentPage >= maxPhotosOnPage) {
+                        htmlPages += '</div></div>'; // Fermer page précédente
+                        currentPageNumber++;
+                        photosOnCurrentPage = 0;
+    
+                        // Nouvelle page avec logo en haut à gauche (plus petit)
+                        htmlPages += `
+                        <div class="page">
+                            <div style="margin-bottom: 20px;">
+                                <img src="${logoBase64}" style="width: 80px; height: 40px; object-fit: contain;" />
+                            </div>
+                            <div class="content">
+                        `;
+                    }
+    
+                    // Si première photo de la page, ajouter le header uniquement sur la page 1
+                    if (photosOnCurrentPage === 0 && currentPageNumber === 1 && groupIndex === 0) {
+                        // Page 1: Logo centré + titre + header
+                        htmlPages = `
+                        <div class="page">
+                            <div style="text-align: center; margin-bottom: 15px;">
+                                <img src="${logoBase64}" style="width: 160px; height: 80px; object-fit: contain;" />
+                            </div>
+                            <div style="text-align: center; font-family: 'Times New Roman', Times, serif; font-size: 20pt; font-weight: bold; margin-bottom: 20px;">
+                                <span style="border-bottom: 2px solid #000; padding-bottom: 2px;">Rapport Photo d'Intervention - ${city}</span>
+                            </div>
+                            <div class="content">
+                        ` + groupHeader;
+                    }
+    
+                    // Paire de photos
+                    htmlPages += `
+                        <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 20px; page-break-inside: avoid;">
+                            <div style="text-align: center;">
+                                <div style="font-weight: bold; font-size: 10pt; margin-bottom: 5px;">AVANT</div>
+                                <img src="${rapport.avantBase64}" style="width: 185px; height: 132px; object-fit: cover; border: 1px solid #999;" />
+                            </div>
+                            <div style="margin: 0 15px;">
+                                <svg width="40" height="20" style="display: block;">
+                                    <line x1="0" y1="10" x2="32" y2="10" stroke="black" stroke-width="2"/>
+                                    <polygon points="40,10 32,6 32,14" fill="black"/>
+                                </svg>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-weight: bold; font-size: 10pt; margin-bottom: 5px;">APRÈS</div>
+                                <img src="${rapport.apresBase64}" style="width: 185px; height: 132px; object-fit: cover; border: 1px solid #999;" />
+                            </div>
+                        </div>
+                    `;
+    
+                    photosOnCurrentPage++;
+                }
+            }
+    
+            // Fermer la dernière page
+            htmlPages += '</div></div>';
+    
+            // Compter le nombre total de pages
+            const totalPages = currentPageNumber;
+    
+            // HTML complet
             const htmlContent = `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        @page {
-            size: A4;
-            margin: 15mm;
-        }
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-            background: white;
-            color: #000;
-        }
-        .page {
-            page-break-after: always;
-            padding: 20px;
-        }
-        .page:last-child {
-            page-break-after: auto;
-        }
-        /* Logo centré en haut */
-        .logo-container {
-            text-align: center;
-            margin-bottom: 15px;
-        }
-        .logo-container img {
-            width: 160px;
-            height: 80px;
-            object-fit: contain;
-        }
-        /* Titre principal */
-        .main-title {
-            text-align: center;
-            font-family: 'Times New Roman', Times, serif;
-            font-size: 20px;
-            font-weight: bold;
-            margin-bottom: 20px;
-            text-decoration: underline;
-        }
-        /* Encadré d'informations */
-        .info-box {
-            width: 100%;
-            margin: 0 auto 30px auto;
-            border: 2px solid #000;
-            border-radius: 10px;
-            padding: 15px;
-        }
-        .info-line {
-            font-size: 11px;
-            margin-bottom: 5px;
-        }
-        .info-line:last-child {
-            margin-bottom: 0;
-        }
-        .info-line.bold {
-            font-weight: bold;
-        }
-        /* Section photos - disposition VERTICALE */
-        .photos-section {
-            margin-top: 20px;
-        }
-        /* Paire de photos AVANT/APRÈS (disposition horizontale dans chaque paire) */
-        .photo-pair {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 30px;
-            page-break-inside: avoid;
-        }
-        .photo-block {
-            text-align: center;
-        }
-        .photo-title {
-            font-weight: bold;
-            font-size: 13px;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-        }
-        .photo-block img {
-            width: 240px;
-            height: 180px;
-            object-fit: cover;
-            border: 1px solid #999;
-        }
-        .arrow-separator {
-            font-size: 40px;
-            font-weight: bold;
-            margin: 0 20px;
-            color: #000;
-        }
-        /* Pied de page */
-        .footer {
-            text-align: center;
-            font-size: 10px;
-            color: #333;
-            margin-top: 30px;
-        }
-    </style>
-</head>
-<body>
-${Array.from({ length: totalPages }, (_, pageIndex) => {
-    const startIndex = pageIndex * 3;
-    const endIndex = Math.min(startIndex + 3, validConstatations.length);
-    const pagePairs = validConstatations.slice(startIndex, endIndex);
-
-    return `
-    <div class="page">
-        <!-- Logo centré -->
-        <div class="logo-container">
-            <img src="${logoBase64}" alt="Logo" />
-        </div>
-
-        <!-- Titre principal -->
-        <div class="main-title">Rapport Photo d'Intervention - ${chantierName}</div>
-
-        <!-- Encadré d'informations -->
-        <div class="info-box">
-            <div class="info-line bold">
-                PROMOTEUR: ${promoteur.toUpperCase()} - VILLE: ${city.toUpperCase()}
-            </div>
-            <div class="info-line">
-                Mission: ${task}
-            </div>
-            <div class="info-line">
-                Intervention le: ${selectedDate.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-            </div>
-        </div>
-
-        <!-- Section photos (3 paires par page maximum, disposition verticale) -->
-        <div class="photos-section">
-            ${pagePairs.map((c, index) => `
-            <div class="photo-pair">
-                <div class="photo-block">
-                    <div class="photo-title">AVANT</div>
-                    <img src="${c.avantBase64}" alt="Photo avant ${startIndex + index + 1}" />
-                </div>
-                <div class="arrow-separator">→</div>
-                <div class="photo-block">
-                    <div class="photo-title">APRÈS</div>
-                    <img src="${c.apresBase64}" alt="Photo après ${startIndex + index + 1}" />
-                </div>
-            </div>
-            `).join('')}
-        </div>
-
-        <!-- Pied de page -->
-        <div class="footer">
-            Page ${pageIndex + 1} / ${totalPages}
-        </div>
-    </div>
-    `;
-}).join('')}
-</body>
-</html>
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <style>
+            @page { size: A4; margin: 15mm; }
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body { font-family: Helvetica, Arial, sans-serif; background: white; color: #000; }
+            .page { page-break-after: always; padding: 10px 20px; position: relative; min-height: 800px; }
+            .page:last-child { page-break-after: auto; }
+            .content { margin-bottom: 40px; }
+            .footer { position: absolute; bottom: 10px; left: 0; right: 0; text-align: center; font-size: 10pt; }
+        </style>
+    </head>
+    <body>
+    ${htmlPages}
+    <script>
+        const pages = document.querySelectorAll('.page');
+        pages.forEach((page, index) => {
+            const footer = document.createElement('div');
+            footer.className = 'footer';
+            footer.textContent = 'Page ' + (index + 1) + ' / ' + ${totalPages};
+            page.appendChild(footer);
+        });
+    </script>
+    </body>
+    </html>
             `;
-
+    
             // Créer le PDF
             const { uri } = await Print.printToFileAsync({
                 html: htmlContent,
-                width: 595, // A4 width in points
-                height: 842 // A4 height in points
+                width: 595,
+                height: 842
             });
-
-            // Nom du fichier
-            const fileName = `rapport-intervention-${city}-${selectedDate.toLocaleDateString('fr-FR').replace(/\//g, '-')}.pdf`;
-
+    
+            const fileName = `rapport-intervention-${city}-${selectedDate.toISOString().split('T')[0]}.pdf`.replace(/\s+/g, '-');
+    
             // Partager le PDF
             if (await Sharing.isAvailableAsync()) {
                 await Sharing.shareAsync(uri, {
@@ -524,6 +493,7 @@ ${Array.from({ length: totalPages }, (_, pageIndex) => {
             setLoading(false);
         }
     };
+
 
     // Charger les rapportsPhotos au montage du composant et quand la date change
     useEffect(() => {
@@ -581,10 +551,11 @@ ${Array.from({ length: totalPages }, (_, pageIndex) => {
                 <KeyboardAwareScrollView
                     contentContainerStyle={styles.contentContainer}
                     enableOnAndroid={true}
-                    enableAutomaticScroll={true}
+                    enableAutomaticScroll={false}
                     extraScrollHeight={20}
                     keyboardShouldPersistTaps="handled"
                     enableResetScrollToCoords={false}
+                    scrollEnabled={scrollEnabled}
                 >
                     {/* Calendrier */}
                     <View style={styles.calendarContainer}>
@@ -604,28 +575,80 @@ ${Array.from({ length: totalPages }, (_, pageIndex) => {
                         </TouchableOpacity>
                     )}
 
-                    {/* Liste des rapportsPhotos */}
-                    {rapportsPhotos.map((c, i) => (
-                        <View key={c.id || i} style={styles.card}>
-                            {/* Badge Entreprise */}
-                            <View style={styles.badge}>
-                                <Text style={styles.badgeText}>{c.company}</Text>
-                            </View>
+                    {/* Liste des rapportsPhotos groupés par mission */}
+                    {(() => {
+                        // Grouper les rapports par intituleMission
+                        const groupedByMission = rapportsPhotos.reduce((acc, rapport) => {
+                            const mission = rapport.intituleMission || 'Sans mission';
+                            if (!acc[mission]) {
+                                acc[mission] = [];
+                            }
+                            acc[mission].push(rapport);
+                            return acc;
+                        }, {});
 
-                            <View style={styles.imageRow}>
-                                <View style={styles.imageWrapper}>
-                                    <Text style={styles.imageLabel}>Avant</Text>
-                                    <Image source={{ uri: c.avant }} style={styles.image} />
-                                </View>
-                                <View style={styles.imageWrapper}>
-                                    <Text style={styles.imageLabel}>Après</Text>
-                                    <Image source={{ uri: c.apres }} style={styles.image} />
-                                </View>
-                            </View>
-                        </View>
-                    ))}
+                        return Object.entries(groupedByMission).map(([mission, rapports]) => {
+                            const isExpanded = expandedFolders[mission] || false;
+                            const displayedRapports = isExpanded ? rapports : rapports.slice(0, 2);
+                            const hasMore = rapports.length > 2;
 
-                    {/* Bouton “＋” */}
+                            return (
+                                <View key={mission} style={styles.folderContainer}>
+                                    {/* Header du dossier */}
+                                    <TouchableOpacity
+                                        onPress={() => setExpandedFolders(prev => ({
+                                            ...prev,
+                                            [mission]: !prev[mission]
+                                        }))}
+                                    >
+                                        <Text style={styles.folderTitle}>
+                                            📁 {mission} ({rapports.length}) {hasMore ? (isExpanded ? '▲' : '▼') : ''}
+                                        </Text>
+                                    </TouchableOpacity>
+
+                                    {/* Photos du dossier */}
+                                    {displayedRapports.map((c, i) => (
+                                        <View key={c.id || i} style={styles.card}>
+                                            {/* Badge avec infos */}
+                                            <View style={styles.badgeRow}>
+                                                <View style={styles.badge}>
+                                                    <Text style={styles.badgeText}>{c.entreprise || c.company || 'N/A'}</Text>
+                                                </View>
+                                            </View>
+
+                                            <View style={styles.imageRow}>
+                                                <View style={styles.imageWrapper}>
+                                                    <Text style={styles.imageLabel}>Avant</Text>
+                                                    <Image source={{ uri: c.avant }} style={styles.image} />
+                                                </View>
+                                                <View style={styles.imageWrapper}>
+                                                    <Text style={styles.imageLabel}>Après</Text>
+                                                    <Image source={{ uri: c.apres }} style={styles.image} />
+                                                </View>
+                                            </View>
+                                        </View>
+                                    ))}
+
+                                    {/* Message "voir plus" si nécessaire */}
+                                    {!isExpanded && hasMore && (
+                                        <TouchableOpacity
+                                            style={styles.seeMoreButton}
+                                            onPress={() => setExpandedFolders(prev => ({
+                                                ...prev,
+                                                [mission]: true
+                                            }))}
+                                        >
+                                            <Text style={styles.seeMoreText}>
+                                                Voir {rapports.length - 2} de plus...
+                                            </Text>
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
+                            );
+                        });
+                    })()}
+
+                    {/* Bouton "＋" */}
                     {!showForm && (
                         <TouchableOpacity
                             style={styles.toggleCircle}
@@ -634,10 +657,34 @@ ${Array.from({ length: totalPages }, (_, pageIndex) => {
                             <Text style={styles.toggleCircleText}>＋</Text>
                         </TouchableOpacity>
                     )}
+                </KeyboardAwareScrollView>
 
-                    {/* Formulaire */}
-                    {showForm && (
-                        <View style={styles.formCard}>
+                {/* Modal formulaire */}
+                <Modal
+                    visible={showForm}
+                    transparent={true}
+                    animationType="fade"
+                    onRequestClose={() => setShowForm(false)}
+                >
+                    <KeyboardAvoidingView
+                        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                        style={styles.modalContainer}
+                    >
+                        {/* Fond sombre cliquable pour fermer */}
+                        <TouchableOpacity
+                            activeOpacity={1}
+                            style={styles.overlayBackdrop}
+                            onPress={() => setShowForm(false)}
+                        />
+
+                        <View style={styles.formCardOverlay}>
+                            <ScrollView
+                                contentContainerStyle={{ padding: 16, paddingBottom: 250 }}
+                                keyboardShouldPersistTaps="always"
+                                showsVerticalScrollIndicator={true}
+                                nestedScrollEnabled={true}
+                                bounces={true}
+                            >
                             {/* Bouton ✕ */}
                             <TouchableOpacity
                                 style={styles.closeFormBtn}
@@ -646,35 +693,75 @@ ${Array.from({ length: totalPages }, (_, pageIndex) => {
                                 <Text style={styles.closeFormText}>✕</Text>
                             </TouchableOpacity>
 
-                            {/* Numéro de rapport */}
-                            <Text style={styles.label}>Numéro de rapport :</Text>
+                            {/* Batiment */}
+                            <Text style={styles.label}>Bâtiment :</Text>
                             <View style={{ position: 'relative' }}>
                                 <TextInput
                                     style={styles.textInput}
-                                    placeholder="Ex: 123"
-                                    keyboardType="numeric"
-                                    value={form.reportNumber}
-                                    onChangeText={v => updateForm('reportNumber', v)}
-                                    onFocus={() => setShowReportNumberSuggestions(true)}
-                                    onBlur={() => setTimeout(() => setShowReportNumberSuggestions(false), 200)}
+                                    placeholder="Ex: Bâtiment A"
+                                    placeholderTextColor="#999"
+                                    value={form.batiment}
+                                    onChangeText={v => updateForm('batiment', v)}
+                                    onFocus={() => setShowBatimentSuggestions(true)}
+                                    onBlur={() => setTimeout(() => setShowBatimentSuggestions(false), 200)}
                                 />
-                                {showReportNumberSuggestions && reportNumberSuggestions.length > 0 && (
-                                    <View style={styles.suggestionsContainer}>
-                                        <ScrollView nestedScrollEnabled={true} keyboardShouldPersistTaps="handled">
-                                            {reportNumberSuggestions.map((suggestion, idx) => (
-                                                <TouchableOpacity
-                                                    key={idx}
-                                                    style={styles.suggestionItem}
-                                                    onPress={() => {
-                                                        updateForm('reportNumber', suggestion);
-                                                        setShowReportNumberSuggestions(false);
-                                                    }}
-                                                >
-                                                    <Text style={styles.suggestionText}>{suggestion}</Text>
-                                                </TouchableOpacity>
-                                            ))}
-                                        </ScrollView>
-                                    </View>
+                                {showBatimentSuggestions && batimentSuggestions.length > 0 && (
+                                    <ScrollView
+                                        style={styles.suggestionsContainer}
+                                        nestedScrollEnabled={true}
+                                        keyboardShouldPersistTaps="always"
+                                        showsVerticalScrollIndicator={true}
+                                    >
+                                        {batimentSuggestions.map((suggestion, idx) => (
+                                            <TouchableOpacity
+                                                key={idx}
+                                                style={styles.suggestionItem}
+                                                activeOpacity={0.7}
+                                                onPress={() => {
+                                                    updateForm('batiment', suggestion);
+                                                    setShowBatimentSuggestions(false);
+                                                }}
+                                            >
+                                                <Text style={styles.suggestionText}>{suggestion}</Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </ScrollView>
+                                )}
+                            </View>
+
+                            {/* Intitulé Mission */}
+                            <Text style={styles.label}>Intitulé Mission :</Text>
+                            <View style={{ position: 'relative' }}>
+                                <TextInput
+                                    style={styles.textInput}
+                                    placeholder="Ex: Electricité"
+                                    placeholderTextColor="#999"
+                                    value={form.intituleMission}
+                                    onChangeText={v => updateForm('intituleMission', v)}
+                                    onFocus={() => setShowIntituleMissionSuggestions(true)}
+                                    onBlur={() => setTimeout(() => setShowIntituleMissionSuggestions(false), 200)}
+                                />
+                                {showIntituleMissionSuggestions && intituleMissionSuggestions.length > 0 && (
+                                    <ScrollView
+                                        style={styles.suggestionsContainer}
+                                        nestedScrollEnabled={true}
+                                        keyboardShouldPersistTaps="always"
+                                        showsVerticalScrollIndicator={true}
+                                    >
+                                        {intituleMissionSuggestions.map((suggestion, idx) => (
+                                            <TouchableOpacity
+                                                key={idx}
+                                                style={styles.suggestionItem}
+                                                activeOpacity={0.7}
+                                                onPress={() => {
+                                                    updateForm('intituleMission', suggestion);
+                                                    setShowIntituleMissionSuggestions(false);
+                                                }}
+                                            >
+                                                <Text style={styles.suggestionText}>{suggestion}</Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </ScrollView>
                                 )}
                             </View>
 
@@ -684,28 +771,33 @@ ${Array.from({ length: totalPages }, (_, pageIndex) => {
                                 <TextInput
                                     style={styles.textInput}
                                     placeholder="Ex: Chantier XYZ"
+                                    placeholderTextColor="#999"
                                     value={form.chantierName}
                                     onChangeText={v => updateForm('chantierName', v)}
                                     onFocus={() => setShowChantierNameSuggestions(true)}
                                     onBlur={() => setTimeout(() => setShowChantierNameSuggestions(false), 200)}
                                 />
                                 {showChantierNameSuggestions && chantierNameSuggestions.length > 0 && (
-                                    <View style={styles.suggestionsContainer}>
-                                        <ScrollView nestedScrollEnabled={true} keyboardShouldPersistTaps="handled">
-                                            {chantierNameSuggestions.map((suggestion, idx) => (
-                                                <TouchableOpacity
-                                                    key={idx}
-                                                    style={styles.suggestionItem}
-                                                    onPress={() => {
-                                                        updateForm('chantierName', suggestion);
-                                                        setShowChantierNameSuggestions(false);
-                                                    }}
-                                                >
-                                                    <Text style={styles.suggestionText}>{suggestion}</Text>
-                                                </TouchableOpacity>
-                                            ))}
-                                        </ScrollView>
-                                    </View>
+                                    <ScrollView
+                                        style={styles.suggestionsContainer}
+                                        nestedScrollEnabled={true}
+                                        keyboardShouldPersistTaps="always"
+                                        showsVerticalScrollIndicator={true}
+                                    >
+                                        {chantierNameSuggestions.map((suggestion, idx) => (
+                                            <TouchableOpacity
+                                                key={idx}
+                                                style={styles.suggestionItem}
+                                                activeOpacity={0.7}
+                                                onPress={() => {
+                                                    updateForm('chantierName', suggestion);
+                                                    setShowChantierNameSuggestions(false);
+                                                }}
+                                            >
+                                                <Text style={styles.suggestionText}>{suggestion}</Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </ScrollView>
                                 )}
                             </View>
 
@@ -715,28 +807,33 @@ ${Array.from({ length: totalPages }, (_, pageIndex) => {
                                 <TextInput
                                     style={styles.textInput}
                                     placeholder="Ex: Entreprise A"
-                                    value={form.company}
-                                    onChangeText={v => updateForm('company', v)}
-                                    onFocus={() => setShowCompanySuggestions(true)}
-                                    onBlur={() => setTimeout(() => setShowCompanySuggestions(false), 200)}
+                                    placeholderTextColor="#999"
+                                    value={form.entreprise}
+                                    onChangeText={v => updateForm('entreprise', v)}
+                                    onFocus={() => setShowEntrepriseSuggestions(true)}
+                                    onBlur={() => setTimeout(() => setShowEntrepriseSuggestions(false), 200)}
                                 />
-                                {showCompanySuggestions && companySuggestions.length > 0 && (
-                                    <View style={styles.suggestionsContainer}>
-                                        <ScrollView nestedScrollEnabled={true} keyboardShouldPersistTaps="handled">
-                                            {companySuggestions.map((suggestion, idx) => (
-                                                <TouchableOpacity
-                                                    key={idx}
-                                                    style={styles.suggestionItem}
-                                                    onPress={() => {
-                                                        updateForm('company', suggestion);
-                                                        setShowCompanySuggestions(false);
-                                                    }}
-                                                >
-                                                    <Text style={styles.suggestionText}>{suggestion}</Text>
-                                                </TouchableOpacity>
-                                            ))}
-                                        </ScrollView>
-                                    </View>
+                                {showEntrepriseSuggestions && entrepriseSuggestions.length > 0 && (
+                                    <ScrollView
+                                        style={styles.suggestionsContainer}
+                                        nestedScrollEnabled={true}
+                                        keyboardShouldPersistTaps="always"
+                                        showsVerticalScrollIndicator={true}
+                                    >
+                                        {entrepriseSuggestions.map((suggestion, idx) => (
+                                            <TouchableOpacity
+                                                key={idx}
+                                                style={styles.suggestionItem}
+                                                activeOpacity={0.7}
+                                                onPress={() => {
+                                                    updateForm('entreprise', suggestion);
+                                                    setShowEntrepriseSuggestions(false);
+                                                }}
+                                            >
+                                                <Text style={styles.suggestionText}>{suggestion}</Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </ScrollView>
                                 )}
                             </View>
 
@@ -771,9 +868,10 @@ ${Array.from({ length: totalPages }, (_, pageIndex) => {
                             >
                                 <Text style={styles.validateText}>Valider</Text>
                             </TouchableOpacity>
+                        </ScrollView>
                         </View>
-                    )}
-                </KeyboardAwareScrollView>
+                    </KeyboardAvoidingView>
+                </Modal>
 
                 {/* Modal de sélection de source d'image */}
                 <Modal
@@ -823,7 +921,17 @@ ${Array.from({ length: totalPages }, (_, pageIndex) => {
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#f9f9f9' },
     contentContainer: { padding: 16 },
-    calendarContainer: { marginBottom: 24 },
+    calendarContainer: {
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 8,
+        marginBottom: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
 
     exportButton: {
         backgroundColor: '#4caf50',
@@ -885,15 +993,44 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
 
-    formCard: {
-        backgroundColor: '#fff',
-        borderRadius: 8,
-        padding: 12,
-        marginBottom: 24,
-        elevation: 3,
+    // Modal styles
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
-    closeFormBtn: { alignSelf: 'flex-end', marginBottom: 8 },
-    closeFormText: { fontSize: 18, color: '#f26463' },
+    overlayBackdrop: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0,0,0,0.3)',
+    },
+    formCardOverlay: {
+        width: '92%',
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        maxHeight: '75%',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 10,
+    },
+    closeFormBtn: {
+        position: 'absolute',
+        top: 8,
+        right: 8,
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: '#f0f0f0',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 10,
+    },
+    closeFormText: {
+        fontSize: 20,
+        color: '#666',
+        fontWeight: 'bold',
+    },
     label: { fontSize: 14, fontWeight: '500', marginTop: 12, color: '#333' },
     textInput: {
         marginTop: 4,
@@ -1035,7 +1172,6 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.25,
         shadowRadius: 8,
-        overflow: 'hidden',
     },
     suggestionItem: {
         paddingVertical: 12,
@@ -1048,5 +1184,38 @@ const styles = StyleSheet.create({
         fontSize: 15,
         color: '#333',
         fontWeight: '400',
+    },
+
+    // Styles pour les dossiers
+    folderContainer: {
+        marginBottom: 20,
+    },
+    folderTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#414248',
+        marginTop: 16,
+        marginBottom: 12,
+        marginLeft: 4,
+    },
+    badgeRow: {
+        flexDirection: 'row',
+        position: 'absolute',
+        top: -10,
+        left: 16,
+        zIndex: 10,
+        gap: 8,
+    },
+    seeMoreButton: {
+        backgroundColor: '#f0f0f0',
+        padding: 10,
+        borderRadius: 6,
+        alignItems: 'center',
+        marginTop: 8,
+    },
+    seeMoreText: {
+        color: '#666',
+        fontSize: 14,
+        fontWeight: '500',
     },
 });
