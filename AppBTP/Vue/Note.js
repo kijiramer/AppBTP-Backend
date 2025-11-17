@@ -1,5 +1,5 @@
 // Note.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -7,15 +7,22 @@ import {
   TouchableOpacity,
   Switch,
   Alert,
+  Animated,
+  PanResponder,
   TextInput,
+  ScrollView,
+  Modal,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import moment from 'moment';
 import 'moment/locale/fr';
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import Storage from '../utils/Storage';
+import { Ionicons } from '@expo/vector-icons';
 
 import Header from './Header';
 import ScreenWrapper from '../Controleur/ScreenWrapper';
@@ -25,11 +32,13 @@ import { API_BASE_URL } from '../config';
 moment.locale('fr');
 
 export default function Note({ route, navigation }) {
-  const { city, building, task } = route.params;
+  const { city, building, task } = route.params || {};
+  const scrollViewRef = useRef(null);
 
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [swipedNoteId, setSwipedNoteId] = useState(null);
   const [form, setForm] = useState({
     floor: '',
     apartment: '',
@@ -40,12 +49,27 @@ export default function Note({ route, navigation }) {
     closedTime: '',
   });
   const [showForm, setShowForm] = useState(false);
+  const [scrollEnabled, setScrollEnabled] = useState(true);
+
+  // Suggestions pour autocomplete
   const [floorSuggestions, setFloorSuggestions] = useState([]);
   const [apartmentSuggestions, setApartmentSuggestions] = useState([]);
   const [companySuggestions, setCompanySuggestions] = useState([]);
   const [showFloorSuggestions, setShowFloorSuggestions] = useState(false);
   const [showApartmentSuggestions, setShowApartmentSuggestions] = useState(false);
   const [showCompanySuggestions, setShowCompanySuggestions] = useState(false);
+
+  const updateForm = (field, value) =>
+    setForm(prev => ({ ...prev, [field]: value }));
+
+  const handleToggleOpen = v => {
+    updateForm('open', v);
+    updateForm('openTime', v ? moment().format('HH:mm') : '');
+  };
+  const handleToggleClosed = v => {
+    updateForm('closed', v);
+    updateForm('closedTime', v ? moment().format('HH:mm') : '');
+  };
 
   // Charger l'historique des valeurs saisies
   useEffect(() => {
@@ -82,29 +106,31 @@ export default function Note({ route, navigation }) {
     loadHistory();
   }, []);
 
-  const updateForm = (field, value) =>
-      setForm(prev => ({ ...prev, [field]: value }));
+  // Charger les notes
+  useEffect(() => {
+    loadNotes();
+  }, [selectedDate]);
 
-  const handleToggleOpen = v => {
-    updateForm('open', v);
-    updateForm('openTime', v ? moment().format('HH:mm') : '');
-  };
-  const handleToggleClosed = v => {
-    updateForm('closed', v);
-    updateForm('closedTime', v ? moment().format('HH:mm') : '');
-  };
+  // Quand le formulaire s'ouvre, désactiver scroll du fond
+  useEffect(() => {
+    if (showForm) {
+      setScrollEnabled(false);
+    } else {
+      setScrollEnabled(true);
+    }
+  }, [showForm]);
 
   // Fonction pour charger les notes depuis l'API
   const loadNotes = async () => {
     try {
       setLoading(true);
-  const token = await Storage.getItem('token');
+      const token = await Storage.getItem('token');
       if (!token) {
         Alert.alert('Erreur', 'Vous devez être connecté');
         return;
       }
 
-  const response = await axios.get(`${API_BASE_URL}/notes?city=${city}&building=${building}&task=${task}&selectedDate=${selectedDate.toISOString()}`, {
+      const response = await axios.get(`${API_BASE_URL}/notes?city=${city}&building=${building}&task=${task}&selectedDate=${selectedDate.toISOString()}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -129,12 +155,6 @@ export default function Note({ route, navigation }) {
   };
 
   const addNote = async () => {
-    // Validation
-    if (!form.floor.trim() || !form.apartment.trim() || !form.company.trim()) {
-      Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires');
-      return;
-    }
-
     try {
       setLoading(true);
       const token = await Storage.getItem('token');
@@ -182,9 +202,15 @@ export default function Note({ route, navigation }) {
           }
         };
 
-        await updateHistory('note_floor_history', form.floor, floorSuggestions, setFloorSuggestions);
-        await updateHistory('note_apartment_history', form.apartment, apartmentSuggestions, setApartmentSuggestions);
-        await updateHistory('note_company_history', form.company, companySuggestions, setCompanySuggestions);
+        if (form.floor.trim()) {
+          await updateHistory('note_floor_history', form.floor, floorSuggestions, setFloorSuggestions);
+        }
+        if (form.apartment.trim()) {
+          await updateHistory('note_apartment_history', form.apartment, apartmentSuggestions, setApartmentSuggestions);
+        }
+        if (form.company.trim()) {
+          await updateHistory('note_company_history', form.company, companySuggestions, setCompanySuggestions);
+        }
 
         // Ajouter la nouvelle note à l'état local
         setNotes(prev => [
@@ -199,11 +225,11 @@ export default function Note({ route, navigation }) {
           ...prev,
         ]);
 
-        // Réinitialiser le formulaire mais garder les valeurs
+        // Réinitialiser le formulaire complètement
         setForm({
-          floor: form.floor,
-          apartment: form.apartment,
-          company: form.company,
+          floor: '',
+          apartment: '',
+          company: '',
           open: false,
           closed: false,
           openTime: '',
@@ -219,6 +245,52 @@ export default function Note({ route, navigation }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Supprimer une note
+  const deleteNote = async (noteId) => {
+    Alert.alert(
+      'Supprimer la note',
+      'Êtes-vous sûr de vouloir supprimer cette note ?',
+      [
+        {
+          text: 'Annuler',
+          style: 'cancel',
+        },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setLoading(true);
+              const token = await Storage.getItem('token');
+              if (!token) {
+                Alert.alert('Erreur', 'Vous devez être connecté');
+                return;
+              }
+
+              const response = await axios.delete(`${API_BASE_URL}/notes/${noteId}`, {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              });
+
+              if (response.data.success) {
+                // Supprimer la note de l'état local
+                setNotes(prev => prev.filter(note => note.id !== noteId));
+                // Rafraîchir les dates marquées pour le calendrier
+                loadNoteDates();
+              }
+            } catch (err) {
+              console.error('Error deleting note:', err);
+              Alert.alert('Erreur', 'Impossible de supprimer la note');
+            } finally {
+              setLoading(false);
+            }
+          },
+        },
+      ]
+    );
   };
 
   // Fermer une note (ajouter l'heure de fermeture)
@@ -244,10 +316,6 @@ export default function Note({ route, navigation }) {
                 return;
               }
 
-              console.log('Closing note:', noteId);
-              console.log('API URL:', `${API_BASE_URL}/notes/${noteId}`);
-              console.log('Data:', { closedTime: currentTime });
-
               const response = await axios.put(
                 `${API_BASE_URL}/notes/${noteId}`,
                 { closedTime: currentTime },
@@ -258,8 +326,6 @@ export default function Note({ route, navigation }) {
                   },
                 }
               );
-
-              console.log('Response:', response.data);
 
               if (response.data.success) {
                 // Mettre à jour la note dans l'état local
@@ -274,7 +340,6 @@ export default function Note({ route, navigation }) {
               }
             } catch (err) {
               console.error('Error closing note:', err);
-              console.error('Error details:', err.response?.data);
               Alert.alert('Erreur', `Impossible de fermer la note: ${err.response?.data?.message || err.message}`);
             } finally {
               setLoading(false);
@@ -294,9 +359,9 @@ export default function Note({ route, navigation }) {
   const [noteDates, setNoteDates] = useState([]);
   const loadNoteDates = async () => {
     try {
-  const token = await Storage.getItem('token');
+      const token = await Storage.getItem('token');
       if (!token) return;
-  const url = `${API_BASE_URL}/notes/dates?city=${city}&building=${building}&task=${task}`;
+      const url = `${API_BASE_URL}/notes/dates?city=${city}&building=${building}&task=${task}`;
       const response = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
       if (response.data.success && Array.isArray(response.data.dates)) {
         setNoteDates(response.data.dates);
@@ -304,9 +369,9 @@ export default function Note({ route, navigation }) {
     } catch (e) {
       // Fallback silencieux: récupérer toutes les notes et en déduire les dates
       try {
-  const token = await Storage.getItem('token');
+        const token = await Storage.getItem('token');
         if (!token) return;
-  const urlAll = `${API_BASE_URL}/notes?city=${city}&building=${building}&task=${task}`;
+        const urlAll = `${API_BASE_URL}/notes?city=${city}&building=${building}&task=${task}`;
         const respAll = await axios.get(urlAll, { headers: { Authorization: `Bearer ${token}` } });
         if (respAll.data.success && Array.isArray(respAll.data.notes)) {
           const set = new Set();
@@ -329,13 +394,83 @@ export default function Note({ route, navigation }) {
   // Liste des dates avec notes (YYYY-MM-DD)
   const datesWithNotes = noteDates;
 
-  // Composant pour une note
-  const NoteCard = ({ note, onClose }) => {
+  // Fonction pour fermer toutes les notes swipées
+  const closeSwipedNotes = () => {
+    setSwipedNoteId(null);
+  };
+
+  // Composant pour une note avec swipe
+  const SwipeableNoteCard = ({ note, onDelete, onClose }) => {
+    const translateX = useRef(new Animated.Value(0)).current;
+    const isThisNoteSwipedLeft = swipedNoteId === note.id;
     const isNoteOpen = note.openTime && !note.closedTime;
 
+    // Fermer automatiquement si une autre note est swipée
+    useEffect(() => {
+      if (swipedNoteId !== note.id && swipedNoteId !== null) {
+        Animated.spring(translateX, {
+          toValue: 0,
+          useNativeDriver: false,
+          tension: 150,
+          friction: 8,
+        }).start();
+      }
+    }, [swipedNoteId, note.id, translateX]);
+
+    const panResponder = PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return Math.abs(gestureState.dx) > 20 &&
+          Math.abs(gestureState.dx) > Math.abs(gestureState.dy) * 3 &&
+          Math.abs(gestureState.dy) < 30;
+      },
+      onPanResponderGrant: () => {
+        translateX.setOffset(translateX._value);
+        translateX.setValue(0);
+      },
+      onPanResponderMove: (_, gestureState) => {
+        // Vérifier que le mouvement reste principalement horizontal
+        if (Math.abs(gestureState.dy) > Math.abs(gestureState.dx)) {
+          return; // Annuler si trop vertical
+        }
+
+        if (gestureState.dx < 0 && gestureState.dx > -80) { // Limiter le swipe
+          translateX.setValue(gestureState.dx);
+        }
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        translateX.flattenOffset();
+
+        // Vérifier une dernière fois que c'était un swipe horizontal
+        if (Math.abs(gestureState.dy) > Math.abs(gestureState.dx)) {
+          return;
+        }
+
+        // Juste marquer comme swipé si assez à gauche, sans animation
+        const currentValue = translateX._value;
+        if (currentValue < -30) {
+          setSwipedNoteId(note.id);
+        } else if (currentValue > -10) {
+          setSwipedNoteId(null);
+        }
+
+        // Pas d'animation - reste où c'est !
+      },
+    });
+
     return (
-      <View style={styles.noteContainer}>
-        <View style={styles.noteCard}>
+      <View style={styles.swipeContainer}>
+        {/* Bouton de suppression en arrière-plan */}
+        <View style={styles.deleteButtonBackground}>
+          <TouchableOpacity style={styles.deleteButton} onPress={onDelete}>
+            <Ionicons name="trash" size={18} color="#fff" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Note avec swipe */}
+        <Animated.View
+          style={[styles.noteCard, { transform: [{ translateX }], zIndex: 1 }]}
+          {...panResponder.panHandlers}
+        >
           {/* Badge Entreprise */}
           <View style={styles.badge}>
             <Text style={styles.badgeText}>
@@ -370,213 +505,279 @@ export default function Note({ route, navigation }) {
               )}
             </View>
           </TouchableOpacity>
-        </View>
+        </Animated.View>
       </View>
     );
   };
 
   return (
-      <ScreenWrapper>
-        <SafeAreaView style={styles.container}>
-          <Header
-              navigation={navigation}
-              isHomePage={false}
-              city={city}
-              building={building}
-              task={task}
-          />
+    <ScreenWrapper>
+      <SafeAreaView style={styles.container}>
+        <Header
+          navigation={navigation}
+          isHomePage={false}
+          city={city}
+          building={building}
+          task={task}
+        />
 
-          <KeyboardAwareScrollView
-              contentContainerStyle={styles.contentContainer}
-              enableOnAndroid={true}
-              enableAutomaticScroll={true}
-              extraScrollHeight={100}
-              keyboardShouldPersistTaps="handled"
+        <KeyboardAwareScrollView
+          ref={scrollViewRef}
+          contentContainerStyle={styles.contentContainer}
+          onTouchStart={closeSwipedNotes}
+          enableOnAndroid={true}
+          enableAutomaticScroll={false}
+          keyboardShouldPersistTaps="handled"
+          scrollEnabled={scrollEnabled}
+        >
+          {/* Calendrier */}
+          <View style={styles.calendarContainer}>
+            {displayCalendarScreen(selectedDate, setSelectedDate, datesWithNotes)}
+          </View>
+
+          {/* Notes existantes */}
+          {(() => {
+            // Séparer les notes ouvertes, fermées et autres
+            const openNotes = notes.filter(note => note.openTime && !note.closedTime);
+            const closedNotes = notes.filter(note => note.closedTime);
+            const otherNotes = notes.filter(note => !note.openTime && !note.closedTime);
+
+            return (
+              <>
+                {/* Section Notes Autres */}
+                {otherNotes.length > 0 && (
+                  <>
+                    <View style={styles.sectionHeader}>
+                      <Text style={styles.sectionHeaderText}>📝 Notes ({otherNotes.length})</Text>
+                    </View>
+                    {otherNotes.map((note, idx) => (
+                      <SwipeableNoteCard
+                        key={note.id || idx}
+                        note={note}
+                        onDelete={() => deleteNote(note.id)}
+                        onClose={() => closeNote(note.id)}
+                      />
+                    ))}
+                  </>
+                )}
+
+                {/* Section Notes Ouvertes */}
+                {openNotes.length > 0 && (
+                  <>
+                    <View style={styles.sectionHeader}>
+                      <Text style={styles.sectionHeaderText}>📂 Ouvert ({openNotes.length})</Text>
+                    </View>
+                    {openNotes.map((note, idx) => (
+                      <SwipeableNoteCard
+                        key={note.id || idx}
+                        note={note}
+                        onDelete={() => deleteNote(note.id)}
+                        onClose={() => closeNote(note.id)}
+                      />
+                    ))}
+                  </>
+                )}
+
+                {/* Section Notes Fermées */}
+                {closedNotes.length > 0 && (
+                  <>
+                    <View style={styles.sectionHeader}>
+                      <Text style={styles.sectionHeaderText}>✅ Fermé ({closedNotes.length})</Text>
+                    </View>
+                    {closedNotes.map((note, idx) => (
+                      <SwipeableNoteCard
+                        key={note.id || idx}
+                        note={note}
+                        onDelete={() => deleteNote(note.id)}
+                        onClose={() => closeNote(note.id)}
+                      />
+                    ))}
+                  </>
+                )}
+              </>
+            );
+          })()}
+
+          {/* Bouton "＋" cercle pour ouvrir */}
+          {!showForm && (
+            <TouchableOpacity
+              style={styles.toggleCircle}
+              onPress={() => setShowForm(true)}
+            >
+              <Text style={styles.toggleCircleText}>＋</Text>
+            </TouchableOpacity>
+          )}
+        </KeyboardAwareScrollView>
+
+        {/* Modal formulaire */}
+        <Modal
+          visible={showForm}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowForm(false)}
+        >
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.modalContainer}
           >
-            {/* Calendrier */}
-            <View style={styles.calendarContainer}>
-              {displayCalendarScreen(selectedDate, setSelectedDate, datesWithNotes)}
-            </View>
+            {/* Fond sombre cliquable pour fermer */}
+            <TouchableOpacity
+              activeOpacity={1}
+              style={styles.overlayBackdrop}
+              onPress={() => setShowForm(false)}
+            />
 
-            {/* Notes existantes */}
-            {(() => {
-              // Séparer les notes ouvertes et fermées
-              const openNotes = notes.filter(note => note.openTime && !note.closedTime);
-              const closedNotes = notes.filter(note => note.closedTime);
-
-              return (
-                <>
-                  {/* Section Notes Ouvertes */}
-                  {openNotes.length > 0 && (
-                    <>
-                      <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionHeaderText}>📂 Ouvert ({openNotes.length})</Text>
-                      </View>
-                      {openNotes.map((note, idx) => (
-                        <NoteCard
-                          key={note.id || idx}
-                          note={note}
-                          onClose={() => closeNote(note.id)}
-                        />
-                      ))}
-                    </>
-                  )}
-
-                  {/* Section Notes Fermées */}
-                  {closedNotes.length > 0 && (
-                    <>
-                      <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionHeaderText}>✅ Fermé ({closedNotes.length})</Text>
-                      </View>
-                      {closedNotes.map((note, idx) => (
-                        <NoteCard
-                          key={note.id || idx}
-                          note={note}
-                          onClose={() => closeNote(note.id)}
-                        />
-                      ))}
-                    </>
-                  )}
-                </>
-              );
-            })()}
-
-            {/* Bouton “＋” cercle pour ouvrir */}
-            {!showForm && (
-                <TouchableOpacity
-                    style={styles.toggleCircle}
-                    onPress={() => setShowForm(true)}
-                >
-                  <Text style={styles.toggleCircleText}>＋</Text>
+            <View style={styles.formCardOverlay}>
+              <ScrollView
+                contentContainerStyle={{ padding: 16 }}
+                keyboardShouldPersistTaps="always"
+                showsVerticalScrollIndicator={true}
+              >
+                <TouchableOpacity style={styles.closeFormBtn} onPress={() => setShowForm(false)}>
+                  <Text style={styles.closeFormText}>✕</Text>
                 </TouchableOpacity>
-            )}
 
-            {/* Formulaire */}
-            {showForm && (
-                <View style={styles.formCard}>
-                  {/* Bouton ✕ */}
-                  <TouchableOpacity
-                      style={styles.closeFormBtn}
-                      onPress={() => setShowForm(false)}
-                  >
-                    <Text style={styles.closeFormText}>✕</Text>
-                  </TouchableOpacity>
+                <Text style={styles.formTitle}>Nouvelle note</Text>
 
-                  {/* Ligne Étage/Appart/+ */}
-                  <View style={styles.formRow}>
-                    <Text style={styles.label}>Étage :</Text>
-                    <View style={{ flex: 1 }}>
-                      <TextInput
-                          style={styles.textInput}
-                          value={form.floor}
-                          onChangeText={v => updateForm('floor', v)}
-                          placeholder="Ex: 1"
-                          keyboardType="numeric"
-                          onFocus={() => setShowFloorSuggestions(true)}
-                          onBlur={() => setTimeout(() => setShowFloorSuggestions(false), 200)}
-                      />
-                      {showFloorSuggestions && floorSuggestions.length > 0 && (
-                        <View style={styles.suggestionsContainer}>
-                          {floorSuggestions.map((suggestion, idx) => (
-                            <TouchableOpacity
-                              key={idx}
-                              style={styles.suggestionItem}
-                              onPress={() => {
-                                updateForm('floor', suggestion);
-                                setShowFloorSuggestions(false);
-                              }}
-                            >
-                              <Text style={styles.suggestionText}>{suggestion}</Text>
-                            </TouchableOpacity>
-                          ))}
-                        </View>
-                      )}
-                    </View>
-
-                    <Text style={[styles.label, { marginLeft: 12 }]}>Appart :</Text>
-                    <View style={{ flex: 1 }}>
-                      <TextInput
-                          style={styles.textInput}
-                          value={form.apartment}
-                          onChangeText={v => updateForm('apartment', v)}
-                          placeholder="Ex: 101"
-                          keyboardType="numeric"
-                          onFocus={() => setShowApartmentSuggestions(true)}
-                          onBlur={() => setTimeout(() => setShowApartmentSuggestions(false), 200)}
-                      />
-                      {showApartmentSuggestions && apartmentSuggestions.length > 0 && (
-                        <View style={styles.suggestionsContainer}>
-                          {apartmentSuggestions.map((suggestion, idx) => (
-                            <TouchableOpacity
-                              key={idx}
-                              style={styles.suggestionItem}
-                              onPress={() => {
-                                updateForm('apartment', suggestion);
-                                setShowApartmentSuggestions(false);
-                              }}
-                            >
-                              <Text style={styles.suggestionText}>{suggestion}</Text>
-                            </TouchableOpacity>
-                          ))}
-                        </View>
-                      )}
-                    </View>
-
-                    <TouchableOpacity
-                        style={styles.addButton}
-                        onPress={addNote}
-                    >
-                      <Text style={styles.addText}>＋</Text>
-                    </TouchableOpacity>
+                {/* Ligne Étage/Appart */}
+                <View style={styles.formRow}>
+                  <View style={{ flex: 1, position: 'relative' }}>
+                    <Text style={styles.label}>Étage</Text>
+                    <TextInput
+                      value={form.floor}
+                      onChangeText={(v) => updateForm('floor', v)}
+                      placeholder="Ex: 1"
+                      placeholderTextColor="#999"
+                      keyboardType="numeric"
+                      style={styles.textInput}
+                      onFocus={() => setShowFloorSuggestions(true)}
+                      onBlur={() => setTimeout(() => setShowFloorSuggestions(false), 200)}
+                    />
+                    {showFloorSuggestions && floorSuggestions.length > 0 && (
+                      <ScrollView
+                        style={styles.suggestionsContainer}
+                        nestedScrollEnabled={true}
+                        keyboardShouldPersistTaps="always"
+                        showsVerticalScrollIndicator={true}
+                      >
+                        {floorSuggestions.map((suggestion, idx) => (
+                          <TouchableOpacity
+                            key={idx}
+                            style={styles.suggestionItem}
+                            activeOpacity={0.7}
+                            onPress={() => {
+                              updateForm('floor', suggestion);
+                              setShowFloorSuggestions(false);
+                            }}
+                          >
+                            <Text style={styles.suggestionText}>{suggestion}</Text>
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
+                    )}
                   </View>
 
-                  {/* Champ Entreprise */}
-                  <View style={styles.companyRow}>
-                    <Text style={styles.label}>Entreprise :</Text>
-                    <View style={{ flex: 1 }}>
-                      <TextInput
-                          style={[styles.textInput, { flex: 1 }]}
-                          value={form.company}
-                          onChangeText={v => updateForm('company', v)}
-                          placeholder="Nom de l'entreprise"
-                          onFocus={() => setShowCompanySuggestions(true)}
-                          onBlur={() => setTimeout(() => setShowCompanySuggestions(false), 200)}
-                      />
-                      {showCompanySuggestions && companySuggestions.length > 0 && (
-                        <View style={styles.suggestionsContainer}>
-                          {companySuggestions.map((suggestion, idx) => (
-                            <TouchableOpacity
-                              key={idx}
-                              style={styles.suggestionItem}
-                              onPress={() => {
-                                updateForm('company', suggestion);
-                                setShowCompanySuggestions(false);
-                              }}
-                            >
-                              <Text style={styles.suggestionText}>{suggestion}</Text>
-                            </TouchableOpacity>
-                          ))}
-                        </View>
-                      )}
-                    </View>
-                  </View>
-
-                  {/* Switches */}
-                  <View style={styles.switchRow}>
-                    <View style={styles.switchWrapper}>
-                      <Text style={styles.switchLabel}>Ouvert</Text>
-                      <Switch value={form.open} onValueChange={handleToggleOpen} />
-                    </View>
-                    <View style={styles.switchWrapper}>
-                      <Text style={styles.switchLabel}>Fermé</Text>
-                      <Switch value={form.closed} onValueChange={handleToggleClosed} />
-                    </View>
+                  <View style={{ flex: 1, marginLeft: 12, position: 'relative' }}>
+                    <Text style={styles.label}>Appart</Text>
+                    <TextInput
+                      value={form.apartment}
+                      onChangeText={(v) => updateForm('apartment', v)}
+                      placeholder="Ex: 101"
+                      placeholderTextColor="#999"
+                      keyboardType="numeric"
+                      style={styles.textInput}
+                      onFocus={() => setShowApartmentSuggestions(true)}
+                      onBlur={() => setTimeout(() => setShowApartmentSuggestions(false), 200)}
+                    />
+                    {showApartmentSuggestions && apartmentSuggestions.length > 0 && (
+                      <ScrollView
+                        style={styles.suggestionsContainer}
+                        nestedScrollEnabled={true}
+                        keyboardShouldPersistTaps="always"
+                        showsVerticalScrollIndicator={true}
+                      >
+                        {apartmentSuggestions.map((suggestion, idx) => (
+                          <TouchableOpacity
+                            key={idx}
+                            style={styles.suggestionItem}
+                            activeOpacity={0.7}
+                            onPress={() => {
+                              updateForm('apartment', suggestion);
+                              setShowApartmentSuggestions(false);
+                            }}
+                          >
+                            <Text style={styles.suggestionText}>{suggestion}</Text>
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
+                    )}
                   </View>
                 </View>
-            )}
-          </KeyboardAwareScrollView>
-        </SafeAreaView>
-      </ScreenWrapper>
+
+                {/* Champ Entreprise */}
+                <View style={{ marginTop: 12, position: 'relative' }}>
+                  <Text style={styles.label}>Entreprise</Text>
+                  <TextInput
+                    value={form.company}
+                    onChangeText={(v) => updateForm('company', v)}
+                    placeholder="Ex: HOPRA"
+                    placeholderTextColor="#999"
+                    style={[styles.textInput, { width: '100%' }]}
+                    onFocus={() => setShowCompanySuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowCompanySuggestions(false), 200)}
+                  />
+                  {showCompanySuggestions && companySuggestions.length > 0 && (
+                    <ScrollView
+                      style={styles.suggestionsContainer}
+                      nestedScrollEnabled={true}
+                      keyboardShouldPersistTaps="always"
+                      showsVerticalScrollIndicator={true}
+                    >
+                      {companySuggestions.map((suggestion, idx) => (
+                        <TouchableOpacity
+                          key={idx}
+                          style={styles.suggestionItem}
+                          activeOpacity={0.7}
+                          onPress={() => {
+                            updateForm('company', suggestion);
+                            setShowCompanySuggestions(false);
+                          }}
+                        >
+                          <Text style={styles.suggestionText}>{suggestion}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
+                  )}
+                </View>
+
+                {/* Switches */}
+                <View style={styles.switchRow}>
+                  <View style={styles.switchWrapper}>
+                    <Text style={styles.switchLabel}>Ouvert</Text>
+                    <Switch value={form.open} onValueChange={handleToggleOpen} />
+                  </View>
+                  <View style={styles.switchWrapper}>
+                    <Text style={styles.switchLabel}>Fermé</Text>
+                    <Switch value={form.closed} onValueChange={handleToggleClosed} />
+                  </View>
+                </View>
+
+                {/* Boutons Actions */}
+                <View style={styles.formActions}>
+                  <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowForm(false)}>
+                    <Text style={styles.cancelText}>Annuler</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity style={styles.addButtonOverlay} onPress={addNote}>
+                    <Text style={styles.addText}>Ajouter</Text>
+                  </TouchableOpacity>
+                </View>
+              </ScrollView>
+            </View>
+          </KeyboardAvoidingView>
+        </Modal>
+      </SafeAreaView>
+    </ScreenWrapper>
   );
 }
 
@@ -641,10 +842,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  noteField: { 
-    flex: 1, 
-    textAlign: 'center', 
-    fontSize: 13, 
+  noteField: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 13,
     color: '#111',
     paddingHorizontal: 2,
   },
@@ -671,72 +872,32 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 
-  formCard: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 24,
-    overflow: 'visible',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  closeFormBtn: { alignSelf: 'flex-end', marginBottom: 8 },
-  closeFormText: { fontSize: 18, color: '#f26463' },
-
-  formRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  companyRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  label: { fontSize: 14, fontWeight: '500', color: '#333' },
-  textInput: {
-    flex: 1,
-    minWidth: 60,
-    marginHorizontal: 4,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 6,
-    backgroundColor: '#fff',
-    fontSize: 14,
-  },
-  addButton: {
-    backgroundColor: '#f26463',
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 8,
-  },
-  addText: { color: '#fff', fontSize: 20 },
-
-  switchRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 4,
-  },
-  switchWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: 16,
-  },
-  switchLabel: { marginRight: 6, fontSize: 13 },
-
-  // Styles pour le conteneur de note
-  noteContainer: {
+  // Styles pour le swipe-to-delete
+  swipeContainer: {
+    position: 'relative',
     marginTop: 20,
     marginBottom: 16,
-    paddingTop: 15,
+    overflow: 'visible',
+    borderRadius: 30,
+  },
+  deleteButtonBackground: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    width: 60,
+    height: '100%',
+    backgroundColor: '#ff4444',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderTopRightRadius: 30,
+    borderBottomRightRadius: 30,
+    zIndex: 0,
+  },
+  deleteButton: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   openNoteHighlight: {
     fontWeight: 'bold',
@@ -752,31 +913,109 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
 
-  // Styles pour les suggestions
-  suggestionsContainer: {
-    position: 'absolute',
-    top: 40,
-    left: 4,
-    right: 4,
+  // Modal styles
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  overlayBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+  },
+  formCardOverlay: {
+    width: '92%',
     backgroundColor: '#fff',
+    borderRadius: 12,
+    maxHeight: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 10,
+  },
+  closeFormBtn: {
+    position: 'absolute',
+    right: 8,
+    top: 8,
+    zIndex: 10,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  closeFormText: { fontSize: 20, color: '#333', fontWeight: '600' },
+
+  formTitle: { fontSize: 18, fontWeight: '700', marginBottom: 16, textAlign: 'center', color: '#f26463' },
+
+  formRow: { flexDirection: 'row', alignItems: 'center' },
+  label: { fontSize: 13, color: '#444', marginBottom: 6, fontWeight: '500' },
+  textInput: {
     borderWidth: 1,
     borderColor: '#ddd',
-    borderRadius: 6,
-    maxHeight: 150,
-    zIndex: 1000,
-    elevation: 5,
+    backgroundColor: '#fff',
+    height: 44,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    fontSize: 15,
+  },
+
+  switchRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 16,
+  },
+  switchWrapper: { flexDirection: 'row', alignItems: 'center' },
+  switchLabel: { marginRight: 8, fontSize: 14, color: '#333' },
+
+  formActions: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 20 },
+  cancelBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginRight: 12,
+    borderRadius: 8,
+  },
+  cancelText: { color: '#666', fontSize: 15 },
+
+  addButtonOverlay: {
+    backgroundColor: '#f26463',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  addText: { color: '#fff', fontWeight: '700', fontSize: 15 },
+
+  // Suggestions dropdown
+  suggestionsContainer: {
+    position: 'absolute',
+    top: 70,
+    left: 0,
+    right: 0,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderTopWidth: 0,
+    borderBottomLeftRadius: 8,
+    borderBottomRightRadius: 8,
+    maxHeight: 180,
+    zIndex: 10000,
+    elevation: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
   },
   suggestionItem: {
-    padding: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: '#e8e8e8',
+    backgroundColor: '#fff',
   },
   suggestionText: {
-    fontSize: 14,
+    fontSize: 15,
     color: '#333',
+    fontWeight: '400',
   },
 });

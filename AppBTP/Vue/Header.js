@@ -32,7 +32,7 @@ export default function Header({ navigation, isHomePage, city, building, task })
 
         if (!mounted) return;
 
-        const pages = ['Notes', 'Rapports Photos', 'Constatations', 'Effectifs'];
+        const pages = ['Notes', 'Constatations', 'Effectifs'];
 
         let cities = [];
         if (resCities.ok) {
@@ -58,7 +58,7 @@ export default function Header({ navigation, isHomePage, city, building, task })
               label: bName,
               children: pages.map(p => ({
                 label: p,
-                route: p === 'Notes' ? 'Note' : p === 'Rapports Photos' ? 'RapportPhoto' : p === 'Constatations' ? 'Constatation' : 'Effectif',
+                route: p === 'Notes' ? 'Note' : p === 'Constatations' ? 'Constatation' : 'Effectif',
                 params: { city: cityName, building: bName, task: p },
               })),
             };
@@ -67,7 +67,7 @@ export default function Header({ navigation, isHomePage, city, building, task })
           // If no buildings found, still expose pages at city level
           const cityChildren = buildingNodes.length > 0 ? buildingNodes : pages.map(p => ({
             label: p,
-            route: p === 'Notes' ? 'Note' : p === 'Rapports Photos' ? 'RapportPhoto' : p === 'Constatations' ? 'Constatation' : 'Effectif',
+            route: p === 'Notes' ? 'Note' : p === 'Constatations' ? 'Constatation' : 'Effectif',
             params: { city: cityName, task: p },
           }));
 
@@ -82,12 +82,12 @@ export default function Header({ navigation, isHomePage, city, building, task })
 
       // fallback: build a small static list containing current city + examples
       const fallbackCities = [city, 'Saint Ouen', 'Paris 17eme'].filter(Boolean);
-      const pages = ['Notes', 'Rapports Photos', 'Constatations', 'Effectifs'];
+      const pages = ['Notes', 'Constatations', 'Effectifs'];
       setCityItems(fallbackCities.map((c) => ({
         label: c,
         children: pages.map(p => ({
           label: p,
-          route: p === 'Notes' ? 'Note' : p === 'Rapports Photos' ? 'RapportPhoto' : p === 'Constatations' ? 'Constatation' : 'Effectif',
+          route: p === 'Notes' ? 'Note' : p === 'Constatations' ? 'Constatation' : 'Effectif',
           params: { city: c, task: p },
         })),
       })));
