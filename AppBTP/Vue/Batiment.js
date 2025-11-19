@@ -5,12 +5,13 @@ import Header from './Header';
 import ScreenWrapper from '../Controleur/ScreenWrapper';
 import { MaterialIcons } from '@expo/vector-icons';
 import { TabContext } from '../Controleur/TabContext';
+import { useUserRole } from '../Controleur/UserRoleContext';
 
-const sections = [
-    { name: 'Notes', icon: 'note', route: 'Note', task: 'Notes' },
+const allSections = [
+    { name: 'Notes', icon: 'note', route: 'Note', task: 'Note' },
     { name: 'Constatations', icon: 'assignment', route: 'Constatation', task: 'Constatations' },
     { name: 'Rapport Photo', icon: 'photo-camera', route: 'RapportPhoto', task: 'Rapport Photo' },
-    { name: 'Effectifs', icon: 'people', route: 'Effectif', task: 'Effectifs' },
+    { name: 'Effectifs', icon: 'people', route: 'Effectif', task: 'Effectif' },
     { name: 'Remarques', icon: 'comment', route: 'Remarque', task: 'Remarques' },
 ];
 
@@ -24,6 +25,10 @@ const Card = ({ name, icon, onPress }) => (
 export default function Batiment({ route, navigation }) {
     const { city, building } = route.params || {};
     const { setActiveTab } = useContext(TabContext);
+    const { canViewTask } = useUserRole();
+
+    // Filtrer les sections selon le rôle de l'utilisateur
+    const sections = allSections.filter(section => canViewTask(section.task));
 
     useEffect(() => {
         if (building) {

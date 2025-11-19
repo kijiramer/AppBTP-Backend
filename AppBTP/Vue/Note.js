@@ -27,6 +27,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Header from './Header';
 import ScreenWrapper from '../Controleur/ScreenWrapper';
 import { displayCalendarScreen } from './Components/Calendar';
+import { useUserRole } from '../Controleur/UserRoleContext';
 import { API_BASE_URL } from '../config';
 
 moment.locale('fr');
@@ -34,6 +35,7 @@ moment.locale('fr');
 export default function Note({ route, navigation }) {
   const { city, building, task } = route.params || {};
   const scrollViewRef = useRef(null);
+  const { canAddItem } = useUserRole();
 
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -599,7 +601,7 @@ export default function Note({ route, navigation }) {
           })()}
 
           {/* Bouton "＋" cercle pour ouvrir */}
-          {!showForm && (
+          {!showForm && canAddItem('Note') && (
             <TouchableOpacity
               style={styles.toggleCircle}
               onPress={() => setShowForm(true)}

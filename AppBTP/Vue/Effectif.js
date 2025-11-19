@@ -10,10 +10,12 @@ import Storage from '../utils/Storage';
 import Header from './Header';
 import ScreenWrapper from '../Controleur/ScreenWrapper';
 import { displayCalendarScreen } from './Components/Calendar';
+import { useUserRole } from '../Controleur/UserRoleContext';
 import { API_BASE_URL } from '../config';
 
 export default function Effectif({ route, navigation }) {
   const { city, building, task } = route.params || {};
+  const { canAddItem } = useUserRole();
   const [effectifs, setEffectifs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -311,7 +313,7 @@ export default function Effectif({ route, navigation }) {
           )}
 
           {/* Bouton "＋" cercle pour ouvrir le formulaire */}
-          {!showForm && (
+          {!showForm && canAddItem('Effectif') && (
             <TouchableOpacity
               style={styles.toggleCircle}
               onPress={() => setShowForm(true)}

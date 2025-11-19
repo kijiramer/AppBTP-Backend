@@ -11,9 +11,11 @@ import { API_BASE_URL } from '../config';
 import Header from './Header';
 import ScreenWrapper from '../Controleur/ScreenWrapper';
 import { displayCalendarScreen } from './Components/Calendar';
+import { useUserRole } from '../Controleur/UserRoleContext';
 
 export default function Constatation({ route, navigation }) {
     const { city, building, task } = route.params;
+    const { canAddItem } = useUserRole();
 
     const [constatations, setConstatations] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -410,7 +412,7 @@ export default function Constatation({ route, navigation }) {
                     )}
 
                     {/* Bouton pour afficher le formulaire */}
-                    {!showForm && (
+                    {!showForm && canAddItem('Constatations') && (
                         <TouchableOpacity
                             style={styles.toggleCircle}
                             onPress={() => setShowForm(true)}

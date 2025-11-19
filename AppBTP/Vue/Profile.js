@@ -6,6 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import Storage from '../utils/Storage';
 import { API_BASE_URL } from '../config';
+import { useUserRole } from '../Controleur/UserRoleContext';
 
 import Header from './Header';
 import ScreenWrapper from '../Controleur/ScreenWrapper';
@@ -14,6 +15,7 @@ export default function Profile({ navigation }) {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(false);
     const [editMode, setEditMode] = useState(false);
+    const { clearUserRole } = useUserRole();
     const [form, setForm] = useState({
         name: '',
         email: ''
@@ -93,6 +95,7 @@ export default function Profile({ navigation }) {
                     onPress: async () => {
                         await Storage.removeItem('token');
                         await Storage.removeItem('user');
+                        await clearUserRole();
                         navigation.replace('LoginPage');
                     },
                 },

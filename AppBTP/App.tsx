@@ -17,6 +17,7 @@ import Remarque from './Vue/Remarque';
 import Effectif from './Vue/Effectif';
 import PrivacyPolicy from './Vue/PrivacyPolicy';
 import { TabProvider } from './Controleur/TabContext';
+import { UserRoleProvider } from './Controleur/UserRoleContext';
 import ErrorBoundary from './Controleur/ErrorBoundary';
 import axios from 'axios';
 import { API_BASE_URL } from './config';
@@ -90,24 +91,26 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <TabProvider>
-        <NavigationContainer>
-          <Stack.Navigator initialRouteName={initialRoute}>
-            <Stack.Screen name="LoginPage" component={LoginPage} options={{ headerShown: false }} />
-            <Stack.Screen name="SignUp" component={SignUp} options={{ headerShown: false }} />
-            <Stack.Screen name="HomePage" component={HomePage} options={{ headerShown: false }} />
-            <Stack.Screen name="Profile" component={Profile} options={{ headerShown: false }} />
-            <Stack.Screen name="Chantier" component={Chantier} options={{ headerShown: false }} />
-            <Stack.Screen name="Batiment" component={Batiment} options={{ headerShown: false }} />
-            <Stack.Screen name="Note" component={Note} options={{ headerShown: false }} />
-            <Stack.Screen name="RapportPhoto" component={RapportPhoto} options={{ headerShown: false }} />
-            <Stack.Screen name="Constatation" component={Constatation} options={{ headerShown: false }} />
-            <Stack.Screen name="Remarque" component={Remarque} options={{ headerShown: false }} />
-            <Stack.Screen name="Effectif" component={Effectif} options={{ headerShown: false }} />
-            <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicy} options={{ headerShown: false }} />
-          </Stack.Navigator>
-        </NavigationContainer>
-      </TabProvider>
+      <UserRoleProvider>
+        <TabProvider>
+          <NavigationContainer>
+            <Stack.Navigator initialRouteName={initialRoute}>
+              <Stack.Screen name="LoginPage" component={LoginPage} options={{ headerShown: false }} />
+              <Stack.Screen name="SignUp" component={SignUp} options={{ headerShown: false }} />
+              <Stack.Screen name="HomePage" component={HomePage} options={{ headerShown: false }} />
+              <Stack.Screen name="Profile" component={Profile} options={{ headerShown: false }} />
+              <Stack.Screen name="Chantier" component={Chantier} options={{ headerShown: false }} />
+              <Stack.Screen name="Batiment" component={Batiment} options={{ headerShown: false }} />
+              <Stack.Screen name="Note" component={Note} options={{ headerShown: false }} />
+              <Stack.Screen name="RapportPhoto" component={RapportPhoto} options={{ headerShown: false }} />
+              <Stack.Screen name="Constatation" component={Constatation} options={{ headerShown: false }} />
+              <Stack.Screen name="Remarque" component={Remarque} options={{ headerShown: false }} />
+              <Stack.Screen name="Effectif" component={Effectif} options={{ headerShown: false }} />
+              <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicy} options={{ headerShown: false }} />
+            </Stack.Navigator>
+          </NavigationContainer>
+        </TabProvider>
+      </UserRoleProvider>
     </ErrorBoundary>
   );
 }
