@@ -15,10 +15,8 @@ export default function Profile({ navigation }) {
     const [loading, setLoading] = useState(false);
     const [editMode, setEditMode] = useState(false);
     const [form, setForm] = useState({
-        username: '',
-        email: '',
-        firstName: '',
-        lastName: ''
+        name: '',
+        email: ''
     });
 
     useEffect(() => {
@@ -43,10 +41,8 @@ export default function Profile({ navigation }) {
             if (response.data.success) {
                 setUser(response.data.user);
                 setForm({
-                    username: response.data.user.username || '',
-                    email: response.data.user.email || '',
-                    firstName: response.data.user.firstName || '',
-                    lastName: response.data.user.lastName || ''
+                    name: response.data.user.name || '',
+                    email: response.data.user.email || ''
                 });
             }
         } catch (err) {
@@ -125,8 +121,8 @@ export default function Profile({ navigation }) {
                         {!editMode ? (
                             <View>
                                 <View style={styles.infoRow}>
-                                    <Text style={styles.label}>Nom d'utilisateur :</Text>
-                                    <Text style={styles.value}>{user?.username || 'N/A'}</Text>
+                                    <Text style={styles.label}>Nom :</Text>
+                                    <Text style={styles.value}>{user?.name || 'N/A'}</Text>
                                 </View>
 
                                 <View style={styles.infoRow}>
@@ -135,18 +131,8 @@ export default function Profile({ navigation }) {
                                 </View>
 
                                 <View style={styles.infoRow}>
-                                    <Text style={styles.label}>Prénom :</Text>
-                                    <Text style={styles.value}>{user?.firstName || 'N/A'}</Text>
-                                </View>
-
-                                <View style={styles.infoRow}>
-                                    <Text style={styles.label}>Nom :</Text>
-                                    <Text style={styles.value}>{user?.lastName || 'N/A'}</Text>
-                                </View>
-
-                                <View style={styles.infoRow}>
                                     <Text style={styles.label}>Rôle :</Text>
-                                    <Text style={styles.value}>{user?.role || 'Utilisateur'}</Text>
+                                    <Text style={[styles.value, styles.roleValue]}>{user?.role || 'user'}</Text>
                                 </View>
 
                                 <TouchableOpacity
@@ -159,13 +145,12 @@ export default function Profile({ navigation }) {
                         ) : (
                             <View>
                                 <View style={styles.formRow}>
-                                    <Text style={styles.label}>Nom d'utilisateur :</Text>
+                                    <Text style={styles.label}>Nom :</Text>
                                     <TextInput
                                         style={styles.textInput}
-                                        value={form.username}
-                                        onChangeText={v => updateForm('username', v)}
-                                        placeholder="Nom d'utilisateur"
-                                        editable={false}
+                                        value={form.name}
+                                        onChangeText={v => updateForm('name', v)}
+                                        placeholder="Nom"
                                     />
                                 </View>
 
@@ -180,36 +165,14 @@ export default function Profile({ navigation }) {
                                     />
                                 </View>
 
-                                <View style={styles.formRow}>
-                                    <Text style={styles.label}>Prénom :</Text>
-                                    <TextInput
-                                        style={styles.textInput}
-                                        value={form.firstName}
-                                        onChangeText={v => updateForm('firstName', v)}
-                                        placeholder="Prénom"
-                                    />
-                                </View>
-
-                                <View style={styles.formRow}>
-                                    <Text style={styles.label}>Nom :</Text>
-                                    <TextInput
-                                        style={styles.textInput}
-                                        value={form.lastName}
-                                        onChangeText={v => updateForm('lastName', v)}
-                                        placeholder="Nom"
-                                    />
-                                </View>
-
                                 <View style={styles.buttonRow}>
                                     <TouchableOpacity
                                         style={[styles.button, styles.cancelButton]}
                                         onPress={() => {
                                             setEditMode(false);
                                             setForm({
-                                                username: user?.username || '',
-                                                email: user?.email || '',
-                                                firstName: user?.firstName || '',
-                                                lastName: user?.lastName || ''
+                                                name: user?.name || '',
+                                                email: user?.email || ''
                                             });
                                         }}
                                     >
@@ -283,6 +246,11 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         backgroundColor: '#f5f5f5',
         borderRadius: 8,
+    },
+    roleValue: {
+        fontWeight: '600',
+        color: '#f26463',
+        textTransform: 'capitalize',
     },
     formRow: {
         marginBottom: 16,

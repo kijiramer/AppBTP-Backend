@@ -249,6 +249,54 @@ app.get('/user', async (req, res) => {
   }
 });
 
+// Route pour récupérer le profil utilisateur (alias de /user)
+app.get('/user/profile', async (req, res) => {
+  const header = req.get('Authorization');
+  const cookieToken = req.cookies && req.cookies.token;
+  const token = header ? header.split(' ')[1] : cookieToken;
+  if (!token) {
+    return res.status(401).json({ success: false, message: 'You are not authorized.' });
+  }
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(payload.id);
+    if (!user) {
+      throw new Error('Invalid user.');
+    }
+    return res.json({ success: true, user: sanitizeUser(user) });
+  } catch (err) {
+    return res.status(401).json({ success: false, message: 'Invalid JWT token.' });
+  }
+});
+
+// Route pour mettre à jour le profil utilisateur
+app.put('/user/profile', async (req, res) => {
+  const header = req.get('Authorization');
+  const cookieToken = req.cookies && req.cookies.token;
+  const token = header ? header.split(' ')[1] : cookieToken;
+  if (!token) {
+    return res.status(401).json({ success: false, message: 'You are not authorized.' });
+  }
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(payload.id);
+    if (!user) {
+      throw new Error('Invalid user.');
+    }
+
+    // Mettre à jour les champs autorisés
+    const { name, email } = req.body;
+    if (name) user.name = name;
+    if (email) user.email = email;
+
+    await user.save();
+    return res.json({ success: true, user: sanitizeUser(user) });
+  } catch (err) {
+    console.error('Error updating profile:', err.message);
+    return res.status(500).json({ success: false, message: 'Error updating profile', error: err.message });
+  }
+});
+
 app.get('/buildings', async (req, res) => {
   try {
     const buildings = await Building.find();
