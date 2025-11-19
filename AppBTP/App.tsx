@@ -13,6 +13,7 @@ import Batiment from './Vue/Batiment';
 import Note from './Vue/Note';
 import RapportPhoto from './Vue/RapportPhoto';
 import Constatation from './Vue/Constatation';
+import Remarque from './Vue/Remarque';
 import Effectif from './Vue/Effectif';
 import PrivacyPolicy from './Vue/PrivacyPolicy';
 import { TabProvider } from './Controleur/TabContext';
@@ -101,6 +102,7 @@ export default function App() {
             <Stack.Screen name="Note" component={Note} options={{ headerShown: false }} />
             <Stack.Screen name="RapportPhoto" component={RapportPhoto} options={{ headerShown: false }} />
             <Stack.Screen name="Constatation" component={Constatation} options={{ headerShown: false }} />
+            <Stack.Screen name="Remarque" component={Remarque} options={{ headerShown: false }} />
             <Stack.Screen name="Effectif" component={Effectif} options={{ headerShown: false }} />
             <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicy} options={{ headerShown: false }} />
           </Stack.Navigator>

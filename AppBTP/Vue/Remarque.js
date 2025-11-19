@@ -111,7 +111,24 @@ export default function Remarque({ route, navigation }) {
         setForm(prev => ({ ...prev, [field]: value }));
 
     const openImageSourceModal = () => {
-        setShowImageSourceModal(true);
+        Alert.alert(
+            'Choisir une photo',
+            'Sélectionnez la source de votre photo',
+            [
+                {
+                    text: 'Prendre une photo',
+                    onPress: () => takePhoto()
+                },
+                {
+                    text: 'Choisir depuis la galerie',
+                    onPress: () => pickImageFromGallery()
+                },
+                {
+                    text: 'Annuler',
+                    style: 'cancel'
+                }
+            ]
+        );
     };
 
     const pickImageFromGallery = async () => {
@@ -132,7 +149,6 @@ export default function Remarque({ route, navigation }) {
 
             if (!result.canceled) {
                 updateForm('photo', result.assets[0].uri);
-                setShowImageSourceModal(false);
             }
         } catch (e) {
             console.warn("Erreur sélection image: ", e);
@@ -158,7 +174,6 @@ export default function Remarque({ route, navigation }) {
 
             if (!result.canceled) {
                 updateForm('photo', result.assets[0].uri);
-                setShowImageSourceModal(false);
             }
         } catch (e) {
             console.warn("Erreur prise photo: ", e);
