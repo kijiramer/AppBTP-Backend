@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   salt: { type: String, required: true },
   hash: { type: String, required: true },
-  role: { type: String, enum: ['user', 'admin'], default: 'user' }
+  role: { type: String, enum: ['user', 'admin', 'nettoyeur', 'hommeclé', 'pilote'], default: 'user' }
 });
 
 const User = mongoose.model('User', userSchema);
