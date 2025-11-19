@@ -15,7 +15,7 @@
   "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.yourname.appbtp",
-      "buildNumber": "19",
+      "buildNumber": "21",
       "infoPlist": {
     "ITSAppUsesNonExemptEncryption": false,
     "NSPhotoLibraryUsageDescription": "Cette application a besoin d'accéder à votre bibliothèque pour choisir votre photo de profil.",
