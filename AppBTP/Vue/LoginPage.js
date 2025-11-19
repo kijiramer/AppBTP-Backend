@@ -18,6 +18,7 @@ import Storage from '../utils/Storage';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useNavigation } from '@react-navigation/native';
 import useNavigationCustom from '../Controleur/useNavigationCustom';
+import { useUserRole } from '../Controleur/UserRoleContext';
 import { API_BASE_URL } from '../config';
 
 // Configuration Axios
@@ -48,6 +49,7 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false);
     const navigation = useNavigation();
     const { goBack, navigateTo } = useNavigationCustom();
+    const { updateUserRole } = useUserRole();
     const { handleSubmit, control, formState: { errors }, reset } = useForm({
         mode: 'onBlur',
         defaultValues: {
@@ -80,6 +82,11 @@ export default function LoginPage() {
             }
 
             setUser(data.user);
+
+            // Stocker le rôle de l'utilisateur
+            if (data.user.role) {
+                await updateUserRole(data.user.role);
+            }
         } catch (err) {
             console.log("Error loading user:", err);
             const message = err.response?.data?.message ?? err.message ?? 'Il y a un soucis';

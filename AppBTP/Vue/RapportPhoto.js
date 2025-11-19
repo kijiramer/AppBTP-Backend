@@ -14,9 +14,11 @@ import { API_BASE_URL } from '../config';
 import Header from './Header';
 import ScreenWrapper from '../Controleur/ScreenWrapper';
 import { displayCalendarScreen } from './Components/Calendar';
+import { useUserRole } from '../Controleur/UserRoleContext';
 
 export default function RapportPhoto({ route, navigation }) {
     const { city, building, task } = route.params;
+    const { canAddItem } = useUserRole();
 
     const [rapportsPhotos, setRapportsPhotos] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -666,7 +668,7 @@ export default function RapportPhoto({ route, navigation }) {
                     })()}
 
                     {/* Bouton "＋" */}
-                    {!showForm && (
+                    {!showForm && canAddItem('Rapport Photo') && (
                         <TouchableOpacity
                             style={styles.toggleCircle}
                             onPress={() => setShowForm(true)}
