@@ -104,10 +104,28 @@ export default function RapportPhoto({ route, navigation }) {
 
     const openImageSourceModal = (type) => {
         setCurrentImageType(type);
-        setShowImageSourceModal(true);
+        Alert.alert(
+            'Choisir une photo',
+            'Sélectionnez la source de votre photo',
+            [
+                {
+                    text: 'Prendre une photo',
+                    onPress: () => takePhoto(type)
+                },
+                {
+                    text: 'Choisir depuis la galerie',
+                    onPress: () => pickImageFromGallery(type)
+                },
+                {
+                    text: 'Annuler',
+                    style: 'cancel'
+                }
+            ]
+        );
     };
 
-    const pickImageFromGallery = async () => {
+    const pickImageFromGallery = async (type) => {
+        const imageType = type || currentImageType;
         if (hasLibraryPermission === false) {
             Alert.alert(
                 "Permission refusée",
@@ -124,8 +142,7 @@ export default function RapportPhoto({ route, navigation }) {
             });
 
             if (!result.canceled) {
-                setForm(prev => ({ ...prev, [currentImageType]: result.assets[0].uri }));
-                setShowImageSourceModal(false);
+                setForm(prev => ({ ...prev, [imageType]: result.assets[0].uri }));
             }
         } catch (e) {
             console.warn("Erreur sélection image: ", e);
@@ -133,7 +150,8 @@ export default function RapportPhoto({ route, navigation }) {
         }
     };
 
-    const takePhoto = async () => {
+    const takePhoto = async (type) => {
+        const imageType = type || currentImageType;
         if (hasCameraPermission === false) {
             Alert.alert(
                 "Permission refusée",
@@ -150,8 +168,7 @@ export default function RapportPhoto({ route, navigation }) {
             });
 
             if (!result.canceled) {
-                setForm(prev => ({ ...prev, [currentImageType]: result.assets[0].uri }));
-                setShowImageSourceModal(false);
+                setForm(prev => ({ ...prev, [imageType]: result.assets[0].uri }));
             }
         } catch (e) {
             console.warn("Erreur prise photo: ", e);
