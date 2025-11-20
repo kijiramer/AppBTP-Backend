@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Image, Dimensions, Alert, TextInput, Modal, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, Text, TouchableOpacity, Image, Alert, TextInput, Modal, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -20,60 +20,62 @@ export default function RapportPhoto({ route, navigation }) {
     const { city, building, task } = route.params;
     const { canAddItem } = useUserRole();
 
-    const [rapportsPhotos, setRapportsPhotos] = useState([]);
+    const [folders, setFolders] = useState([]);
+    const [selectedFolder, setSelectedFolder] = useState(null);
     const [loading, setLoading] = useState(false);
     const [selectedDate, setSelectedDate] = useState(new Date());
-    const [form, setForm] = useState({ avant: null, apres: null, batiment: building || '', intituleMission: '', chantierName: city || '', entreprise: '' });
-    const [showForm, setShowForm] = useState(false);
+    const [showFolderForm, setShowFolderForm] = useState(false);
+    const [showPhotoModal, setShowPhotoModal] = useState(false);
     const [hasLibraryPermission, setHasLibraryPermission] = useState(null);
     const [hasCameraPermission, setHasCameraPermission] = useState(null);
-    const [showImageSourceModal, setShowImageSourceModal] = useState(false);
-    const [currentImageType, setCurrentImageType] = useState(null);
-    const [batimentSuggestions, setBatimentSuggestions] = useState([]);
+    const [scrollEnabled, setScrollEnabled] = useState(true);
+    const [expandedFolders, setExpandedFolders] = useState({});
+    const [folderPhotos, setFolderPhotos] = useState({});
+
+    // Form pour créer un dossier
+    const [form, setForm] = useState({
+        intituleMission: '',
+        chantierName: city || '',
+        company: '',
+        mission: '',
+        startDate: new Date(),
+        endDate: null,
+    });
+
+    // Form pour ajouter des photos
+    const [photoForm, setPhotoForm] = useState({
+        avant: null,
+        apres: null,
+    });
+
+    // Suggestions d'autocomplétion
     const [intituleMissionSuggestions, setIntituleMissionSuggestions] = useState([]);
     const [chantierNameSuggestions, setChantierNameSuggestions] = useState([]);
-    const [entrepriseSuggestions, setEntrepriseSuggestions] = useState([]);
-    const [showBatimentSuggestions, setShowBatimentSuggestions] = useState(false);
+    const [companySuggestions, setCompanySuggestions] = useState([]);
     const [showIntituleMissionSuggestions, setShowIntituleMissionSuggestions] = useState(false);
     const [showChantierNameSuggestions, setShowChantierNameSuggestions] = useState(false);
-    const [showEntrepriseSuggestions, setShowEntrepriseSuggestions] = useState(false);
-    const [expandedFolders, setExpandedFolders] = useState({});
-    const [scrollEnabled, setScrollEnabled] = useState(true);
+    const [showCompanySuggestions, setShowCompanySuggestions] = useState(false);
 
-    // Désactiver le scroll quand le formulaire s'ouvre
+    // Désactiver le scroll quand un formulaire s'ouvre
     useEffect(() => {
-        if (showForm) {
+        if (showFolderForm || showPhotoModal) {
             setScrollEnabled(false);
         } else {
             setScrollEnabled(true);
         }
-    }, [showForm]);
+    }, [showFolderForm, showPhotoModal]);
 
     // Charger l'historique des valeurs saisies
     useEffect(() => {
         const loadHistory = async () => {
             try {
-                const batimentHistory = await AsyncStorage.getItem('rapportPhoto_batiment_history');
                 const intituleMissionHistory = await AsyncStorage.getItem('rapportPhoto_intituleMission_history');
                 const chantierNameHistory = await AsyncStorage.getItem('rapportPhoto_chantierName_history');
-                const entrepriseHistory = await AsyncStorage.getItem('rapportPhoto_entreprise_history');
+                const companyHistory = await AsyncStorage.getItem('rapportPhoto_company_history');
 
-                if (batimentHistory) {
-                    const batiments = JSON.parse(batimentHistory);
-                    setBatimentSuggestions(batiments.sort());
-                }
-                if (intituleMissionHistory) {
-                    const missions = JSON.parse(intituleMissionHistory);
-                    setIntituleMissionSuggestions(missions.sort());
-                }
-                if (chantierNameHistory) {
-                    const chantierNames = JSON.parse(chantierNameHistory);
-                    setChantierNameSuggestions(chantierNames.sort());
-                }
-                if (entrepriseHistory) {
-                    const entreprises = JSON.parse(entrepriseHistory);
-                    setEntrepriseSuggestions(entreprises.sort());
-                }
+                if (intituleMissionHistory) setIntituleMissionSuggestions(JSON.parse(intituleMissionHistory).sort());
+                if (chantierNameHistory) setChantierNameSuggestions(JSON.parse(chantierNameHistory).sort());
+                if (companyHistory) setCompanySuggestions(JSON.parse(companyHistory).sort());
             } catch (error) {
                 console.error('Error loading history:', error);
             }
@@ -84,11 +86,9 @@ export default function RapportPhoto({ route, navigation }) {
     // Demande de permissions à l'ouverture du composant
     useEffect(() => {
         (async () => {
-            // Permission pour la galerie
             const libraryStatus = await ImagePicker.requestMediaLibraryPermissionsAsync();
             setHasLibraryPermission(libraryStatus.status === 'granted');
 
-            // Permission pour la caméra
             const cameraStatus = await ImagePicker.requestCameraPermissionsAsync();
             setHasCameraPermission(cameraStatus.status === 'granted');
 
@@ -101,11 +101,224 @@ export default function RapportPhoto({ route, navigation }) {
         })();
     }, []);
 
-    const updateForm = (field, value) =>
-        setForm(prev => ({ ...prev, [field]: value }));
+    const updateForm = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
+    const updatePhotoForm = (field, value) => setPhotoForm(prev => ({ ...prev, [field]: value }));
 
+    // Charger les dossiers depuis l'API
+    const loadFolders = async () => {
+        try {
+            setLoading(true);
+            const token = await Storage.getItem('token');
+            if (!token) {
+                Alert.alert('Erreur', 'Vous devez être connecté');
+                return;
+            }
+
+            const response = await axios.get(`${API_BASE_URL}/folders?city=${city}&building=${building}&task=${task}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (response.data.success) {
+                setFolders(response.data.folders);
+                // Charger les photos pour chaque dossier
+                response.data.folders.forEach(folder => loadFolderPhotos(folder._id));
+            }
+        } catch (err) {
+            console.error('Error loading folders:', err);
+            Alert.alert('Erreur', 'Impossible de charger les dossiers');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Charger les photos d'un dossier
+    const loadFolderPhotos = async (folderId) => {
+        try {
+            const token = await Storage.getItem('token');
+            if (!token) return;
+
+            const response = await axios.get(`${API_BASE_URL}/folders/${folderId}/photos`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (response.data.success) {
+                setFolderPhotos(prev => ({
+                    ...prev,
+                    [folderId]: response.data.photos
+                }));
+            }
+        } catch (err) {
+            console.error('Error loading folder photos:', err);
+        }
+    };
+
+    // Créer un nouveau dossier
+    const createFolder = async () => {
+        if (!form.intituleMission.trim() || !form.chantierName.trim() || !form.company.trim() || !form.mission.trim()) {
+            Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires');
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const token = await Storage.getItem('token');
+            if (!token) {
+                Alert.alert('Erreur', 'Vous devez être connecté');
+                return;
+            }
+
+            const folderData = {
+                intituleMission: form.intituleMission,
+                chantierName: form.chantierName,
+                company: form.company,
+                city,
+                building,
+                task,
+                mission: form.mission,
+                startDate: form.startDate.toISOString(),
+                endDate: form.endDate ? form.endDate.toISOString() : undefined,
+            };
+
+            const response = await axios.post(`${API_BASE_URL}/folders`, folderData, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (response.data.success) {
+                // Sauvegarder dans l'historique
+                const updateHistory = async (key, value, suggestions, setSuggestions) => {
+                    const newSuggestions = [...suggestions];
+                    if (!newSuggestions.includes(value)) {
+                        newSuggestions.push(value);
+                        await AsyncStorage.setItem(key, JSON.stringify(newSuggestions));
+                        setSuggestions(newSuggestions.sort());
+                    }
+                };
+
+                await updateHistory('rapportPhoto_intituleMission_history', form.intituleMission, intituleMissionSuggestions, setIntituleMissionSuggestions);
+                await updateHistory('rapportPhoto_chantierName_history', form.chantierName, chantierNameSuggestions, setChantierNameSuggestions);
+                await updateHistory('rapportPhoto_company_history', form.company, companySuggestions, setCompanySuggestions);
+
+                // Réinitialiser le formulaire
+                setForm({
+                    intituleMission: '',
+                    chantierName: city || '',
+                    company: '',
+                    mission: '',
+                    startDate: new Date(),
+                    endDate: null,
+                });
+                setShowFolderForm(false);
+                await loadFolders();
+
+                Alert.alert('Succès', 'Dossier créé avec succès');
+            }
+        } catch (err) {
+            console.error('Error creating folder:', err);
+            Alert.alert('Erreur', 'Impossible de créer le dossier');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Ajouter une paire de photos à un dossier
+    const addPhotosToFolder = async () => {
+        if (!photoForm.avant || !photoForm.apres) {
+            Alert.alert('Erreur', 'Veuillez sélectionner les deux photos (avant et après)');
+            return;
+        }
+
+        if (!selectedFolder) {
+            Alert.alert('Erreur', 'Aucun dossier sélectionné');
+            return;
+        }
+
+        try {
+            setLoading(true);
+            const token = await Storage.getItem('token');
+            if (!token) {
+                Alert.alert('Erreur', 'Vous devez être connecté');
+                return;
+            }
+
+            const photoData = {
+                imageAvant: photoForm.avant,
+                imageApres: photoForm.apres,
+            };
+
+            const response = await axios.post(`${API_BASE_URL}/folders/${selectedFolder._id}/photos`, photoData, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (response.data.success) {
+                // Réinitialiser le formulaire photo
+                setPhotoForm({ avant: null, apres: null });
+                setShowPhotoModal(false);
+                await loadFolderPhotos(selectedFolder._id);
+
+                Alert.alert('Succès', 'Photos ajoutées avec succès');
+            }
+        } catch (err) {
+            console.error('Error adding photos:', err);
+            Alert.alert('Erreur', 'Impossible d\'ajouter les photos');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Prendre une photo avec la caméra
+    const takePhoto = async (type) => {
+        if (hasCameraPermission === false) {
+            Alert.alert(
+                "Permission refusée",
+                "Veuillez autoriser l'accès à la caméra dans les paramètres de l'application."
+            );
+            return;
+        }
+
+        try {
+            const result = await ImagePicker.launchCameraAsync({
+                mediaTypes: ['images'],
+                quality: 0.7,
+                allowsEditing: true,
+            });
+
+            if (!result.canceled) {
+                updatePhotoForm(type, result.assets[0].uri);
+            }
+        } catch (e) {
+            console.warn("Erreur prise photo: ", e);
+            Alert.alert("Erreur", "Impossible de prendre la photo");
+        }
+    };
+
+    // Choisir une photo depuis la galerie
+    const pickImageFromGallery = async (type) => {
+        if (hasLibraryPermission === false) {
+            Alert.alert(
+                "Permission refusée",
+                "Veuillez autoriser l'accès à la galerie dans les paramètres de l'application."
+            );
+            return;
+        }
+
+        try {
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ['images'],
+                quality: 0.7,
+                allowsEditing: true,
+            });
+
+            if (!result.canceled) {
+                updatePhotoForm(type, result.assets[0].uri);
+            }
+        } catch (e) {
+            console.warn("Erreur sélection image: ", e);
+            Alert.alert("Erreur", "Impossible de sélectionner l'image");
+        }
+    };
+
+    // Modal de choix de source d'image (caméra ou galerie)
     const openImageSourceModal = (type) => {
-        setCurrentImageType(type);
         Alert.alert(
             'Choisir une photo',
             'Sélectionnez la source de votre photo',
@@ -126,174 +339,80 @@ export default function RapportPhoto({ route, navigation }) {
         );
     };
 
-    const pickImageFromGallery = async (type) => {
-        const imageType = type || currentImageType;
-        if (hasLibraryPermission === false) {
-            Alert.alert(
-                "Permission refusée",
-                "Veuillez autoriser l'accès à la galerie dans les paramètres de l'application."
-            );
-            return;
-        }
+    // Supprimer un dossier
+    const deleteFolder = async (folderId) => {
+        Alert.alert(
+            'Confirmer la suppression',
+            'Voulez-vous vraiment supprimer ce dossier et toutes ses photos ?',
+            [
+                { text: 'Annuler', style: 'cancel' },
+                {
+                    text: 'Supprimer',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            const token = await Storage.getItem('token');
+                            if (!token) return;
 
-        try {
-            const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ['images'],
-                quality: 0.7,
-                allowsEditing: true,
-            });
+                            await axios.delete(`${API_BASE_URL}/folders/${folderId}`, {
+                                headers: { Authorization: `Bearer ${token}` },
+                            });
 
-            if (!result.canceled) {
-                setForm(prev => ({ ...prev, [imageType]: result.assets[0].uri }));
-            }
-        } catch (e) {
-            console.warn("Erreur sélection image: ", e);
-            Alert.alert("Erreur", "Impossible de sélectionner l'image");
-        }
-    };
-
-    const takePhoto = async (type) => {
-        const imageType = type || currentImageType;
-        if (hasCameraPermission === false) {
-            Alert.alert(
-                "Permission refusée",
-                "Veuillez autoriser l'accès à la caméra dans les paramètres de l'application."
-            );
-            return;
-        }
-
-        try {
-            const result = await ImagePicker.launchCameraAsync({
-                mediaTypes: ['images'],
-                quality: 0.7,
-                allowsEditing: true,
-            });
-
-            if (!result.canceled) {
-                setForm(prev => ({ ...prev, [imageType]: result.assets[0].uri }));
-            }
-        } catch (e) {
-            console.warn("Erreur prise photo: ", e);
-            Alert.alert("Erreur", "Impossible de prendre la photo");
-        }
-    };
-
-    // Fonction pour charger les rapportsPhotos depuis l'API
-    const loadRapportsPhotos = async () => {
-        try {
-            setLoading(true);
-            const token = await Storage.getItem('token');
-            if (!token) {
-                Alert.alert('Erreur', 'Vous devez être connecté');
-                return;
-            }
-
-            const response = await axios.get(`${API_BASE_URL}/rapportsPhotos?city=${city}&building=${building}&task=${task}&selectedDate=${selectedDate.toISOString()}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (response.data.success) {
-                setRapportsPhotos(response.data.rapportsPhotos.map(constatation => ({
-                    id: constatation._id,
-                    batiment: constatation.batiment,
-                    intituleMission: constatation.intituleMission,
-                    chantierName: constatation.chantierName,
-                    entreprise: constatation.entreprise,
-                    avant: constatation.imageAvant,
-                    apres: constatation.imageApres,
-                })));
-            }
-        } catch (err) {
-            console.error('Error loading rapportsPhotos:', err);
-            Alert.alert('Erreur', 'Impossible de charger les rapportsPhotos');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const addRapportPhoto = async () => {
-        if (!form.avant || !form.apres) {
-            Alert.alert('Erreur', 'Veuillez sélectionner les deux photos (avant et après)');
-            return;
-        }
-
-        if (!form.batiment.trim() || !form.intituleMission.trim() || !form.chantierName.trim() || !form.entreprise.trim()) {
-            Alert.alert('Erreur', 'Veuillez remplir tous les champs obligatoires');
-            return;
-        }
-
-        try {
-            setLoading(true);
-            const token = await Storage.getItem('token');
-            if (!token) {
-                Alert.alert('Erreur', 'Vous devez être connecté');
-                return;
-            }
-
-            const rapportPhotoData = {
-                batiment: form.batiment,
-                intituleMission: form.intituleMission,
-                chantierName: form.chantierName,
-                entreprise: form.entreprise,
-                city,
-                building,
-                task,
-                imageAvant: form.avant,
-                imageApres: form.apres,
-                selectedDate: selectedDate.toISOString(),
-            };
-
-            const response = await axios.post(`${API_BASE_URL}/rapportsPhotos`, rapportPhotoData, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (response.data.success) {
-                // Sauvegarder dans l'historique
-                const updateHistory = async (key, value, suggestions, setSuggestions) => {
-                    const newSuggestions = [...suggestions];
-                    if (!newSuggestions.includes(value)) {
-                        newSuggestions.push(value);
-                        await AsyncStorage.setItem(key, JSON.stringify(newSuggestions));
-                        setSuggestions(newSuggestions.sort());
+                            await loadFolders();
+                            Alert.alert('Succès', 'Dossier supprimé');
+                        } catch (err) {
+                            console.error('Error deleting folder:', err);
+                            Alert.alert('Erreur', 'Impossible de supprimer le dossier');
+                        }
                     }
-                };
-
-                await updateHistory('rapportPhoto_batiment_history', form.batiment, batimentSuggestions, setBatimentSuggestions);
-                await updateHistory('rapportPhoto_intituleMission_history', form.intituleMission, intituleMissionSuggestions, setIntituleMissionSuggestions);
-                await updateHistory('rapportPhoto_chantierName_history', form.chantierName, chantierNameSuggestions, setChantierNameSuggestions);
-                await updateHistory('rapportPhoto_entreprise_history', form.entreprise, entrepriseSuggestions, setEntrepriseSuggestions);
-
-                // Rafraîchir la liste complète
-                await loadRapportsPhotos();
-                await fetchAllRapportsPhotos();
-
-                // Réinitialiser le formulaire - vider tous les champs sauf chantierName (qui reste la ville)
-                setForm({ avant: null, apres: null, batiment: '', intituleMission: '', chantierName: city || '', entreprise: '' });
-                setShowForm(false);
-
-                Alert.alert('Succès', 'Rapport photo ajouté avec succès');
-            }
-        } catch (err) {
-            console.error('Error adding rapport photo:', err);
-            Alert.alert('Erreur', 'Impossible d\'ajouter le rapport photo');
-        } finally {
-            setLoading(false);
-        }
+                }
+            ]
+        );
     };
 
-    const exportToPDF = async () => {
-        if (rapportsPhotos.length === 0) {
-            Alert.alert('Erreur', 'Aucune constatation à exporter');
+    // Supprimer une photo
+    const deletePhoto = async (photoId, folderId) => {
+        Alert.alert(
+            'Confirmer la suppression',
+            'Voulez-vous vraiment supprimer cette paire de photos ?',
+            [
+                { text: 'Annuler', style: 'cancel' },
+                {
+                    text: 'Supprimer',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            const token = await Storage.getItem('token');
+                            if (!token) return;
+
+                            await axios.delete(`${API_BASE_URL}/photos/${photoId}`, {
+                                headers: { Authorization: `Bearer ${token}` },
+                            });
+
+                            await loadFolderPhotos(folderId);
+                            Alert.alert('Succès', 'Photos supprimées');
+                        } catch (err) {
+                            console.error('Error deleting photo:', err);
+                            Alert.alert('Erreur', 'Impossible de supprimer les photos');
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
+    // Exporter un dossier en PDF
+    const exportToPDF = async (folder) => {
+        const photos = folderPhotos[folder._id] || [];
+
+        if (photos.length === 0) {
+            Alert.alert('Erreur', 'Ce dossier ne contient aucune photo à exporter');
             return;
         }
-    
+
         try {
             setLoading(true);
-    
+
             // Fonction helper pour convertir une URI en base64
             const convertUriToBase64 = async (uri) => {
                 try {
@@ -306,154 +425,123 @@ export default function RapportPhoto({ route, navigation }) {
                     throw error;
                 }
             };
-    
+
             // Récupérer le logo et le convertir en base64
             const { Asset } = require('expo-asset');
             const logoAsset = Asset.fromModule(require('../assets/logo.jpg'));
             await logoAsset.downloadAsync();
             const logoBase64 = await convertUriToBase64(logoAsset.localUri || logoAsset.uri);
-    
-            // Exporter tous les rapports photos disponibles (tous les dossiers)
-            const selectedRapports = rapportsPhotos;
-    
-            // Convertir toutes les images en base64
-            const rapportsWithBase64 = await Promise.all(
-                selectedRapports.map(async (c) => {
+
+            // Convertir toutes les photos en base64
+            const photosWithBase64 = await Promise.all(
+                photos.map(async (photo) => {
                     try {
-                        const avantBase64 = await convertUriToBase64(c.avant);
-                        const apresBase64 = await convertUriToBase64(c.apres);
-                        return { ...c, avantBase64, apresBase64 };
+                        const avantBase64 = await convertUriToBase64(photo.imageAvant);
+                        const apresBase64 = await convertUriToBase64(photo.imageApres);
+                        return { ...photo, avantBase64, apresBase64 };
                     } catch (error) {
                         console.error('Error converting images:', error);
                         return null;
                     }
                 })
             );
-    
-            const validRapports = rapportsWithBase64.filter(c => c !== null);
-    
-            if (validRapports.length === 0) {
+
+            const validPhotos = photosWithBase64.filter(p => p !== null);
+
+            if (validPhotos.length === 0) {
                 Alert.alert('Erreur', 'Impossible de charger les images');
                 return;
             }
-    
-            // Grouper par chantier (city, building, entreprise, date)
-            const groupedByChantier = {};
-            validRapports.forEach((rapport) => {
-                // Utiliser entreprise ou company (rétrocompatibilité)
-                const entrepriseValue = rapport.entreprise || rapport.company || 'N/A';
-                const key = `${rapport.city}|${rapport.building}|${entrepriseValue}|${new Date(rapport.selectedDate).toLocaleDateString()}`;
-                if (!groupedByChantier[key]) {
-                    groupedByChantier[key] = {
-                        info: {
-                            intituleMission: rapport.intituleMission || 'Mission non spécifiée',
-                            chantierName: rapport.chantierName || rapport.city || 'N/A',
-                            city: rapport.city || 'N/A',
-                            building: rapport.building || 'N/A',
-                            entreprise: entrepriseValue,
-                            selectedDate: rapport.selectedDate
-                        },
-                        photos: []
-                    };
-                }
-                groupedByChantier[key].photos.push(rapport);
-            });
-    
-            // Générer le HTML comme la webapp
+
+            // Générer le HTML
             let htmlPages = '';
             let currentPageNumber = 1;
             let photosOnCurrentPage = 0;
             const maxPhotosFirstPage = 3;
             const maxPhotosOtherPages = 4;
-    
-            // Pour chaque groupe de chantier
-            const groups = Object.values(groupedByChantier);
-            for (let groupIndex = 0; groupIndex < groups.length; groupIndex++) {
-                const group = groups[groupIndex];
-    
-                // Header du groupe (tableau d'informations)
-                const groupHeader = `
-                    <div style="width: 420px; margin: 0 auto 25px auto; border: 2px solid #000; border-radius: 8px; padding: 0; overflow: hidden;">
-                        <div style="padding: 10px 8px; border-bottom: 1px solid #000;">
-                            <div style="font-size: 9pt; font-weight: bold;">
-                                PROMOTEUR: ${(group.info.entreprise || 'N/A').toUpperCase()} - VILLE: ${(group.info.city || 'N/A').toUpperCase()}
-                            </div>
+
+            // Header du dossier (tableau d'informations)
+            const folderHeader = `
+                <div style="width: 420px; margin: 0 auto 25px auto; border: 2px solid #000; border-radius: 8px; padding: 0; overflow: hidden;">
+                    <div style="padding: 10px 8px; border-bottom: 1px solid #000;">
+                        <div style="font-size: 9pt; font-weight: bold;">
+                            Promoteur: ${folder.company.toUpperCase()} - Ville: ${folder.city.toUpperCase()}
                         </div>
-                        <div style="padding: 10px 8px; border-bottom: 1px solid #000;">
-                            <div style="font-size: 9pt;">Mission: ${group.info.intituleMission || 'Mission non spécifiée'}</div>
+                    </div>
+                    <div style="padding: 10px 8px; border-bottom: 1px solid #000;">
+                        <div style="font-size: 9pt;">Mission: ${folder.mission}</div>
+                    </div>
+                    <div style="padding: 10px 8px;">
+                        <div style="font-size: 9pt;">Intervention le : ${new Date(folder.startDate).toLocaleDateString('fr-FR')}</div>
+                    </div>
+                </div>
+            `;
+
+            // Photos du dossier
+            for (let i = 0; i < validPhotos.length; i++) {
+                const photo = validPhotos[i];
+                const maxPhotosOnPage = currentPageNumber === 1 ? maxPhotosFirstPage : maxPhotosOtherPages;
+
+                // Nouvelle page si nécessaire
+                if (photosOnCurrentPage >= maxPhotosOnPage) {
+                    htmlPages += '</div></div>'; // Fermer page précédente
+                    currentPageNumber++;
+                    photosOnCurrentPage = 0;
+
+                    // Nouvelle page avec logo en haut à gauche (plus petit)
+                    htmlPages += `
+                    <div class="page">
+                        <div style="margin-bottom: 20px;">
+                            <img src="${logoBase64}" style="width: 80px; height: 40px; object-fit: contain;" />
                         </div>
-                        <div style="padding: 10px 8px;">
-                            <div style="font-size: 9pt;">Intervention le: ${selectedDate.toLocaleDateString('fr-FR')}</div>
+                        <div class="content">
+                    `;
+                }
+
+                // Si première photo de la page, ajouter le header uniquement sur la page 1
+                if (photosOnCurrentPage === 0 && currentPageNumber === 1) {
+                    // Page 1: Logo centré + titre + header
+                    htmlPages = `
+                    <div class="page">
+                        <div style="text-align: center; margin-bottom: 15px;">
+                            <img src="${logoBase64}" style="width: 160px; height: 80px; object-fit: contain;" />
+                        </div>
+                        <div style="text-align: center; font-family: 'Times New Roman', Times, serif; font-size: 20pt; font-weight: bold; margin-bottom: 20px;">
+                            <span style="border-bottom: 2px solid #000; padding-bottom: 2px;">Rapport Photo - ${folder.chantierName}</span>
+                        </div>
+                        <div class="content">
+                    ` + folderHeader;
+                }
+
+                // Paire de photos
+                htmlPages += `
+                    <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 20px; page-break-inside: avoid;">
+                        <div style="text-align: center;">
+                            <div style="font-weight: bold; font-size: 10pt; margin-bottom: 5px;">AVANT</div>
+                            <img src="${photo.avantBase64}" style="width: 185px; height: 132px; object-fit: cover; border: 1px solid #999;" />
+                        </div>
+                        <div style="margin: 0 15px;">
+                            <svg width="40" height="20" style="display: block;">
+                                <line x1="0" y1="10" x2="32" y2="10" stroke="black" stroke-width="2"/>
+                                <polygon points="40,10 32,6 32,14" fill="black"/>
+                            </svg>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-weight: bold; font-size: 10pt; margin-bottom: 5px;">APRÈS</div>
+                            <img src="${photo.apresBase64}" style="width: 185px; height: 132px; object-fit: cover; border: 1px solid #999;" />
                         </div>
                     </div>
                 `;
-    
-                // Photos du groupe
-                for (let i = 0; i < group.photos.length; i++) {
-                    const rapport = group.photos[i];
-                    const maxPhotosOnPage = currentPageNumber === 1 ? maxPhotosFirstPage : maxPhotosOtherPages;
-    
-                    // Nouvelle page si nécessaire
-                    if (photosOnCurrentPage >= maxPhotosOnPage) {
-                        htmlPages += '</div></div>'; // Fermer page précédente
-                        currentPageNumber++;
-                        photosOnCurrentPage = 0;
-    
-                        // Nouvelle page avec logo en haut à gauche (plus petit)
-                        htmlPages += `
-                        <div class="page">
-                            <div style="margin-bottom: 20px;">
-                                <img src="${logoBase64}" style="width: 80px; height: 40px; object-fit: contain;" />
-                            </div>
-                            <div class="content">
-                        `;
-                    }
-    
-                    // Si première photo de la page, ajouter le header uniquement sur la page 1
-                    if (photosOnCurrentPage === 0 && currentPageNumber === 1 && groupIndex === 0) {
-                        // Page 1: Logo centré + titre + header
-                        htmlPages = `
-                        <div class="page">
-                            <div style="text-align: center; margin-bottom: 15px;">
-                                <img src="${logoBase64}" style="width: 160px; height: 80px; object-fit: contain;" />
-                            </div>
-                            <div style="text-align: center; font-family: 'Times New Roman', Times, serif; font-size: 20pt; font-weight: bold; margin-bottom: 20px;">
-                                <span style="border-bottom: 2px solid #000; padding-bottom: 2px;">Rapport Photo d'Intervention - ${city}</span>
-                            </div>
-                            <div class="content">
-                        ` + groupHeader;
-                    }
-    
-                    // Paire de photos
-                    htmlPages += `
-                        <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 20px; page-break-inside: avoid;">
-                            <div style="text-align: center;">
-                                <div style="font-weight: bold; font-size: 10pt; margin-bottom: 5px;">AVANT</div>
-                                <img src="${rapport.avantBase64}" style="width: 185px; height: 132px; object-fit: cover; border: 1px solid #999;" />
-                            </div>
-                            <div style="margin: 0 15px;">
-                                <svg width="40" height="20" style="display: block;">
-                                    <line x1="0" y1="10" x2="32" y2="10" stroke="black" stroke-width="2"/>
-                                    <polygon points="40,10 32,6 32,14" fill="black"/>
-                                </svg>
-                            </div>
-                            <div style="text-align: center;">
-                                <div style="font-weight: bold; font-size: 10pt; margin-bottom: 5px;">APRÈS</div>
-                                <img src="${rapport.apresBase64}" style="width: 185px; height: 132px; object-fit: cover; border: 1px solid #999;" />
-                            </div>
-                        </div>
-                    `;
-    
-                    photosOnCurrentPage++;
-                }
+
+                photosOnCurrentPage++;
             }
-    
+
             // Fermer la dernière page
             htmlPages += '</div></div>';
-    
+
             // Compter le nombre total de pages
             const totalPages = currentPageNumber;
-    
+
             // HTML complet
             const htmlContent = `
     <!DOCTYPE html>
@@ -484,16 +572,16 @@ export default function RapportPhoto({ route, navigation }) {
     </body>
     </html>
             `;
-    
+
             // Créer le PDF
             const { uri } = await Print.printToFileAsync({
                 html: htmlContent,
                 width: 595,
                 height: 842
             });
-    
-            const fileName = `rapport-intervention-${city}-${selectedDate.toISOString().split('T')[0]}.pdf`.replace(/\s+/g, '-');
-    
+
+            const fileName = `dossier-${folder.reportNumber}-${folder.intituleMission.replace(/\s+/g, '-')}.pdf`;
+
             // Partager le PDF
             if (await Sharing.isAvailableAsync()) {
                 await Sharing.shareAsync(uri, {
@@ -513,47 +601,9 @@ export default function RapportPhoto({ route, navigation }) {
         }
     };
 
-
-    // Charger les rapportsPhotos au montage du composant et quand la date change
+    // Charger les dossiers au montage et quand la date change
     useEffect(() => {
-        loadRapportsPhotos();
-    }, [city, building, task, selectedDate]);
-
-    // Charger toutes les rapportsPhotos pour marquer les dates avec pastilles
-    const [allConstatations, setAllConstatations] = useState([]);
-    const [datesWithRapportsPhotos, setDatesWithConstatations] = useState([]);
-
-    const fetchAllRapportsPhotos = async () => {
-        try {
-            const token = await Storage.getItem('token');
-            if (!token) return;
-
-            const response = await axios.get(`${API_BASE_URL}/rapportsPhotos?city=${city}&building=${building}&task=${task}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (response.data.success) {
-                const allConsts = response.data.rapportsPhotos || [];
-                setAllConstatations(allConsts);
-
-                // Extraire les dates uniques avec rapportsPhotos
-                const uniqueDates = [...new Set(
-                    allConsts.map(c => {
-                        const date = new Date(c.selectedDate);
-                        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-                    })
-                )];
-                setDatesWithConstatations(uniqueDates);
-            }
-        } catch (err) {
-            console.error('Error loading all rapportsPhotos:', err);
-        }
-    };
-
-    useEffect(() => {
-        fetchAllRapportsPhotos();
+        loadFolders();
     }, [city, building, task]);
 
     return (
@@ -578,359 +628,341 @@ export default function RapportPhoto({ route, navigation }) {
                 >
                     {/* Calendrier */}
                     <View style={styles.calendarContainer}>
-                        {displayCalendarScreen(selectedDate, setSelectedDate, datesWithRapportsPhotos)}
+                        {displayCalendarScreen(selectedDate, setSelectedDate, [])}
                     </View>
 
-                    {/* Bouton Export PDF */}
-                    {rapportsPhotos.length > 0 && (
-                        <TouchableOpacity
-                            style={styles.exportButton}
-                            onPress={exportToPDF}
-                            disabled={loading}
-                        >
-                            <Text style={styles.exportButtonText}>
-                                {loading ? 'Export en cours...' : '📄 Exporter en PDF'}
-                            </Text>
-                        </TouchableOpacity>
-                    )}
+                    {/* Liste des dossiers */}
+                    {folders.map((folder) => {
+                        const isExpanded = expandedFolders[folder._id] || false;
+                        const photos = folderPhotos[folder._id] || [];
+                        const displayedPhotos = isExpanded ? photos : photos.slice(0, 2);
+                        const hasMore = photos.length > 2;
 
-                    {/* Liste des rapportsPhotos groupés par mission */}
-                    {(() => {
-                        // Grouper les rapports par intituleMission
-                        const groupedByMission = rapportsPhotos.reduce((acc, rapport) => {
-                            const mission = rapport.intituleMission || 'Sans mission';
-                            if (!acc[mission]) {
-                                acc[mission] = [];
-                            }
-                            acc[mission].push(rapport);
-                            return acc;
-                        }, {});
-
-                        return Object.entries(groupedByMission).map(([mission, rapports]) => {
-                            const isExpanded = expandedFolders[mission] || false;
-                            const displayedRapports = isExpanded ? rapports : rapports.slice(0, 2);
-                            const hasMore = rapports.length > 2;
-
-                            return (
-                                <View key={mission} style={styles.folderContainer}>
-                                    {/* Header du dossier */}
+                        return (
+                            <View key={folder._id} style={styles.folderCard}>
+                                {/* Header du dossier */}
+                                <View style={styles.folderHeader}>
+                                    <View style={styles.folderTitleContainer}>
+                                        <Text style={styles.folderNumber}>📁 Dossier #{folder.reportNumber}</Text>
+                                        <Text style={styles.folderTitle}>{folder.intituleMission}</Text>
+                                        <Text style={styles.folderSubtitle}>{folder.company}</Text>
+                                    </View>
                                     <TouchableOpacity
-                                        onPress={() => setExpandedFolders(prev => ({
-                                            ...prev,
-                                            [mission]: !prev[mission]
-                                        }))}
+                                        style={styles.deleteFolderBtn}
+                                        onPress={() => deleteFolder(folder._id)}
                                     >
-                                        <Text style={styles.folderTitle}>
-                                            📁 {mission} ({rapports.length}) {hasMore ? (isExpanded ? '▲' : '▼') : ''}
-                                        </Text>
+                                        <Text style={styles.deleteFolderText}>🗑️</Text>
                                     </TouchableOpacity>
+                                </View>
 
-                                    {/* Photos du dossier */}
-                                    {displayedRapports.map((c, i) => (
-                                        <View key={c.id || i} style={styles.card}>
-                                            {/* Badge avec infos */}
-                                            <View style={styles.badgeRow}>
-                                                <View style={styles.badge}>
-                                                    <Text style={styles.badgeText}>{c.entreprise || c.company || 'N/A'}</Text>
-                                                </View>
+                                {/* Photos du dossier */}
+                                {displayedPhotos.map((photo, idx) => (
+                                    <View key={photo._id} style={styles.photoCard}>
+                                        <View style={styles.imageRow}>
+                                            <View style={styles.imageWrapper}>
+                                                <Text style={styles.imageLabel}>Avant</Text>
+                                                <Image source={{ uri: photo.imageAvant }} style={styles.image} />
                                             </View>
-
-                                            <View style={styles.imageRow}>
-                                                <View style={styles.imageWrapper}>
-                                                    <Text style={styles.imageLabel}>Avant</Text>
-                                                    <Image source={{ uri: c.avant }} style={styles.image} />
-                                                </View>
-                                                <View style={styles.imageWrapper}>
-                                                    <Text style={styles.imageLabel}>Après</Text>
-                                                    <Image source={{ uri: c.apres }} style={styles.image} />
-                                                </View>
+                                            <View style={styles.imageWrapper}>
+                                                <Text style={styles.imageLabel}>Après</Text>
+                                                <Image source={{ uri: photo.imageApres }} style={styles.image} />
                                             </View>
                                         </View>
-                                    ))}
-
-                                    {/* Message "voir plus" si nécessaire */}
-                                    {!isExpanded && hasMore && (
                                         <TouchableOpacity
-                                            style={styles.seeMoreButton}
-                                            onPress={() => setExpandedFolders(prev => ({
-                                                ...prev,
-                                                [mission]: true
-                                            }))}
+                                            style={styles.deletePhotoBtn}
+                                            onPress={() => deletePhoto(photo._id, folder._id)}
                                         >
-                                            <Text style={styles.seeMoreText}>
-                                                Voir {rapports.length - 2} de plus...
-                                            </Text>
+                                            <Text style={styles.deletePhotoText}>Supprimer cette paire</Text>
                                         </TouchableOpacity>
-                                    )}
-                                </View>
-                            );
-                        });
-                    })()}
+                                    </View>
+                                ))}
 
-                    {/* Bouton "＋" */}
-                    {!showForm && canAddItem('Rapport Photo') && (
+                                {/* Bouton voir plus/moins */}
+                                {!isExpanded && hasMore && (
+                                    <TouchableOpacity
+                                        style={styles.seeMoreButton}
+                                        onPress={() => setExpandedFolders(prev => ({ ...prev, [folder._id]: true }))}
+                                    >
+                                        <Text style={styles.seeMoreText}>Voir {photos.length - 2} de plus...</Text>
+                                    </TouchableOpacity>
+                                )}
+                                {isExpanded && hasMore && (
+                                    <TouchableOpacity
+                                        style={styles.seeMoreButton}
+                                        onPress={() => setExpandedFolders(prev => ({ ...prev, [folder._id]: false }))}
+                                    >
+                                        <Text style={styles.seeMoreText}>Voir moins</Text>
+                                    </TouchableOpacity>
+                                )}
+
+                                {/* Bouton ajouter photos */}
+                                <TouchableOpacity
+                                    style={styles.addPhotosBtn}
+                                    onPress={() => {
+                                        setSelectedFolder(folder);
+                                        setShowPhotoModal(true);
+                                    }}
+                                >
+                                    <Text style={styles.addPhotosBtnText}>📸 Ajouter photos avant/après</Text>
+                                </TouchableOpacity>
+
+                                {/* Bouton exporter en PDF */}
+                                {photos.length > 0 && (
+                                    <TouchableOpacity
+                                        style={styles.exportButton}
+                                        onPress={() => exportToPDF(folder)}
+                                        disabled={loading}
+                                    >
+                                        <Text style={styles.exportButtonText}>
+                                            {loading ? 'Export en cours...' : '📄 Exporter en PDF'}
+                                        </Text>
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                        );
+                    })}
+
+                    {/* Bouton créer un nouveau dossier */}
+                    {!showFolderForm && canAddItem('Rapport Photo') && (
                         <TouchableOpacity
                             style={styles.toggleCircle}
-                            onPress={() => setShowForm(true)}
+                            onPress={() => setShowFolderForm(true)}
                         >
                             <Text style={styles.toggleCircleText}>＋</Text>
                         </TouchableOpacity>
                     )}
                 </KeyboardAwareScrollView>
 
-                {/* Modal formulaire */}
+                {/* Modal formulaire création dossier */}
                 <Modal
-                    visible={showForm}
+                    visible={showFolderForm}
                     transparent={true}
                     animationType="fade"
-                    onRequestClose={() => setShowForm(false)}
+                    onRequestClose={() => setShowFolderForm(false)}
                 >
-                    <KeyboardAvoidingView
-                        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                        style={styles.modalContainer}
-                    >
-                        {/* Fond sombre cliquable pour fermer */}
+                    <View style={styles.modalContainer}>
                         <TouchableOpacity
                             activeOpacity={1}
                             style={styles.overlayBackdrop}
-                            onPress={() => setShowForm(false)}
+                            onPress={() => setShowFolderForm(false)}
                         />
 
                         <View style={styles.formCardOverlay}>
                             <ScrollView
-                                contentContainerStyle={{ padding: 16, paddingBottom: 250 }}
+                                contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
                                 keyboardShouldPersistTaps="always"
                                 showsVerticalScrollIndicator={true}
                                 nestedScrollEnabled={true}
-                                bounces={true}
                             >
-                            {/* Bouton ✕ */}
+                                <TouchableOpacity
+                                    style={styles.closeFormBtn}
+                                    onPress={() => setShowFolderForm(false)}
+                                >
+                                    <Text style={styles.closeFormText}>✕</Text>
+                                </TouchableOpacity>
+
+                                <Text style={styles.formTitle}>Créer un nouveau dossier</Text>
+
+                                {/* Intitulé Mission */}
+                                <Text style={styles.label}>Intitulé Mission :</Text>
+                                <View style={{ position: 'relative' }}>
+                                    <TextInput
+                                        style={styles.textInput}
+                                        placeholder="Ex: Électricité"
+                                        placeholderTextColor="#999"
+                                        value={form.intituleMission}
+                                        onChangeText={v => updateForm('intituleMission', v)}
+                                        onFocus={() => setShowIntituleMissionSuggestions(true)}
+                                        onBlur={() => setTimeout(() => setShowIntituleMissionSuggestions(false), 200)}
+                                    />
+                                    {showIntituleMissionSuggestions && intituleMissionSuggestions.length > 0 && (
+                                        <ScrollView
+                                            style={styles.suggestionsContainer}
+                                            nestedScrollEnabled={true}
+                                            keyboardShouldPersistTaps="always"
+                                        >
+                                            {intituleMissionSuggestions.map((suggestion, idx) => (
+                                                <TouchableOpacity
+                                                    key={idx}
+                                                    style={styles.suggestionItem}
+                                                    onPress={() => {
+                                                        updateForm('intituleMission', suggestion);
+                                                        setShowIntituleMissionSuggestions(false);
+                                                    }}
+                                                >
+                                                    <Text style={styles.suggestionText}>{suggestion}</Text>
+                                                </TouchableOpacity>
+                                            ))}
+                                        </ScrollView>
+                                    )}
+                                </View>
+
+                                {/* Nom du chantier */}
+                                <Text style={styles.label}>Nom du chantier :</Text>
+                                <View style={{ position: 'relative' }}>
+                                    <TextInput
+                                        style={styles.textInput}
+                                        placeholder="Ex: Chantier XYZ"
+                                        placeholderTextColor="#999"
+                                        value={form.chantierName}
+                                        onChangeText={v => updateForm('chantierName', v)}
+                                        onFocus={() => setShowChantierNameSuggestions(true)}
+                                        onBlur={() => setTimeout(() => setShowChantierNameSuggestions(false), 200)}
+                                    />
+                                    {showChantierNameSuggestions && chantierNameSuggestions.length > 0 && (
+                                        <ScrollView
+                                            style={styles.suggestionsContainer}
+                                            nestedScrollEnabled={true}
+                                            keyboardShouldPersistTaps="always"
+                                        >
+                                            {chantierNameSuggestions.map((suggestion, idx) => (
+                                                <TouchableOpacity
+                                                    key={idx}
+                                                    style={styles.suggestionItem}
+                                                    onPress={() => {
+                                                        updateForm('chantierName', suggestion);
+                                                        setShowChantierNameSuggestions(false);
+                                                    }}
+                                                >
+                                                    <Text style={styles.suggestionText}>{suggestion}</Text>
+                                                </TouchableOpacity>
+                                            ))}
+                                        </ScrollView>
+                                    )}
+                                </View>
+
+                                {/* Entreprise */}
+                                <Text style={styles.label}>Entreprise :</Text>
+                                <View style={{ position: 'relative' }}>
+                                    <TextInput
+                                        style={styles.textInput}
+                                        placeholder="Ex: Entreprise A"
+                                        placeholderTextColor="#999"
+                                        value={form.company}
+                                        onChangeText={v => updateForm('company', v)}
+                                        onFocus={() => setShowCompanySuggestions(true)}
+                                        onBlur={() => setTimeout(() => setShowCompanySuggestions(false), 200)}
+                                    />
+                                    {showCompanySuggestions && companySuggestions.length > 0 && (
+                                        <ScrollView
+                                            style={styles.suggestionsContainer}
+                                            nestedScrollEnabled={true}
+                                            keyboardShouldPersistTaps="always"
+                                        >
+                                            {companySuggestions.map((suggestion, idx) => (
+                                                <TouchableOpacity
+                                                    key={idx}
+                                                    style={styles.suggestionItem}
+                                                    onPress={() => {
+                                                        updateForm('company', suggestion);
+                                                        setShowCompanySuggestions(false);
+                                                    }}
+                                                >
+                                                    <Text style={styles.suggestionText}>{suggestion}</Text>
+                                                </TouchableOpacity>
+                                            ))}
+                                        </ScrollView>
+                                    )}
+                                </View>
+
+                                {/* Ville (lecture seule) */}
+                                <Text style={styles.label}>Ville :</Text>
+                                <Text style={styles.readOnlyText}>{city}</Text>
+
+                                {/* Bâtiment (lecture seule) */}
+                                <Text style={styles.label}>Bâtiment :</Text>
+                                <Text style={styles.readOnlyText}>{building}</Text>
+
+                                {/* Mission */}
+                                <Text style={styles.label}>Mission :</Text>
+                                <TextInput
+                                    style={styles.textInput}
+                                    placeholder="Ex: Installation"
+                                    placeholderTextColor="#999"
+                                    value={form.mission}
+                                    onChangeText={v => updateForm('mission', v)}
+                                />
+
+                                {/* Date de début (pour l'instant on utilise la date actuelle) */}
+                                <Text style={styles.label}>Date de début :</Text>
+                                <Text style={styles.readOnlyText}>{form.startDate.toLocaleDateString('fr-FR')}</Text>
+
+                                {/* Date de fin (optionnel) */}
+                                <Text style={styles.label}>Date de fin (optionnel) :</Text>
+                                <Text style={styles.readOnlyText}>{form.endDate ? form.endDate.toLocaleDateString('fr-FR') : 'Non définie'}</Text>
+
+                                {/* Bouton Créer */}
+                                <TouchableOpacity
+                                    style={styles.validateButton}
+                                    onPress={createFolder}
+                                    disabled={loading}
+                                >
+                                    <Text style={styles.validateText}>{loading ? 'Création...' : 'Créer le dossier'}</Text>
+                                </TouchableOpacity>
+                            </ScrollView>
+                        </View>
+                    </View>
+                </Modal>
+
+                {/* Modal ajout de photos */}
+                <Modal
+                    visible={showPhotoModal}
+                    transparent={true}
+                    animationType="fade"
+                    onRequestClose={() => setShowPhotoModal(false)}
+                >
+                    <View style={styles.modalContainer}>
+                        <TouchableOpacity
+                            activeOpacity={1}
+                            style={styles.overlayBackdrop}
+                            onPress={() => setShowPhotoModal(false)}
+                        />
+
+                        <View style={styles.photoModalCard}>
                             <TouchableOpacity
                                 style={styles.closeFormBtn}
-                                onPress={() => setShowForm(false)}
+                                onPress={() => setShowPhotoModal(false)}
                             >
                                 <Text style={styles.closeFormText}>✕</Text>
                             </TouchableOpacity>
 
-                            {/* Batiment */}
-                            <Text style={styles.label}>Bâtiment :</Text>
-                            <View style={{ position: 'relative' }}>
-                                <TextInput
-                                    style={styles.textInput}
-                                    placeholder="Ex: Bâtiment A"
-                                    placeholderTextColor="#999"
-                                    value={form.batiment}
-                                    onChangeText={v => updateForm('batiment', v)}
-                                    onFocus={() => setShowBatimentSuggestions(true)}
-                                    onBlur={() => setTimeout(() => setShowBatimentSuggestions(false), 200)}
-                                />
-                                {showBatimentSuggestions && batimentSuggestions.length > 0 && (
-                                    <ScrollView
-                                        style={styles.suggestionsContainer}
-                                        nestedScrollEnabled={true}
-                                        keyboardShouldPersistTaps="always"
-                                        showsVerticalScrollIndicator={true}
-                                    >
-                                        {batimentSuggestions.map((suggestion, idx) => (
-                                            <TouchableOpacity
-                                                key={idx}
-                                                style={styles.suggestionItem}
-                                                activeOpacity={0.7}
-                                                onPress={() => {
-                                                    updateForm('batiment', suggestion);
-                                                    setShowBatimentSuggestions(false);
-                                                }}
-                                            >
-                                                <Text style={styles.suggestionText}>{suggestion}</Text>
-                                            </TouchableOpacity>
-                                        ))}
-                                    </ScrollView>
-                                )}
-                            </View>
+                            <Text style={styles.formTitle}>Ajouter des photos</Text>
+                            <Text style={styles.formSubtitle}>Dossier #{selectedFolder?.reportNumber}</Text>
 
-                            {/* Intitulé Mission */}
-                            <Text style={styles.label}>Intitulé Mission :</Text>
-                            <View style={{ position: 'relative' }}>
-                                <TextInput
-                                    style={styles.textInput}
-                                    placeholder="Ex: Electricité"
-                                    placeholderTextColor="#999"
-                                    value={form.intituleMission}
-                                    onChangeText={v => updateForm('intituleMission', v)}
-                                    onFocus={() => setShowIntituleMissionSuggestions(true)}
-                                    onBlur={() => setTimeout(() => setShowIntituleMissionSuggestions(false), 200)}
-                                />
-                                {showIntituleMissionSuggestions && intituleMissionSuggestions.length > 0 && (
-                                    <ScrollView
-                                        style={styles.suggestionsContainer}
-                                        nestedScrollEnabled={true}
-                                        keyboardShouldPersistTaps="always"
-                                        showsVerticalScrollIndicator={true}
-                                    >
-                                        {intituleMissionSuggestions.map((suggestion, idx) => (
-                                            <TouchableOpacity
-                                                key={idx}
-                                                style={styles.suggestionItem}
-                                                activeOpacity={0.7}
-                                                onPress={() => {
-                                                    updateForm('intituleMission', suggestion);
-                                                    setShowIntituleMissionSuggestions(false);
-                                                }}
-                                            >
-                                                <Text style={styles.suggestionText}>{suggestion}</Text>
-                                            </TouchableOpacity>
-                                        ))}
-                                    </ScrollView>
-                                )}
-                            </View>
-
-                            {/* Nom du chantier */}
-                            <Text style={styles.label}>Nom du chantier :</Text>
-                            <View style={{ position: 'relative' }}>
-                                <TextInput
-                                    style={styles.textInput}
-                                    placeholder="Ex: Chantier XYZ"
-                                    placeholderTextColor="#999"
-                                    value={form.chantierName}
-                                    onChangeText={v => updateForm('chantierName', v)}
-                                    onFocus={() => setShowChantierNameSuggestions(true)}
-                                    onBlur={() => setTimeout(() => setShowChantierNameSuggestions(false), 200)}
-                                />
-                                {showChantierNameSuggestions && chantierNameSuggestions.length > 0 && (
-                                    <ScrollView
-                                        style={styles.suggestionsContainer}
-                                        nestedScrollEnabled={true}
-                                        keyboardShouldPersistTaps="always"
-                                        showsVerticalScrollIndicator={true}
-                                    >
-                                        {chantierNameSuggestions.map((suggestion, idx) => (
-                                            <TouchableOpacity
-                                                key={idx}
-                                                style={styles.suggestionItem}
-                                                activeOpacity={0.7}
-                                                onPress={() => {
-                                                    updateForm('chantierName', suggestion);
-                                                    setShowChantierNameSuggestions(false);
-                                                }}
-                                            >
-                                                <Text style={styles.suggestionText}>{suggestion}</Text>
-                                            </TouchableOpacity>
-                                        ))}
-                                    </ScrollView>
-                                )}
-                            </View>
-
-                            {/* Entreprise */}
-                            <Text style={styles.label}>Entreprise :</Text>
-                            <View style={{ position: 'relative' }}>
-                                <TextInput
-                                    style={styles.textInput}
-                                    placeholder="Ex: Entreprise A"
-                                    placeholderTextColor="#999"
-                                    value={form.entreprise}
-                                    onChangeText={v => updateForm('entreprise', v)}
-                                    onFocus={() => setShowEntrepriseSuggestions(true)}
-                                    onBlur={() => setTimeout(() => setShowEntrepriseSuggestions(false), 200)}
-                                />
-                                {showEntrepriseSuggestions && entrepriseSuggestions.length > 0 && (
-                                    <ScrollView
-                                        style={styles.suggestionsContainer}
-                                        nestedScrollEnabled={true}
-                                        keyboardShouldPersistTaps="always"
-                                        showsVerticalScrollIndicator={true}
-                                    >
-                                        {entrepriseSuggestions.map((suggestion, idx) => (
-                                            <TouchableOpacity
-                                                key={idx}
-                                                style={styles.suggestionItem}
-                                                activeOpacity={0.7}
-                                                onPress={() => {
-                                                    updateForm('entreprise', suggestion);
-                                                    setShowEntrepriseSuggestions(false);
-                                                }}
-                                            >
-                                                <Text style={styles.suggestionText}>{suggestion}</Text>
-                                            </TouchableOpacity>
-                                        ))}
-                                    </ScrollView>
-                                )}
-                            </View>
-
-                            {/* Sélection Avant */}
+                            {/* Photo Avant */}
                             <Text style={styles.label}>Photo Avant :</Text>
                             <TouchableOpacity
                                 style={styles.photoButton}
                                 onPress={() => openImageSourceModal('avant')}
                             >
                                 <Text style={styles.photoButtonText}>
-                                    {form.avant ? 'Changer photo' : 'Choisir photo'}
+                                    {photoForm.avant ? '✓ Photo sélectionnée' : '📷 Choisir photo'}
                                 </Text>
                             </TouchableOpacity>
-                            {form.avant && <Image source={{ uri: form.avant }} style={styles.preview} />}
+                            {photoForm.avant && <Image source={{ uri: photoForm.avant }} style={styles.preview} />}
 
-                            {/* Sélection Après */}
+                            {/* Photo Après */}
                             <Text style={styles.label}>Photo Après :</Text>
                             <TouchableOpacity
                                 style={styles.photoButton}
                                 onPress={() => openImageSourceModal('apres')}
                             >
                                 <Text style={styles.photoButtonText}>
-                                    {form.apres ? 'Changer photo' : 'Choisir photo'}
+                                    {photoForm.apres ? '✓ Photo sélectionnée' : '📷 Choisir photo'}
                                 </Text>
                             </TouchableOpacity>
-                            {form.apres && <Image source={{ uri: form.apres }} style={styles.preview} />}
+                            {photoForm.apres && <Image source={{ uri: photoForm.apres }} style={styles.preview} />}
 
                             {/* Bouton Ajouter */}
                             <TouchableOpacity
                                 style={styles.validateButton}
-                                onPress={addRapportPhoto}
+                                onPress={addPhotosToFolder}
+                                disabled={loading}
                             >
-                                <Text style={styles.validateText}>Valider</Text>
-                            </TouchableOpacity>
-                        </ScrollView>
-                        </View>
-                    </KeyboardAvoidingView>
-                </Modal>
-
-                {/* Modal de sélection de source d'image */}
-                <Modal
-                    visible={showImageSourceModal}
-                    transparent={true}
-                    animationType="fade"
-                    onRequestClose={() => setShowImageSourceModal(false)}
-                >
-                    <TouchableOpacity
-                        style={styles.modalOverlay}
-                        activeOpacity={1}
-                        onPress={() => setShowImageSourceModal(false)}
-                    >
-                        <View style={styles.modalContent}>
-                            <Text style={styles.modalTitle}>Choisir une photo</Text>
-
-                            <TouchableOpacity
-                                style={styles.modalButton}
-                                onPress={takePhoto}
-                            >
-                                <Text style={styles.modalButtonIcon}>📷</Text>
-                                <Text style={styles.modalButtonText}>Prendre une photo</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={styles.modalButton}
-                                onPress={pickImageFromGallery}
-                            >
-                                <Text style={styles.modalButtonIcon}>🖼️</Text>
-                                <Text style={styles.modalButtonText}>Choisir depuis la galerie</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={[styles.modalButton, styles.modalCancelButton]}
-                                onPress={() => setShowImageSourceModal(false)}
-                            >
-                                <Text style={styles.modalCancelText}>Annuler</Text>
+                                <Text style={styles.validateText}>{loading ? 'Ajout...' : 'Ajouter les photos'}</Text>
                             </TouchableOpacity>
                         </View>
-                    </TouchableOpacity>
+                    </View>
                 </Modal>
             </SafeAreaView>
         </ScreenWrapper>
@@ -952,48 +984,132 @@ const styles = StyleSheet.create({
         elevation: 3,
     },
 
-    exportButton: {
-        backgroundColor: '#4caf50',
-        padding: 14,
-        borderRadius: 8,
-        alignItems: 'center',
-        marginBottom: 20,
-        elevation: 3,
+    // Styles pour les dossiers
+    folderCard: {
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 16,
+        borderWidth: 2,
+        borderColor: '#f26463',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 3,
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    folderHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
+        paddingBottom: 12,
+    },
+    folderTitleContainer: {
+        flex: 1,
+    },
+    folderNumber: {
+        fontSize: 14,
+        color: '#666',
+        marginBottom: 4,
+    },
+    folderTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#414248',
+        marginBottom: 4,
+    },
+    folderSubtitle: {
+        fontSize: 14,
+        color: '#f26463',
+        fontWeight: '500',
+    },
+    deleteFolderBtn: {
+        padding: 8,
+    },
+    deleteFolderText: {
+        fontSize: 20,
+    },
+
+    // Styles pour les photos dans un dossier
+    photoCard: {
+        marginBottom: 12,
+        padding: 8,
+        backgroundColor: '#f9f9f9',
+        borderRadius: 8,
+    },
+    imageRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 8,
+    },
+    imageWrapper: {
+        width: '48%',
+        alignItems: 'center',
+    },
+    imageLabel: {
+        fontSize: 14,
+        fontWeight: '500',
+        marginBottom: 4,
+        color: '#666',
+    },
+    image: {
+        width: '100%',
+        height: 120,
+        borderRadius: 8,
+    },
+    deletePhotoBtn: {
+        backgroundColor: '#ff6b6b',
+        padding: 8,
+        borderRadius: 6,
+        alignItems: 'center',
+    },
+    deletePhotoText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: '600',
+    },
+
+    addPhotosBtn: {
+        backgroundColor: '#4caf50',
+        padding: 12,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginTop: 8,
+    },
+    addPhotosBtnText: {
+        color: '#fff',
+        fontWeight: '600',
+        fontSize: 14,
+    },
+
+    exportButton: {
+        backgroundColor: '#2196f3',
+        padding: 12,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginTop: 8,
     },
     exportButtonText: {
         color: '#fff',
         fontWeight: '600',
-        fontSize: 16,
+        fontSize: 14,
     },
 
-    card: {
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 12,
-        marginTop: 15,
-        marginBottom: 16,
-        borderWidth: 1,
-        borderColor: '#f26463',
-        position: 'relative',
+    seeMoreButton: {
+        backgroundColor: '#f0f0f0',
+        padding: 10,
+        borderRadius: 6,
+        alignItems: 'center',
+        marginTop: 8,
     },
-    badge: {
-        position: 'absolute',
-        top: -10,
-        left: 16,
-        backgroundColor: '#f26463',
-        paddingHorizontal: 12,
-        paddingVertical: 4,
-        borderRadius: 20,
+    seeMoreText: {
+        color: '#666',
+        fontSize: 14,
+        fontWeight: '500',
     },
-    badgeText: { color: '#fff', fontWeight: '600', fontSize: 12 },
-
-    cardTitle: { fontWeight: '600', marginBottom: 8, fontSize: 16, marginTop: 8 },
-    imageRow: { flexDirection: 'row', justifyContent: 'space-between' },
-    image: { width: '100%', height: 160, borderRadius: 8 },
 
     toggleCircle: {
         width: 50,
@@ -1020,13 +1136,25 @@ const styles = StyleSheet.create({
     },
     overlayBackdrop: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0,0,0,0.3)',
+        backgroundColor: 'rgba(0,0,0,0.5)',
     },
     formCardOverlay: {
         width: '92%',
         backgroundColor: '#fff',
         borderRadius: 12,
-        maxHeight: '75%',
+        maxHeight: '80%',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 10,
+    },
+    photoModalCard: {
+        width: '92%',
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 16,
+        maxHeight: '70%',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.2,
@@ -1050,129 +1178,72 @@ const styles = StyleSheet.create({
         color: '#666',
         fontWeight: 'bold',
     },
-    label: { fontSize: 14, fontWeight: '500', marginTop: 12, color: '#333' },
+    formTitle: {
+        fontSize: 20,
+        fontWeight: '600',
+        color: '#414248',
+        marginBottom: 8,
+        textAlign: 'center',
+    },
+    formSubtitle: {
+        fontSize: 14,
+        color: '#666',
+        marginBottom: 16,
+        textAlign: 'center',
+    },
+    label: {
+        fontSize: 14,
+        fontWeight: '500',
+        marginTop: 12,
+        color: '#333',
+    },
     textInput: {
         marginTop: 4,
         borderWidth: 1,
         borderColor: '#ddd',
         borderRadius: 6,
-        padding: 8,
+        padding: 10,
         fontSize: 14,
     },
-    inputBtn: {
+    readOnlyText: {
         marginTop: 4,
-        borderWidth: 1,
-        borderColor: '#ddd',
+        padding: 10,
+        backgroundColor: '#f5f5f5',
         borderRadius: 6,
-        padding: 8,
+        fontSize: 14,
+        color: '#666',
     },
-    pickerContainer: {
-        backgroundColor: '#fff',
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 6,
-        marginTop: 8,
-    },
-    okButton: {
-        alignSelf: 'center',
-        backgroundColor: '#f26463',
-        paddingVertical: 8,
-        paddingHorizontal: 16,
-        borderRadius: 6,
-        marginTop: 16,
-        marginBottom: 12,
-    },
-    okButtonText: { color: '#fff', fontSize: 14, fontWeight: '500' },
     photoButton: {
         backgroundColor: '#f26463',
-        padding: 10,
-        borderRadius: 6,
-        alignItems: 'center',
-        marginTop: 8,
-    },
-    photoButtonText: { color: '#fff', fontWeight: '600' },
-    preview: {
-        marginTop: 8,
-        width: '100%',
-        height: 200,
-        borderRadius: 8,
-    },
-    validateButton: {
-        marginTop: 16,
-        backgroundColor: '#4caf50',
         padding: 12,
         borderRadius: 6,
         alignItems: 'center',
-    },
-    validateText: { color: '#fff', fontWeight: '600' },
-
-    imageWrapper: {
-        width: '48%',
-        alignItems: 'center',
-    },
-    imageLabel: {
-        fontSize: 14,
-        fontWeight: '500',
-        marginBottom: 4,
-        color: '#666',
-    },
-
-    // Styles pour le modal
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    modalContent: {
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 20,
-        width: '80%',
-        maxWidth: 400,
-        elevation: 5,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-    },
-    modalTitle: {
-        fontSize: 18,
-        fontWeight: '600',
-        textAlign: 'center',
-        marginBottom: 20,
-        color: '#333',
-    },
-    modalButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#f26463',
-        padding: 15,
-        borderRadius: 8,
-        marginBottom: 12,
-        elevation: 2,
-    },
-    modalButtonIcon: {
-        fontSize: 24,
-        marginRight: 12,
-    },
-    modalButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '500',
-    },
-    modalCancelButton: {
-        backgroundColor: '#ddd',
         marginTop: 8,
-        justifyContent: 'center',
     },
-    modalCancelText: {
-        color: '#333',
+    photoButtonText: {
+        color: '#fff',
+        fontWeight: '600',
+    },
+    preview: {
+        marginTop: 8,
+        width: '100%',
+        height: 150,
+        borderRadius: 8,
+    },
+    validateButton: {
+        marginTop: 20,
+        backgroundColor: '#4caf50',
+        padding: 14,
+        borderRadius: 6,
+        alignItems: 'center',
+    },
+    validateText: {
+        color: '#fff',
+        fontWeight: '600',
         fontSize: 16,
-        fontWeight: '500',
-        textAlign: 'center',
-        flex: 1,
     },
+
+    // Suggestions d'autocomplétion
     suggestionsContainer: {
         position: 'absolute',
         top: 42,
@@ -1184,57 +1255,18 @@ const styles = StyleSheet.create({
         borderTopWidth: 0,
         borderBottomLeftRadius: 8,
         borderBottomRightRadius: 8,
-        maxHeight: 180,
+        maxHeight: 150,
         zIndex: 10000,
         elevation: 8,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.25,
-        shadowRadius: 8,
     },
     suggestionItem: {
         paddingVertical: 12,
         paddingHorizontal: 16,
         borderBottomWidth: 1,
         borderBottomColor: '#e8e8e8',
-        backgroundColor: '#fff',
     },
     suggestionText: {
-        fontSize: 15,
-        color: '#333',
-        fontWeight: '400',
-    },
-
-    // Styles pour les dossiers
-    folderContainer: {
-        marginBottom: 20,
-    },
-    folderTitle: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#414248',
-        marginTop: 16,
-        marginBottom: 12,
-        marginLeft: 4,
-    },
-    badgeRow: {
-        flexDirection: 'row',
-        position: 'absolute',
-        top: -10,
-        left: 16,
-        zIndex: 10,
-        gap: 8,
-    },
-    seeMoreButton: {
-        backgroundColor: '#f0f0f0',
-        padding: 10,
-        borderRadius: 6,
-        alignItems: 'center',
-        marginTop: 8,
-    },
-    seeMoreText: {
-        color: '#666',
         fontSize: 14,
-        fontWeight: '500',
+        color: '#333',
     },
 });

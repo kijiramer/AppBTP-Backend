@@ -1,0 +1,54 @@
+{
+  "expo": {
+    "name": "AppBTP",
+    "slug": "applicationbtpv1",
+    "version": "1.0.0",
+    "orientation": "portrait",
+  "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+  "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yourname.appbtp",
+      "buildNumber": "21",
+      "infoPlist": {
+    "ITSAppUsesNonExemptEncryption": false,
+    "NSPhotoLibraryUsageDescription": "Cette application a besoin d'accéder à votre bibliothèque pour choisir votre photo de profil.",
+    "NSCameraUsageDescription": "Cette application a besoin d'accéder à votre caméra pour prendre une photo de profil."
+      }
+    },
+    "android": {
+      "package": "com.kijiramer.appbtp",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Cette application a besoin d'accéder à votre bibliothèque pour choisir votre photo de profil.",
+          "cameraPermission": "Cette application a besoin d'accéder à votre caméra pour prendre une photo de profil."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "dab0358d-7c8b-4c59-b494-123167641a86"
+      }
+  ,
+  "API_BASE_URL": ""
+    },
+    "owner": "kijiramer"
+  }
+}
