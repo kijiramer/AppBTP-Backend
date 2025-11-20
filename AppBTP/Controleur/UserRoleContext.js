@@ -71,9 +71,14 @@ export const UserRoleProvider = ({ children }) => {
         // Admin peut tout ajouter
         if (userRole === 'admin') return true;
 
-        // Pilote peut seulement ajouter des Remarques
+        // Remarques: seuls pilote et admin peuvent ajouter
+        if (task === 'Remarques') {
+            return userRole === 'pilote' || userRole === 'admin';
+        }
+
+        // Pilote peut seulement ajouter des Remarques (déjà géré ci-dessus)
         if (userRole === 'pilote') {
-            return task === 'Remarques';
+            return false;
         }
 
         // Nettoyeur et homme clé peuvent ajouter (sauf restrictions de visibilité)
@@ -81,7 +86,7 @@ export const UserRoleProvider = ({ children }) => {
             return canViewTask(task);
         }
 
-        // User par défaut peut tout ajouter
+        // User par défaut peut tout ajouter (sauf Remarques)
         return true;
     };
 

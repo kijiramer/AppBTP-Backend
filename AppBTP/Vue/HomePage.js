@@ -8,7 +8,7 @@ import ScreenWrapper from '../Controleur/ScreenWrapper';
 import { MaterialIcons } from '@expo/vector-icons';
 import axios from 'axios'; // Import axios for API calls
 
-export default function HomePage({ navigation }) {
+export default function Home({ navigation }) {
   const [cities, setCities] = useState([]); // State to store cities
 
   // Fetch cities from API

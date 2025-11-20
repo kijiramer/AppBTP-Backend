@@ -399,13 +399,15 @@ export default function Remarque({ route, navigation }) {
                                         </View>
                                     </View>
 
-                                    {/* Bouton supprimer */}
-                                    <TouchableOpacity
-                                        style={styles.deleteButton}
-                                        onPress={() => deleteRemarque(remarque._id)}
-                                    >
-                                        <Text style={styles.deleteButtonText}>Supprimer</Text>
-                                    </TouchableOpacity>
+                                    {/* Bouton supprimer - uniquement pour pilote et admin */}
+                                    {canAddItem('Remarques') && (
+                                        <TouchableOpacity
+                                            style={styles.deleteButton}
+                                            onPress={() => deleteRemarque(remarque._id)}
+                                        >
+                                            <Text style={styles.deleteButtonText}>Supprimer</Text>
+                                        </TouchableOpacity>
+                                    )}
                                 </View>
                             ))}
                         </View>

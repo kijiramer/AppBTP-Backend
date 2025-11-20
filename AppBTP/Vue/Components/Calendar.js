@@ -146,17 +146,6 @@ export function displayCalendarScreen(selectedDate, onDateChange, datesWithNotes
 
         </View>
 
-        {/* Bouton "Aujourd'hui" centré */}
-        <View style={styles.todayButtonWrapper}>
-          <TouchableOpacity
-              style={styles.todayButton}
-              onPress={handleTodayPress}
-              activeOpacity={0.7}
-          >
-            <Text style={styles.todayButtonText}>Aujourd'hui</Text>
-          </TouchableOpacity>
-        </View>
-
       </SafeAreaView>
   );
 }
@@ -268,23 +257,5 @@ const styles = StyleSheet.create({
   selectedDateText: {
     fontSize: 14,
     color: '#333',
-  },
-
-  todayButtonWrapper: {
-    alignItems: 'center',
-    marginTop: 20,
-  },
-
-  todayButton: {
-    backgroundColor: '#f26463',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 20,
-  },
-
-  todayButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
   },
 });
