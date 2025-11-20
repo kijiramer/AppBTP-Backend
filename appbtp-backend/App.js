@@ -88,6 +88,11 @@ app.post('/effectif', async (req, res) => {
       throw new Error('Invalid user.');
     }
     const { city, building, task, floor, apartment, company, nombrePersonnes, selectedDate } = req.body;
+    
+    // Normaliser la date pour éviter les problèmes de timezone
+    const normalizedDate = new Date(selectedDate);
+    normalizedDate.setHours(12, 0, 0, 0);
+    
     const effectif = new Effectif({
       city,
       building,
@@ -96,7 +101,7 @@ app.post('/effectif', async (req, res) => {
       apartment,
       company,
       nombrePersonnes,
-      selectedDate,
+      selectedDate: normalizedDate,
       userId: user._id
     });
     await effectif.save();
@@ -492,6 +497,10 @@ app.post('/notes', async (req, res) => {
 
     const { city, building, task, floor, apartment, company, openTime, closedTime, selectedDate } = req.body;
     
+    // Normaliser la date pour éviter les problèmes de timezone
+    const normalizedDate = new Date(selectedDate);
+    normalizedDate.setHours(12, 0, 0, 0);
+    
     const note = new Note({
       city,
       building,
@@ -501,7 +510,7 @@ app.post('/notes', async (req, res) => {
       company,
       openTime: openTime || '',
       closedTime: closedTime || '',
-      selectedDate: new Date(selectedDate),
+      selectedDate: normalizedDate,
       userId: user._id
     });
 
@@ -695,11 +704,15 @@ app.post('/constatations', async (req, res) => {
       city, building, task, selectedDate, endDate
     } = req.body;
 
+    // Normaliser la date pour éviter les problèmes de timezone
+    const normalizedDate = new Date(selectedDate);
+    normalizedDate.setHours(12, 0, 0, 0); // Midi pour éviter les changements de jour
+
     const constatationData = {
       city,
       building,
       task,
-      selectedDate: new Date(selectedDate),
+      selectedDate: normalizedDate,
       endDate: endDate ? new Date(endDate) : undefined,
       userId: user._id
     };
@@ -875,6 +888,11 @@ app.post('/remarques', async (req, res) => {
     }
 
     const { city, building, task, floor, apartment, description, image, selectedDate } = req.body;
+    
+    // Normaliser la date pour éviter les problèmes de timezone
+    const normalizedDate = new Date(selectedDate);
+    normalizedDate.setHours(12, 0, 0, 0);
+    
     const remarque = new Remarque({
       city,
       building,
@@ -883,7 +901,7 @@ app.post('/remarques', async (req, res) => {
       apartment,
       description,
       image,
-      selectedDate,
+      selectedDate: normalizedDate,
       userId: user._id
     });
 
