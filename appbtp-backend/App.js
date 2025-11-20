@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const connectDB = require('./db');
-const { User, City, Building, Note, Constatation, Effectif } = require('./CombinedModel'); // Import the models
+const { User, City, Building, Note, Constatation, Effectif, Remarque, Folder, FolderPhoto } = require('./CombinedModel'); // Import the models
 
 const JWT_SECRET = 'hvdvay6ert72839289()aiyg8t87qt72393293883uhefiuh78ttq3ifi78272jbkj?[]]pou89ywe';
 
@@ -120,14 +120,14 @@ app.get('/effectif', async (req, res) => {
       throw new Error('Invalid user.');
     }
     const { city, building, floor, apartment, company, selectedDate } = req.query;
-    const filter = { userId: user._id };
+    const filter = {}; // Suppression du filtre userId - accessible à tous
     if (city) filter.city = city;
     if (building) filter.building = building;
     if (floor) filter.floor = floor;
     if (apartment) filter.apartment = apartment;
     if (company) filter.company = company;
     if (selectedDate) filter.selectedDate = selectedDate;
-    const effectifs = await Effectif.find(filter).sort({ createdAt: -1 });
+    const effectifs = await Effectif.find(filter).sort({ createdAt: -1 }).populate('userId', 'name email');
     res.json({ success: true, effectifs });
   } catch (err) {
     console.error('Error fetching effectif:', err.message);
@@ -149,7 +149,7 @@ app.get('/effectifs', async (req, res) => {
       throw new Error('Invalid user.');
     }
     const { city, building, task, floor, apartment, company, selectedDate } = req.query;
-    const filter = { userId: user._id };
+    const filter = {}; // Suppression du filtre userId - accessible à tous
     if (city) filter.city = city;
     if (building) filter.building = building;
     if (task) filter.task = task;
@@ -157,7 +157,7 @@ app.get('/effectifs', async (req, res) => {
     if (apartment) filter.apartment = apartment;
     if (company) filter.company = company;
     if (selectedDate) filter.selectedDate = selectedDate;
-    const effectifs = await Effectif.find(filter).sort({ createdAt: -1 });
+    const effectifs = await Effectif.find(filter).sort({ createdAt: -1 }).populate('userId', 'name email');
     res.json({ success: true, effectifs });
   } catch (err) {
     console.error('Error fetching effectifs:', err.message);
@@ -182,10 +182,15 @@ app.delete('/effectifs/:id', async (req, res) => {
 
     const { id } = req.params;
 
-    // Vérifier que l'effectif appartient à l'utilisateur
-    const effectif = await Effectif.findOne({ _id: id, userId: user._id });
+    // Vérifier que l'effectif existe
+    const effectif = await Effectif.findById(id);
     if (!effectif) {
-      return res.status(404).json({ success: false, message: 'Effectif not found or not authorized' });
+      return res.status(404).json({ success: false, message: 'Effectif not found' });
+    }
+
+    // Vérifier que l'utilisateur est l'auteur ou admin
+    if (effectif.userId.toString() !== user._id.toString() && user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Not authorized to delete this effectif' });
     }
 
     await Effectif.findByIdAndDelete(id);
@@ -526,7 +531,7 @@ app.get('/notes', async (req, res) => {
 
     const { city, building, task, selectedDate } = req.query;
     
-    const filter = { userId: user._id };
+    const filter = {}; // Suppression du filtre userId - accessible à tous
     if (city) filter.city = city;
     if (building) filter.building = building;
     if (task) filter.task = task;
@@ -538,7 +543,7 @@ app.get('/notes', async (req, res) => {
       filter.selectedDate = { $gte: startOfDay, $lte: endOfDay };
     }
 
-    const notes = await Note.find(filter).sort({ createdAt: -1 });
+    const notes = await Note.find(filter).sort({ createdAt: -1 }).populate('userId', 'name email');
     console.log('Notes fetched successfully:', notes);
     res.json({ success: true, notes });
   } catch (err) {
@@ -563,7 +568,7 @@ app.get('/notes/dates', async (req, res) => {
     }
 
     const { city, building, task } = req.query;
-    const filter = { userId: user._id };
+    const filter = {}; // Suppression du filtre userId - accessible à tous
     if (city) filter.city = city;
     if (building) filter.building = building;
     if (task) filter.task = task;
@@ -603,10 +608,15 @@ app.delete('/notes/:id', async (req, res) => {
 
     const { id } = req.params;
     
-    // Vérifier que la note appartient à l'utilisateur
-    const note = await Note.findOne({ _id: id, userId: user._id });
+    // Vérifier que la note existe
+    const note = await Note.findById(id);
     if (!note) {
-      return res.status(404).json({ success: false, message: 'Note not found or not authorized' });
+      return res.status(404).json({ success: false, message: 'Note not found' });
+    }
+
+    // Vérifier que l'utilisateur est l'auteur ou admin
+    if (note.userId.toString() !== user._id.toString() && user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Not authorized to delete this note' });
     }
 
     await Note.findByIdAndDelete(id);
@@ -636,10 +646,15 @@ app.put('/notes/:id', async (req, res) => {
     const { id } = req.params;
     const { closedTime } = req.body;
 
-    // Vérifier que la note appartient à l'utilisateur
-    const note = await Note.findOne({ _id: id, userId: user._id });
+    // Vérifier que la note existe
+    const note = await Note.findById(id);
     if (!note) {
-      return res.status(404).json({ success: false, message: 'Note not found or not authorized' });
+      return res.status(404).json({ success: false, message: 'Note not found' });
+    }
+
+    // Vérifier que l'utilisateur est l'auteur ou admin
+    if (note.userId.toString() !== user._id.toString() && user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Not authorized to update this note' });
     }
 
     note.closedTime = closedTime;
@@ -729,7 +744,7 @@ app.get('/constatations', async (req, res) => {
 
     const { city, building, task, selectedDate } = req.query;
     
-    const filter = { userId: user._id };
+    const filter = {}; // Suppression du filtre userId - accessible à tous
     if (city) filter.city = city;
     if (building) filter.building = building;
     if (task) filter.task = task;
@@ -741,7 +756,7 @@ app.get('/constatations', async (req, res) => {
       filter.selectedDate = { $gte: startOfDay, $lte: endOfDay };
     }
 
-    const constatations = await Constatation.find(filter).sort({ createdAt: -1 });
+    const constatations = await Constatation.find(filter).sort({ createdAt: -1 }).populate('userId', 'name email');
     console.log('Constatations fetched successfully:', constatations);
     res.json({ success: true, constatations });
   } catch (err) {
@@ -835,6 +850,372 @@ app.delete('/constatations/:id', async (req, res) => {
   } catch (err) {
     console.error('Error deleting constatation:', err.message);
     res.status(500).json({ success: false, message: 'Error deleting constatation', error: err.message });
+  }
+});
+
+// Routes pour les remarques
+// Créer une nouvelle remarque
+app.post('/remarques', async (req, res) => {
+  const header = req.get('Authorization');
+  if (!header) {
+    return res.status(401).json({ success: false, message: 'You are not authorized.' });
+  }
+
+  const token = header.split(' ')[1];
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(payload.id);
+    if (!user) {
+      throw new Error('Invalid user.');
+    }
+
+    // Vérifier que l'utilisateur est pilote ou admin
+    if (user.role !== 'pilote' && user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Only pilote and admin can create remarques' });
+    }
+
+    const { city, building, task, floor, apartment, description, image, selectedDate } = req.body;
+    const remarque = new Remarque({
+      city,
+      building,
+      task,
+      floor,
+      apartment,
+      description,
+      image,
+      selectedDate,
+      userId: user._id
+    });
+
+    await remarque.save();
+    console.log('Remarque created successfully:', remarque);
+    res.json({ success: true, remarque });
+  } catch (err) {
+    console.error('Error creating remarque:', err.message);
+    res.status(500).json({ success: false, message: 'Error creating remarque', error: err.message });
+  }
+});
+
+// Récupérer les remarques
+app.get('/remarques', async (req, res) => {
+  const header = req.get('Authorization');
+  if (!header) {
+    return res.status(401).json({ success: false, message: 'You are not authorized.' });
+  }
+
+  const token = header.split(' ')[1];
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(payload.id);
+    if (!user) {
+      throw new Error('Invalid user.');
+    }
+
+    const { city, building, task, selectedDate } = req.query;
+    const filter = {}; // Suppression du filtre userId - accessible à tous
+
+    if (city) filter.city = city;
+    if (building) filter.building = building;
+    if (task) filter.task = task;
+    if (selectedDate) {
+      const date = new Date(selectedDate);
+      const nextDate = new Date(date);
+      nextDate.setDate(date.getDate() + 1);
+      filter.selectedDate = {
+        $gte: date,
+        $lt: nextDate
+      };
+    }
+
+    const remarques = await Remarque.find(filter).sort({ createdAt: -1 }).populate('userId', 'name email');
+    console.log('Remarques fetched successfully:', remarques.length);
+    res.json({ success: true, remarques });
+  } catch (err) {
+    console.error('Error fetching remarques:', err.message);
+    res.status(500).json({ success: false, message: 'Error fetching remarques', error: err.message });
+  }
+});
+
+// Supprimer une remarque
+app.delete('/remarques/:id', async (req, res) => {
+  const header = req.get('Authorization');
+  if (!header) {
+    return res.status(401).json({ success: false, message: 'You are not authorized.' });
+  }
+
+  const token = header.split(' ')[1];
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(payload.id);
+    if (!user) {
+      throw new Error('Invalid user.');
+    }
+
+    // Vérifier que l'utilisateur est pilote ou admin
+    if (user.role !== 'pilote' && user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Only pilote and admin can delete remarques' });
+    }
+
+    const remarqueId = req.params.id;
+    const remarque = await Remarque.findById(remarqueId);
+
+    if (!remarque) {
+      return res.status(404).json({ success: false, message: 'Remarque not found' });
+    }
+
+    // Vérifier que l'utilisateur est l'auteur ou admin
+    if (remarque.userId.toString() !== user._id.toString() && user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Not authorized to delete this remarque' });
+    }
+
+    await Remarque.findByIdAndDelete(remarqueId);
+    console.log('Remarque deleted successfully:', remarqueId);
+    res.json({ success: true, message: 'Remarque deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting remarque:', err.message);
+    res.status(500).json({ success: false, message: 'Error deleting remarque', error: err.message });
+  }
+});
+
+// ==================== ROUTES POUR LES DOSSIERS (FOLDERS) ====================
+// Créer un nouveau dossier avec numéro auto-incrémenté
+app.post('/folders', async (req, res) => {
+  const header = req.get('Authorization');
+  if (!header) {
+    return res.status(401).json({ success: false, message: 'You are not authorized.' });
+  }
+
+  const token = header.split(' ')[1];
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(payload.id);
+    if (!user) {
+      throw new Error('Invalid user.');
+    }
+
+    const { intituleMission, chantierName, company, city, building, task, mission, startDate, endDate } = req.body;
+
+    // Trouver le dernier numéro de rapport et incrémenter
+    const lastFolder = await Folder.findOne().sort({ reportNumber: -1 });
+    const reportNumber = lastFolder ? lastFolder.reportNumber + 1 : 1;
+
+    const folder = new Folder({
+      reportNumber,
+      intituleMission,
+      chantierName,
+      company,
+      city,
+      building,
+      task,
+      mission,
+      startDate: new Date(startDate),
+      endDate: endDate ? new Date(endDate) : undefined,
+      userId: user._id
+    });
+
+    await folder.save();
+    console.log('Folder created successfully:', folder);
+    res.json({ success: true, folder });
+  } catch (err) {
+    console.error('Error creating folder:', err.message);
+    res.status(500).json({ success: false, message: 'Error creating folder', error: err.message });
+  }
+});
+
+// Récupérer les dossiers d'un utilisateur
+app.get('/folders', async (req, res) => {
+  const header = req.get('Authorization');
+  if (!header) {
+    return res.status(401).json({ success: false, message: 'You are not authorized.' });
+  }
+
+  const token = header.split(' ')[1];
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(payload.id);
+    if (!user) {
+      throw new Error('Invalid user.');
+    }
+
+    const { city, building, task, startDate, endDate } = req.query;
+    const filter = { userId: user._id };
+
+    if (city) filter.city = city;
+    if (building) filter.building = building;
+    if (task) filter.task = task;
+
+    // Filtrer par plage de dates si spécifié
+    if (startDate) {
+      const date = new Date(startDate);
+      const nextDate = new Date(date);
+      nextDate.setDate(date.getDate() + 1);
+      filter.startDate = {
+        $gte: date,
+        $lt: nextDate
+      };
+    }
+
+    const folders = await Folder.find(filter).sort({ createdAt: -1 });
+    console.log('Folders fetched successfully:', folders.length);
+    res.json({ success: true, folders });
+  } catch (err) {
+    console.error('Error fetching folders:', err.message);
+    res.status(500).json({ success: false, message: 'Error fetching folders', error: err.message });
+  }
+});
+
+// Supprimer un dossier et toutes ses photos
+app.delete('/folders/:id', async (req, res) => {
+  const header = req.get('Authorization');
+  if (!header) {
+    return res.status(401).json({ success: false, message: 'You are not authorized.' });
+  }
+
+  const token = header.split(' ')[1];
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(payload.id);
+    if (!user) {
+      throw new Error('Invalid user.');
+    }
+
+    const folderId = req.params.id;
+    const folder = await Folder.findById(folderId);
+
+    if (!folder) {
+      return res.status(404).json({ success: false, message: 'Folder not found' });
+    }
+
+    // Vérifier que l'utilisateur est le propriétaire du dossier
+    if (folder.userId.toString() !== user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'You are not authorized to delete this folder' });
+    }
+
+    // Supprimer toutes les photos du dossier
+    await FolderPhoto.deleteMany({ folderId: folderId });
+
+    // Supprimer le dossier
+    await Folder.findByIdAndDelete(folderId);
+    console.log('Folder and its photos deleted successfully:', folderId);
+    res.json({ success: true, message: 'Folder deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting folder:', err.message);
+    res.status(500).json({ success: false, message: 'Error deleting folder', error: err.message });
+  }
+});
+
+// ==================== ROUTES POUR LES PHOTOS ====================
+// Ajouter une paire de photos avant/après à un dossier
+app.post('/folders/:folderId/photos', async (req, res) => {
+  const header = req.get('Authorization');
+  if (!header) {
+    return res.status(401).json({ success: false, message: 'You are not authorized.' });
+  }
+
+  const token = header.split(' ')[1];
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(payload.id);
+    if (!user) {
+      throw new Error('Invalid user.');
+    }
+
+    const { folderId } = req.params;
+    const { imageAvant, imageApres } = req.body;
+
+    // Vérifier que le dossier existe et appartient à l'utilisateur
+    const folder = await Folder.findById(folderId);
+    if (!folder) {
+      return res.status(404).json({ success: false, message: 'Folder not found' });
+    }
+    if (folder.userId.toString() !== user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'You are not authorized to add photos to this folder' });
+    }
+
+    const photo = new FolderPhoto({
+      folderId,
+      imageAvant,
+      imageApres,
+      userId: user._id
+    });
+
+    await photo.save();
+    console.log('Photo added to folder successfully:', photo);
+    res.json({ success: true, photo });
+  } catch (err) {
+    console.error('Error adding photo to folder:', err.message);
+    res.status(500).json({ success: false, message: 'Error adding photo', error: err.message });
+  }
+});
+
+// Récupérer les photos d'un dossier
+app.get('/folders/:folderId/photos', async (req, res) => {
+  const header = req.get('Authorization');
+  if (!header) {
+    return res.status(401).json({ success: false, message: 'You are not authorized.' });
+  }
+
+  const token = header.split(' ')[1];
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(payload.id);
+    if (!user) {
+      throw new Error('Invalid user.');
+    }
+
+    const { folderId } = req.params;
+
+    // Vérifier que le dossier existe et appartient à l'utilisateur
+    const folder = await Folder.findById(folderId);
+    if (!folder) {
+      return res.status(404).json({ success: false, message: 'Folder not found' });
+    }
+    if (folder.userId.toString() !== user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'You are not authorized to view this folder' });
+    }
+
+    const photos = await FolderPhoto.find({ folderId }).sort({ createdAt: -1 });
+    console.log('Photos fetched successfully for folder:', folderId, photos.length);
+    res.json({ success: true, photos });
+  } catch (err) {
+    console.error('Error fetching photos:', err.message);
+    res.status(500).json({ success: false, message: 'Error fetching photos', error: err.message });
+  }
+});
+
+// Supprimer une photo
+app.delete('/photos/:id', async (req, res) => {
+  const header = req.get('Authorization');
+  if (!header) {
+    return res.status(401).json({ success: false, message: 'You are not authorized.' });
+  }
+
+  const token = header.split(' ')[1];
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(payload.id);
+    if (!user) {
+      throw new Error('Invalid user.');
+    }
+
+    const photoId = req.params.id;
+    const photo = await FolderPhoto.findById(photoId);
+
+    if (!photo) {
+      return res.status(404).json({ success: false, message: 'Photo not found' });
+    }
+
+    // Vérifier que l'utilisateur est le propriétaire de la photo
+    if (photo.userId.toString() !== user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'You are not authorized to delete this photo' });
+    }
+
+    await FolderPhoto.findByIdAndDelete(photoId);
+    console.log('Photo deleted successfully:', photoId);
+    res.json({ success: true, message: 'Photo deleted successfully' });
+  } catch (err) {
+    console.error('Error deleting photo:', err.message);
+    res.status(500).json({ success: false, message: 'Error deleting photo', error: err.message });
   }
 });
 

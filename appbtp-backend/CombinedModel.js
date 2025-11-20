@@ -177,4 +177,49 @@ const effectifSchema = new mongoose.Schema({
 
 const Effectif = mongoose.model('Effectif', effectifSchema);
 
-module.exports = { City, User, Building, Note, Constatation, Effectif };
+// Remarque schema
+const remarqueSchema = new mongoose.Schema({
+  city: { type: String, required: true },
+  building: { type: String, required: true },
+  task: { type: String, required: true },
+  floor: { type: String, required: true },
+  apartment: { type: String, required: true },
+  description: { type: String, required: false },
+  image: { type: String, required: true },
+  selectedDate: { type: Date, required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const Remarque = mongoose.model('Remarque', remarqueSchema);
+
+// Folder schema - Pour les dossiers de rapport photo avec numéro auto-incrémenté
+const folderSchema = new mongoose.Schema({
+  reportNumber: { type: Number, required: true },
+  intituleMission: { type: String, required: true },
+  chantierName: { type: String, required: true },
+  company: { type: String, required: true },
+  city: { type: String, required: true },
+  building: { type: String, required: true },
+  task: { type: String, required: true },
+  mission: { type: String, required: true },
+  startDate: { type: Date, required: true },
+  endDate: { type: Date, required: false },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const Folder = mongoose.model('Folder', folderSchema);
+
+// FolderPhoto schema - Pour les paires de photos avant/après dans un dossier
+const folderPhotoSchema = new mongoose.Schema({
+  folderId: { type: mongoose.Schema.Types.ObjectId, ref: 'Folder', required: true },
+  imageAvant: { type: String, required: true },
+  imageApres: { type: String, required: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const FolderPhoto = mongoose.model('FolderPhoto', folderPhotoSchema);
+
+module.exports = { City, User, Building, Note, Constatation, Effectif, Remarque, Folder, FolderPhoto };
