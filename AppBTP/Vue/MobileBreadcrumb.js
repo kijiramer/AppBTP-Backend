@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Modal, FlatList, StyleSheet, Platform } from 'react-native';
 
-export default function MobileBreadcrumb({ segments = [], navigation, onNavigate }) {
+export default function MobileBreadcrumb({ segments = [], navigation, onNavigate, currentCity, currentBuilding }) {
   const [visible, setVisible] = useState(false);
   const [activeItems, setActiveItems] = useState([]);
   const [activeLabel, setActiveLabel] = useState('');
@@ -9,7 +9,9 @@ export default function MobileBreadcrumb({ segments = [], navigation, onNavigate
 
   const openMenu = (segment) => {
     const items = segment.items || [];
+    console.log('🔍 Opening menu for segment:', segment.label, 'Items count:', items.length, 'Items:', items.map(i => i.label));
     if (!items || items.length === 0) return;
+    
     // push current menu to stack
     setStack((s) => [...s, { label: segment.label || '', items }]);
     setActiveItems(items);
@@ -18,8 +20,50 @@ export default function MobileBreadcrumb({ segments = [], navigation, onNavigate
   };
 
   const handleSelect = (item) => {
-    // If the item has nested children, push them onto the stack and continue drilling
     const children = item.children || item.items || [];
+    
+    // Si l'item a une route, c'est une tâche - naviguer directement
+    if (item.route) {
+      setVisible(false);
+      setStack([]);
+      if (navigation && typeof navigation.replace === 'function') {
+        navigation.replace(item.route, item.params || {});
+      }
+      return;
+    }
+    
+    // Si on est au niveau 1 du stack
+    if (stack.length === 1) {
+      // Si l'item a des children ET que le premier child n'a pas de route, c'est une ville
+      const firstChild = children && children.length > 0 ? children[0] : null;
+      const isCity = firstChild && !firstChild.route;
+      
+      if (isCity) {
+        console.log('🏢 Navigating to Chantier with city:', item.label);
+        setVisible(false);
+        setStack([]);
+        if (navigation && typeof navigation.navigate === 'function') {
+          navigation.navigate('Chantier', { city: item.label });
+        }
+        return;
+      }
+      
+      // Sinon c'est un bâtiment - utiliser currentCity comme ville
+      const cityLabel = currentCity || '';
+      console.log('🏢 Navigation from breadcrumb - currentCity:', currentCity, 'building:', item.label);
+      console.log('🏢 Navigating to Batiment with city:', cityLabel, 'building:', item.label);
+      setVisible(false);
+      setStack([]);
+      if (navigation && typeof navigation.navigate === 'function') {
+        navigation.navigate('Batiment', { 
+          city: cityLabel, 
+          building: item.label
+        });
+      }
+      return;
+    }
+    
+    // Si on a des enfants, on continue à naviguer dans les menus
     if (children && children.length > 0) {
       setStack((s) => [...s, { label: item.label || '', items: children }]);
       setActiveItems(children);
@@ -27,13 +71,9 @@ export default function MobileBreadcrumb({ segments = [], navigation, onNavigate
       return;
     }
 
-    // Final selection -> navigate or call callback
+    // Selection finale
     setVisible(false);
     setStack([]);
-    if (item.route && navigation && typeof navigation.navigate === 'function') {
-      navigation.navigate(item.route, item.params || {});
-      return;
-    }
     if (onNavigate) onNavigate(item);
   };
 
@@ -109,22 +149,24 @@ export default function MobileBreadcrumb({ segments = [], navigation, onNavigate
 }
 
 const styles = StyleSheet.create({
-  container: { paddingHorizontal: 12, marginTop: 8 },
+  container: { paddingHorizontal: 12, marginTop: 8, marginBottom: 8 },
   row: { flexDirection: 'row' },
   segment: { marginRight: 16 },
   segmentText: { color: '#7b7c7e', fontSize: 15, fontWeight: '600' },
 
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
   },
   modalCard: {
     backgroundColor: '#fff',
     padding: 16,
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-    maxHeight: '70%'
+    borderRadius: 12,
+    maxHeight: '70%',
+    width: '100%',
   },
   modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
   backBtn: { paddingHorizontal: 8, paddingVertical: 6 },

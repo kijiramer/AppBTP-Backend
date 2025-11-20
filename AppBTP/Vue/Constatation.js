@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Image, Alert, TextInput, Modal, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
@@ -13,9 +14,17 @@ import ScreenWrapper from '../Controleur/ScreenWrapper';
 import { displayCalendarScreen } from './Components/Calendar';
 import { useUserRole } from '../Controleur/UserRoleContext';
 
+// Fonction helper pour formater une date en YYYY-MM-DD (heure locale)
+const formatLocalDate = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 export default function Constatation({ route, navigation }) {
     const { city, building, task } = route.params;
-    const { canAddItem } = useUserRole();
+    const { canAddItem, canDelete } = useUserRole();
 
     const [constatations, setConstatations] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -37,6 +46,10 @@ export default function Constatation({ route, navigation }) {
     const [apartmentSuggestions, setApartmentSuggestions] = useState([]);
     const [showFloorSuggestions, setShowFloorSuggestions] = useState(false);
     const [showApartmentSuggestions, setShowApartmentSuggestions] = useState(false);
+    
+    // Modal pour agrandir l'image
+    const [imageModalVisible, setImageModalVisible] = useState(false);
+    const [selectedImage, setSelectedImage] = useState(null);
 
     // Désactiver le scroll quand le formulaire s'ouvre
     useEffect(() => {
@@ -108,6 +121,14 @@ export default function Constatation({ route, navigation }) {
     useEffect(() => {
         fetchAllConstatations();
     }, [city, building, task]);
+
+    // Refresh automatique quand la page devient active
+    useFocusEffect(
+        useCallback(() => {
+            loadConstatations();
+            fetchAllConstatations();
+        }, [selectedDate])
+    );
 
     const updateForm = (field, value) =>
         setForm(prev => ({ ...prev, [field]: value }));
@@ -190,7 +211,9 @@ export default function Constatation({ route, navigation }) {
             const token = await Storage.getItem('token');
             if (!token) return;
 
-            const dateStr = selectedDate.toISOString().split('T')[0];
+            const dateStr = formatLocalDate(selectedDate);
+            
+            console.log('🔍 Loading constatations for date:', dateStr);
             const response = await axios.get(
                 `${API_BASE_URL}/constatations?city=${city}&building=${building}&task=${task}&selectedDate=${dateStr}`,
                 {
@@ -202,10 +225,11 @@ export default function Constatation({ route, navigation }) {
 
             if (response.data.success) {
                 const constList = response.data.constatations || [];
+                console.log('✅ Constatations loaded:', constList.length, 'items');
                 setConstatations(constList);
             }
         } catch (err) {
-            console.error('Error loading constatations:', err);
+            console.error('❌ Error loading constatations:', err);
         } finally {
             setLoading(false);
         }
@@ -263,6 +287,8 @@ export default function Constatation({ route, navigation }) {
                 return;
             }
 
+            const dateStr = formatLocalDate(selectedDate);
+
             const constatationData = {
                 floor: form.floor,
                 apartment: form.apartment,
@@ -271,7 +297,7 @@ export default function Constatation({ route, navigation }) {
                 building,
                 task,
                 image: form.photo,
-                selectedDate: selectedDate.toISOString(),
+                selectedDate: dateStr, // Format YYYY-MM-DD en heure locale
             };
 
             const response = await axios.post(`${API_BASE_URL}/constatations`, constatationData, {
@@ -386,8 +412,10 @@ export default function Constatation({ route, navigation }) {
                             {constatations.map((constat, idx) => (
                                 <View key={idx} style={styles.constatCard}>
                                     <View style={styles.constatRow}>
-                                        {/* Photo */}
-                                        <Image source={{ uri: constat.image }} style={styles.constatImage} />
+                                        {/* Photo cliquable */}
+                                        <TouchableOpacity onPress={() => { setSelectedImage(constat.image); setImageModalVisible(true); }}>
+                                            <Image source={{ uri: constat.image }} style={styles.constatImage} />
+                                        </TouchableOpacity>
 
                                         {/* Texte à droite */}
                                         <View style={styles.constatTextContainer}>
@@ -399,13 +427,15 @@ export default function Constatation({ route, navigation }) {
                                         </View>
                                     </View>
 
-                                    {/* Bouton supprimer */}
-                                    <TouchableOpacity
-                                        style={styles.deleteButton}
-                                        onPress={() => deleteConstatation(constat._id)}
-                                    >
-                                        <Text style={styles.deleteButtonText}>Supprimer</Text>
-                                    </TouchableOpacity>
+                                    {/* Bouton supprimer - seulement pour admin */}
+                                    {canDelete() && (
+                                        <TouchableOpacity
+                                            style={styles.deleteButton}
+                                            onPress={() => deleteConstatation(constat._id)}
+                                        >
+                                            <Text style={styles.deleteButtonText}>Supprimer</Text>
+                                        </TouchableOpacity>
+                                    )}
                                 </View>
                             ))}
                         </View>
@@ -609,6 +639,36 @@ export default function Constatation({ route, navigation }) {
                         </View>
                     </View>
                 </Modal>
+
+                {/* Modal pour agrandir l'image */}
+                <Modal
+                    visible={imageModalVisible}
+                    transparent={true}
+                    animationType="fade"
+                    onRequestClose={() => setImageModalVisible(false)}
+                >
+                    <TouchableOpacity 
+                        style={styles.imageModalOverlay}
+                        activeOpacity={1}
+                        onPress={() => setImageModalVisible(false)}
+                    >
+                        <View style={styles.imageModalContent}>
+                            {selectedImage && (
+                                <Image 
+                                    source={{ uri: selectedImage }} 
+                                    style={styles.enlargedImage}
+                                    resizeMode="contain"
+                                />
+                            )}
+                            <TouchableOpacity 
+                                style={styles.closeImageButton}
+                                onPress={() => setImageModalVisible(false)}
+                            >
+                                <Text style={styles.closeImageButtonText}>✕</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </TouchableOpacity>
+                </Modal>
             </SafeAreaView>
         </ScreenWrapper>
     );
@@ -618,15 +678,7 @@ const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#f9f9f9' },
     contentContainer: { padding: 16 },
     calendarContainer: {
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 8,
         marginBottom: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
     },
     sectionTitle: {
         fontSize: 18,
@@ -882,5 +934,37 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: '600',
+    },
+    imageModalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.9)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    imageModalContent: {
+        width: '95%',
+        height: '80%',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    enlargedImage: {
+        width: '100%',
+        height: '100%',
+    },
+    closeImageButton: {
+        position: 'absolute',
+        top: 20,
+        right: 20,
+        backgroundColor: 'rgba(255,255,255,0.3)',
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    closeImageButtonText: {
+        color: '#fff',
+        fontSize: 24,
+        fontWeight: 'bold',
     },
 });

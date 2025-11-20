@@ -33,7 +33,7 @@ export function displayCalendarScreen(selectedDate, onDateChange, datesWithNotes
         .startOf('isoWeek');
 
     return Array.from({ length: 21 }, (_, i) => {
-      const dayMoment = moment(startOfWeek).add(i, 'days');
+      const dayMoment = moment(startOfWeek).add(i, 'days').startOf('day');
       return {
         weekday: dayMoment.format('ddd'),
         date: dayMoment.toDate(),
@@ -54,7 +54,8 @@ export function displayCalendarScreen(selectedDate, onDateChange, datesWithNotes
   // Handlers
   const handleTodayPress = () => {
     setWeekOffset(0);
-    const newDate = new Date();
+    const newDate = moment().startOf('day').toDate();
+    console.log('🏠 Today button pressed:', newDate.toISOString(), 'Local:', newDate.toLocaleDateString());
     if (onDateChange) {
       onDateChange(newDate);
     } else {
@@ -63,6 +64,7 @@ export function displayCalendarScreen(selectedDate, onDateChange, datesWithNotes
   };
 
   const handleDateSelect = (date) => {
+    console.log('📅 Calendar date clicked:', date.toISOString(), 'Local:', date.toLocaleDateString());
     if (onDateChange) {
       onDateChange(date);
     } else {
@@ -75,7 +77,7 @@ export function displayCalendarScreen(selectedDate, onDateChange, datesWithNotes
 
   // Render
   return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
 
         {/* Calendrier */}
         <View style={styles.calendarFrame}>
@@ -146,7 +148,7 @@ export function displayCalendarScreen(selectedDate, onDateChange, datesWithNotes
 
         </View>
 
-      </SafeAreaView>
+      </View>
   );
 }
 
@@ -154,16 +156,21 @@ export function displayCalendarScreen(selectedDate, onDateChange, datesWithNotes
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    borderRadius: 12,
     backgroundColor: '#fff',
-    padding: 10,
   },
 
   calendarFrame: {
     backgroundColor: '#fff',
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#d1d1d1',
-    padding: 15,
+    borderWidth: 2,
+    borderColor: 'black',
+    padding: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 5,
   },
 
   header: {
@@ -181,24 +188,23 @@ const styles = StyleSheet.create({
   },
 
   monthText: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '600',
     color: '#333',
   },
 
   weekRow: {
     flexDirection: 'row',
-    marginBottom: 12,
+    marginBottom: 4,
   },
 
   dayWrapper: {
     flex: 1,
-    marginHorizontal: 2,
   },
 
   dayItem: {
     paddingVertical: 12,
-    borderRadius: 16,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -206,13 +212,12 @@ const styles = StyleSheet.create({
   weekdayText: {
     fontSize: 12,
     color: '#555',
-    marginBottom: 4,
+    marginBottom: 5,
   },
 
   dateContainer: {
     alignItems: 'center',
     position: 'relative',
-    paddingTop: 0,
   },
 
   dateText: {

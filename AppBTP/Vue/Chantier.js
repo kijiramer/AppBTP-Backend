@@ -36,12 +36,14 @@ export default function Chantier({ route, navigation }) {
   useEffect(() => {
   axios.get(`${API_BASE_URL}/buildings`)
       .then(response => {
-        setBuildings(response.data);
+        // Filtrer les bâtiments pour la ville actuelle
+        const buildingsForCity = response.data.filter(b => b.city === city);
+        setBuildings(buildingsForCity);
       })
       .catch(error => {
         console.error('Error fetching buildings:', error);
       });
-  }, []);
+  }, [city]);
 
   return (
     <ScreenWrapper>

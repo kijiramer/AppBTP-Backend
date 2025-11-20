@@ -35,7 +35,10 @@ export default function Home({ navigation }) {
           </View>
         </View>
 
-        <ScrollView style={styles.content}>
+        <ScrollView 
+          style={styles.content}
+          contentContainerStyle={styles.scrollContent}
+        >
           <View style={styles.cardList}>
             {cities.map((city, index) => (
               <TouchableOpacity
@@ -102,6 +105,9 @@ const styles = StyleSheet.create({
   content: {
     paddingTop: 12,
     paddingHorizontal: 24,
+  },
+  scrollContent: {
+    paddingBottom: 100,
   },
   cardList: {
     marginTop: 16,

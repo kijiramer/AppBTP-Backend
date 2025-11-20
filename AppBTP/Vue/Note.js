@@ -1,5 +1,5 @@
 // Note.js
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   StyleSheet,
   View,
@@ -17,6 +17,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import moment from 'moment';
 import 'moment/locale/fr';
@@ -32,10 +33,18 @@ import { API_BASE_URL } from '../config';
 
 moment.locale('fr');
 
+// Fonction helper pour formater une date en YYYY-MM-DD (heure locale)
+const formatLocalDate = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 export default function Note({ route, navigation }) {
   const { city, building, task } = route.params || {};
   const scrollViewRef = useRef(null);
-  const { canAddItem } = useUserRole();
+  const { canAddItem, canDelete } = useUserRole();
 
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -113,6 +122,14 @@ export default function Note({ route, navigation }) {
     loadNotes();
   }, [selectedDate]);
 
+  // Refresh automatique quand la page devient active
+  useFocusEffect(
+    useCallback(() => {
+      loadNotes();
+      loadNoteDates();
+    }, [selectedDate])
+  );
+
   // Quand le formulaire s'ouvre, désactiver scroll du fond
   useEffect(() => {
     if (showForm) {
@@ -132,7 +149,8 @@ export default function Note({ route, navigation }) {
         return;
       }
 
-      const response = await axios.get(`${API_BASE_URL}/notes?city=${city}&building=${building}&task=${task}&selectedDate=${selectedDate.toISOString()}`, {
+      const dateStr = formatLocalDate(selectedDate);
+      const response = await axios.get(`${API_BASE_URL}/notes?city=${city}&building=${building}&task=${task}&selectedDate=${dateStr}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -174,7 +192,7 @@ export default function Note({ route, navigation }) {
         company: form.company,
         openTime: form.openTime,
         closedTime: form.closedTime,
-        selectedDate: selectedDate.toISOString(),
+        selectedDate: formatLocalDate(selectedDate), // Format YYYY-MM-DD
       };
 
       const response = await axios.post(`${API_BASE_URL}/notes`, noteData, {
@@ -461,12 +479,14 @@ export default function Note({ route, navigation }) {
 
     return (
       <View style={styles.swipeContainer}>
-        {/* Bouton de suppression en arrière-plan */}
-        <View style={styles.deleteButtonBackground}>
-          <TouchableOpacity style={styles.deleteButton} onPress={onDelete}>
-            <Ionicons name="trash" size={18} color="#fff" />
-          </TouchableOpacity>
-        </View>
+        {/* Bouton de suppression en arrière-plan - seulement pour admin */}
+        {canDelete() && (
+          <View style={styles.deleteButtonBackground}>
+            <TouchableOpacity style={styles.deleteButton} onPress={onDelete}>
+              <Ionicons name="trash" size={18} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Note avec swipe */}
         <Animated.View

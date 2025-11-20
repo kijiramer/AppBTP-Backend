@@ -97,6 +97,12 @@ export const UserRoleProvider = ({ children }) => {
         return true;
     };
 
+    const canDelete = () => {
+        if (!userRole) return false;
+        // Seul l'admin peut supprimer
+        return userRole === 'admin';
+    };
+
     return (
         <UserRoleContext.Provider value={{
             userRole,
@@ -105,7 +111,8 @@ export const UserRoleProvider = ({ children }) => {
             clearUserRole,
             canViewTask,
             canAddItem,
-            canEdit
+            canEdit,
+            canDelete
         }}>
             {children}
         </UserRoleContext.Provider>
