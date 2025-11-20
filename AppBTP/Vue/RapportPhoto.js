@@ -240,9 +240,17 @@ export default function RapportPhoto({ route, navigation }) {
                 return;
             }
 
+            // Convertir les URIs en base64
+            const avantBase64 = await FileSystem.readAsStringAsync(photoForm.avant, {
+                encoding: FileSystem.EncodingType.Base64,
+            });
+            const apresBase64 = await FileSystem.readAsStringAsync(photoForm.apres, {
+                encoding: FileSystem.EncodingType.Base64,
+            });
+
             const photoData = {
-                imageAvant: photoForm.avant,
-                imageApres: photoForm.apres,
+                imageAvant: `data:image/jpeg;base64,${avantBase64}`,
+                imageApres: `data:image/jpeg;base64,${apresBase64}`,
             };
 
             const response = await axios.post(`${API_BASE_URL}/folders/${selectedFolder._id}/photos`, photoData, {
