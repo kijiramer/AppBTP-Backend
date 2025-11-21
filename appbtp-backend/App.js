@@ -1091,6 +1091,51 @@ app.get('/folders', async (req, res) => {
   }
 });
 
+// Modifier un dossier
+app.put('/folders/:id', async (req, res) => {
+  const header = req.get('Authorization');
+  if (!header) {
+    return res.status(401).json({ success: false, message: 'You are not authorized.' });
+  }
+
+  const token = header.split(' ')[1];
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(payload.id);
+    if (!user) {
+      throw new Error('Invalid user.');
+    }
+
+    const folderId = req.params.id;
+    const { intituleMission, chantierName, company, mission, startDate, endDate } = req.body;
+
+    const folder = await Folder.findById(folderId);
+    if (!folder) {
+      return res.status(404).json({ success: false, message: 'Dossier non trouvé' });
+    }
+
+    // Vérifier que l'utilisateur est le propriétaire
+    if (folder.userId.toString() !== user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'Non autorisé à modifier ce dossier' });
+    }
+
+    // Mettre à jour les champs
+    if (intituleMission) folder.intituleMission = intituleMission;
+    if (chantierName) folder.chantierName = chantierName;
+    if (company) folder.company = company;
+    if (mission) folder.mission = mission;
+    if (startDate) folder.startDate = new Date(startDate);
+    if (endDate) folder.endDate = new Date(endDate);
+
+    await folder.save();
+    console.log('Folder updated successfully:', folder);
+    res.json({ success: true, folder });
+  } catch (err) {
+    console.error('Error updating folder:', err.message);
+    res.status(500).json({ success: false, message: 'Error updating folder', error: err.message });
+  }
+});
+
 // Supprimer un dossier et toutes ses photos
 app.delete('/folders/:id', async (req, res) => {
   const header = req.get('Authorization');
