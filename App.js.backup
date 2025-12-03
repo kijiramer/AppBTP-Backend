@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const connectDB = require('./db');
-const { User, City, Building, Note, Constatation, Effectif, Remarque, Folder, FolderPhoto } = require('./CombinedModel'); // Import the models
+const { User, City, Building, Note, Constatation, Effectif, Remarque, Folder, FolderPhoto } = require('../CombinedModel'); // Import the models
 
 const JWT_SECRET = 'hvdvay6ert72839289()aiyg8t87qt72393293883uhefiuh78ttq3ifi78272jbkj?[]]pou89ywe';
 
@@ -993,7 +993,7 @@ app.post('/folders', async (req, res) => {
       throw new Error('Invalid user.');
     }
 
-    const { intituleMission, chantierName, company, city, building, task, mission, startDate, endDate } = req.body;
+    const { chantierName, company, city, building, task, mission, startDate, endDate } = req.body;
 
     // Trouver le dernier numéro de rapport et incrémenter
     const lastFolder = await Folder.findOne().sort({ reportNumber: -1 });
@@ -1001,7 +1001,6 @@ app.post('/folders', async (req, res) => {
 
     const folder = new Folder({
       reportNumber,
-      intituleMission,
       chantierName,
       company,
       city,
