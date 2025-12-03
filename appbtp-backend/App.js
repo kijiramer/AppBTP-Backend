@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const connectDB = require('./db');
 const { User, City, Building, Note, Constatation, Effectif, Remarque, Folder, FolderPhoto } = require('./CombinedModel'); // Import the models
+const avatarRouter = require('../avatar');
 
 const JWT_SECRET = 'hvdvay6ert72839289()aiyg8t87qt72393293883uhefiuh78ttq3ifi78272jbkj?[]]pou89ywe';
 
@@ -64,13 +65,13 @@ app.get('/', (req, res) => {
     endpoints: {
       auth: {
         login: 'POST /login',
-        register: 'POST /register'
+        register: 'POST /register',
       },
       data: {
         effectif: 'POST /effectif',
-        constatations: 'GET /constatations'
-      }
-    }
+        constatations: 'GET /constatations',
+      },
+    },
   });
 });
 
@@ -857,12 +858,15 @@ app.delete('/constatations/:id', async (req, res) => {
     const constatationId = req.params.id;
     const constatation = await Constatation.findById(constatationId);
 
+    console.log('[DELETE constatation] User:', user._id.toString(), 'Role:', user.role, 'Constatation owner:', constatation ? constatation.userId.toString() : 'not found');
+
     if (!constatation) {
       return res.status(404).json({ success: false, message: 'Constatation not found' });
     }
 
-    // Vérifier que l'utilisateur est le propriétaire de la constatation
-    if (constatation.userId.toString() !== user._id.toString()) {
+    // Vérifier que l'utilisateur est le propriétaire ou admin
+    if (constatation.userId.toString() !== user._id.toString() && user.role !== 'admin') {
+      console.log('[DELETE constatation] Refusé: non propriétaire et non admin');
       return res.status(403).json({ success: false, message: 'You are not authorized to delete this constatation' });
     }
 
@@ -1485,6 +1489,9 @@ if (process.env.NODE_ENV !== 'production') {
     console.error('Uncaught Exception:', err);
   });
 }
+
+// Mount the avatar router
+app.use(avatarRouter);
 
 // Export pour Vercel
 module.exports = app;

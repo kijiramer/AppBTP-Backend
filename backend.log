@@ -1,0 +1,1893 @@
+Express server is running on port 8082.
+MongoDB connected
+Buildings fetched successfully: [
+  {
+    _id: new ObjectId('672b54aa3be897daeb1999e5'),
+    name: 'Batiment 104'
+  },
+  { _id: new ObjectId('672b54cc3be897daeb1999e6'), name: 'Battest' },
+  { _id: new ObjectId('672b54613be897daeb1999e3'), name: 'Batiment C' },
+  { _id: new ObjectId('669104ed1d0220beb6023c9f'), name: 'Batiment A' },
+  { _id: new ObjectId('672b54803be897daeb1999e4'), name: 'Batiment D' },
+  { _id: new ObjectId('669104ed1d0220beb6023ca0'), name: 'Batiment B' }
+]
+Buildings fetched successfully: [
+  {
+    _id: new ObjectId('672b54aa3be897daeb1999e5'),
+    name: 'Batiment 104'
+  },
+  { _id: new ObjectId('672b54cc3be897daeb1999e6'), name: 'Battest' },
+  { _id: new ObjectId('672b54613be897daeb1999e3'), name: 'Batiment C' },
+  { _id: new ObjectId('669104ed1d0220beb6023c9f'), name: 'Batiment A' },
+  { _id: new ObjectId('672b54803be897daeb1999e4'), name: 'Batiment D' },
+  { _id: new ObjectId('669104ed1d0220beb6023ca0'), name: 'Batiment B' }
+]
+Buildings fetched successfully: [
+  {
+    _id: new ObjectId('672b54aa3be897daeb1999e5'),
+    name: 'Batiment 104'
+  },
+  { _id: new ObjectId('672b54cc3be897daeb1999e6'), name: 'Battest' },
+  { _id: new ObjectId('672b54613be897daeb1999e3'), name: 'Batiment C' },
+  { _id: new ObjectId('669104ed1d0220beb6023c9f'), name: 'Batiment A' },
+  { _id: new ObjectId('672b54803be897daeb1999e4'), name: 'Batiment D' },
+  { _id: new ObjectId('669104ed1d0220beb6023ca0'), name: 'Batiment B' }
+]
+Buildings fetched successfully: [
+  {
+    _id: new ObjectId('672b54aa3be897daeb1999e5'),
+    name: 'Batiment 104'
+  },
+  { _id: new ObjectId('672b54cc3be897daeb1999e6'), name: 'Battest' },
+  { _id: new ObjectId('672b54613be897daeb1999e3'), name: 'Batiment C' },
+  { _id: new ObjectId('669104ed1d0220beb6023c9f'), name: 'Batiment A' },
+  { _id: new ObjectId('672b54803be897daeb1999e4'), name: 'Batiment D' },
+  { _id: new ObjectId('669104ed1d0220beb6023ca0'), name: 'Batiment B' }
+]
+Constatations fetched successfully: [
+  {
+    _id: new ObjectId('69147973520a2343bba5a3ec'),
+    reportNumber: 1,
+    chantierName: 'Akounad ',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Constatation',
+    company: 'Montfermeil',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/BEAC959A-EEBC-4985-AE13-438AA2EECC49.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/857208D8-D6A1-41ED-8F5B-E6FC80EAF52F.png',
+    selectedDate: 2025-11-12T12:10:56.046Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:11:31.855Z,
+    __v: 0
+  }
+]
+Constatations fetched successfully: [
+  {
+    _id: new ObjectId('69147973520a2343bba5a3ec'),
+    reportNumber: 1,
+    chantierName: 'Akounad ',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Constatation',
+    company: 'Montfermeil',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/BEAC959A-EEBC-4985-AE13-438AA2EECC49.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/857208D8-D6A1-41ED-8F5B-E6FC80EAF52F.png',
+    selectedDate: 2025-11-12T12:10:56.046Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:11:31.855Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('68b5c4430c872da1085797cc'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Constatation',
+    company: 'Entreprise A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/392FC1A3-7297-4F9B-A744-67E269F5123C/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/EA95B7DB-A146-416A-A8D7-D830D8133CC1.jpg',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/392FC1A3-7297-4F9B-A744-67E269F5123C/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/D59A2F22-635C-427A-AE1B-F6C4C87CCCA1.jpg',
+    selectedDate: 2025-09-01T16:05:13.018Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-09-01T16:05:23.221Z,
+    __v: 0
+  }
+]
+Buildings fetched successfully: [
+  {
+    _id: new ObjectId('672b54aa3be897daeb1999e5'),
+    name: 'Batiment 104'
+  },
+  { _id: new ObjectId('672b54cc3be897daeb1999e6'), name: 'Battest' },
+  { _id: new ObjectId('672b54613be897daeb1999e3'), name: 'Batiment C' },
+  { _id: new ObjectId('669104ed1d0220beb6023c9f'), name: 'Batiment A' },
+  { _id: new ObjectId('672b54803be897daeb1999e4'), name: 'Batiment D' },
+  { _id: new ObjectId('669104ed1d0220beb6023ca0'), name: 'Batiment B' }
+]
+Constatation created successfully: {
+  floor: '1',
+  apartment: '105',
+  description: 'J’suis. Sjsksk sheus ',
+  image: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/DFFF1603-3BA0-4AE8-9AD6-F16571E3BB2D.png',
+  city: 'Montfermeil',
+  building: 'Batiment 104',
+  task: 'Constatation',
+  selectedDate: 2025-11-12T12:45:25.799Z,
+  userId: new ObjectId('667abba866c1d7380fa198ab'),
+  _id: new ObjectId('691482f3d032c3fc1efde18a'),
+  createdAt: 2025-11-12T12:52:03.240Z,
+  __v: 0
+}
+Constatations fetched successfully: [
+  {
+    _id: new ObjectId('691482f3d032c3fc1efde18a'),
+    floor: '1',
+    apartment: '105',
+    description: 'J’suis. Sjsksk sheus ',
+    image: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/DFFF1603-3BA0-4AE8-9AD6-F16571E3BB2D.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Constatation',
+    selectedDate: 2025-11-12T12:45:25.799Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:52:03.240Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('69147973520a2343bba5a3ec'),
+    reportNumber: 1,
+    chantierName: 'Akounad ',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Constatation',
+    company: 'Montfermeil',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/BEAC959A-EEBC-4985-AE13-438AA2EECC49.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/857208D8-D6A1-41ED-8F5B-E6FC80EAF52F.png',
+    selectedDate: 2025-11-12T12:10:56.046Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:11:31.855Z,
+    __v: 0
+  }
+]
+Constatations fetched successfully: [
+  {
+    _id: new ObjectId('691482f3d032c3fc1efde18a'),
+    floor: '1',
+    apartment: '105',
+    description: 'J’suis. Sjsksk sheus ',
+    image: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/DFFF1603-3BA0-4AE8-9AD6-F16571E3BB2D.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Constatation',
+    selectedDate: 2025-11-12T12:45:25.799Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:52:03.240Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('69147973520a2343bba5a3ec'),
+    reportNumber: 1,
+    chantierName: 'Akounad ',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Constatation',
+    company: 'Montfermeil',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/BEAC959A-EEBC-4985-AE13-438AA2EECC49.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/857208D8-D6A1-41ED-8F5B-E6FC80EAF52F.png',
+    selectedDate: 2025-11-12T12:10:56.046Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:11:31.855Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('68b5c4430c872da1085797cc'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Constatation',
+    company: 'Entreprise A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/392FC1A3-7297-4F9B-A744-67E269F5123C/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/EA95B7DB-A146-416A-A8D7-D830D8133CC1.jpg',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/392FC1A3-7297-4F9B-A744-67E269F5123C/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/D59A2F22-635C-427A-AE1B-F6C4C87CCCA1.jpg',
+    selectedDate: 2025-09-01T16:05:13.018Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-09-01T16:05:23.221Z,
+    __v: 0
+  }
+]
+Constatation deleted successfully: 69147973520a2343bba5a3ec
+Constatations fetched successfully: [
+  {
+    _id: new ObjectId('691482f3d032c3fc1efde18a'),
+    floor: '1',
+    apartment: '105',
+    description: 'J’suis. Sjsksk sheus ',
+    image: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/DFFF1603-3BA0-4AE8-9AD6-F16571E3BB2D.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Constatation',
+    selectedDate: 2025-11-12T12:45:25.799Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:52:03.240Z,
+    __v: 0
+  }
+]
+Constatations fetched successfully: [
+  {
+    _id: new ObjectId('691482f3d032c3fc1efde18a'),
+    floor: '1',
+    apartment: '105',
+    description: 'J’suis. Sjsksk sheus ',
+    image: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/DFFF1603-3BA0-4AE8-9AD6-F16571E3BB2D.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Constatation',
+    selectedDate: 2025-11-12T12:45:25.799Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:52:03.240Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('68b5c4430c872da1085797cc'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Constatation',
+    company: 'Entreprise A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/392FC1A3-7297-4F9B-A744-67E269F5123C/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/EA95B7DB-A146-416A-A8D7-D830D8133CC1.jpg',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/392FC1A3-7297-4F9B-A744-67E269F5123C/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/D59A2F22-635C-427A-AE1B-F6C4C87CCCA1.jpg',
+    selectedDate: 2025-09-01T16:05:13.018Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-09-01T16:05:23.221Z,
+    __v: 0
+  }
+]
+Buildings fetched successfully: [
+  {
+    _id: new ObjectId('672b54aa3be897daeb1999e5'),
+    name: 'Batiment 104'
+  },
+  { _id: new ObjectId('672b54cc3be897daeb1999e6'), name: 'Battest' },
+  { _id: new ObjectId('672b54613be897daeb1999e3'), name: 'Batiment C' },
+  { _id: new ObjectId('669104ed1d0220beb6023c9f'), name: 'Batiment A' },
+  { _id: new ObjectId('672b54803be897daeb1999e4'), name: 'Batiment D' },
+  { _id: new ObjectId('669104ed1d0220beb6023ca0'), name: 'Batiment B' }
+]
+Constatations fetched successfully: [
+  {
+    _id: new ObjectId('691482f3d032c3fc1efde18a'),
+    floor: '1',
+    apartment: '105',
+    description: 'J’suis. Sjsksk sheus ',
+    image: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/DFFF1603-3BA0-4AE8-9AD6-F16571E3BB2D.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Constatation',
+    selectedDate: 2025-11-12T12:45:25.799Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:52:03.240Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('68b5c4430c872da1085797cc'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Constatation',
+    company: 'Entreprise A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/392FC1A3-7297-4F9B-A744-67E269F5123C/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/EA95B7DB-A146-416A-A8D7-D830D8133CC1.jpg',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/392FC1A3-7297-4F9B-A744-67E269F5123C/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/D59A2F22-635C-427A-AE1B-F6C4C87CCCA1.jpg',
+    selectedDate: 2025-09-01T16:05:13.018Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-09-01T16:05:23.221Z,
+    __v: 0
+  }
+]
+Constatations fetched successfully: [
+  {
+    _id: new ObjectId('691482f3d032c3fc1efde18a'),
+    floor: '1',
+    apartment: '105',
+    description: 'J’suis. Sjsksk sheus ',
+    image: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/DFFF1603-3BA0-4AE8-9AD6-F16571E3BB2D.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Constatation',
+    selectedDate: 2025-11-12T12:45:25.799Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:52:03.240Z,
+    __v: 0
+  }
+]
+Buildings fetched successfully: [
+  {
+    _id: new ObjectId('672b54aa3be897daeb1999e5'),
+    name: 'Batiment 104'
+  },
+  { _id: new ObjectId('672b54cc3be897daeb1999e6'), name: 'Battest' },
+  { _id: new ObjectId('672b54613be897daeb1999e3'), name: 'Batiment C' },
+  { _id: new ObjectId('669104ed1d0220beb6023c9f'), name: 'Batiment A' },
+  { _id: new ObjectId('672b54803be897daeb1999e4'), name: 'Batiment D' },
+  { _id: new ObjectId('669104ed1d0220beb6023ca0'), name: 'Batiment B' }
+]
+Rapports photos fetched successfully: []
+Rapports photos fetched successfully: []
+Buildings fetched successfully: [
+  {
+    _id: new ObjectId('672b54aa3be897daeb1999e5'),
+    name: 'Batiment 104'
+  },
+  { _id: new ObjectId('672b54cc3be897daeb1999e6'), name: 'Battest' },
+  { _id: new ObjectId('672b54613be897daeb1999e3'), name: 'Batiment C' },
+  { _id: new ObjectId('669104ed1d0220beb6023c9f'), name: 'Batiment A' },
+  { _id: new ObjectId('672b54803be897daeb1999e4'), name: 'Batiment D' },
+  { _id: new ObjectId('669104ed1d0220beb6023ca0'), name: 'Batiment B' }
+]
+Rapports photos fetched successfully: []
+Rapports photos fetched successfully: []
+Buildings fetched successfully: [
+  {
+    _id: new ObjectId('672b54aa3be897daeb1999e5'),
+    name: 'Batiment 104'
+  },
+  { _id: new ObjectId('672b54cc3be897daeb1999e6'), name: 'Battest' },
+  { _id: new ObjectId('672b54613be897daeb1999e3'), name: 'Batiment C' },
+  { _id: new ObjectId('669104ed1d0220beb6023c9f'), name: 'Batiment A' },
+  { _id: new ObjectId('672b54803be897daeb1999e4'), name: 'Batiment D' },
+  { _id: new ObjectId('669104ed1d0220beb6023ca0'), name: 'Batiment B' }
+]
+Buildings fetched successfully: [
+  {
+    _id: new ObjectId('672b54aa3be897daeb1999e5'),
+    name: 'Batiment 104'
+  },
+  { _id: new ObjectId('672b54cc3be897daeb1999e6'), name: 'Battest' },
+  { _id: new ObjectId('672b54613be897daeb1999e3'), name: 'Batiment C' },
+  { _id: new ObjectId('669104ed1d0220beb6023c9f'), name: 'Batiment A' },
+  { _id: new ObjectId('672b54803be897daeb1999e4'), name: 'Batiment D' },
+  { _id: new ObjectId('669104ed1d0220beb6023ca0'), name: 'Batiment B' }
+]
+Buildings fetched successfully: [
+  {
+    _id: new ObjectId('672b54aa3be897daeb1999e5'),
+    name: 'Batiment 104'
+  },
+  { _id: new ObjectId('672b54cc3be897daeb1999e6'), name: 'Battest' },
+  { _id: new ObjectId('672b54613be897daeb1999e3'), name: 'Batiment C' },
+  { _id: new ObjectId('669104ed1d0220beb6023c9f'), name: 'Batiment A' },
+  { _id: new ObjectId('672b54803be897daeb1999e4'), name: 'Batiment D' },
+  { _id: new ObjectId('669104ed1d0220beb6023ca0'), name: 'Batiment B' }
+]
+Buildings fetched successfully: [
+  {
+    _id: new ObjectId('672b54aa3be897daeb1999e5'),
+    name: 'Batiment 104'
+  },
+  { _id: new ObjectId('672b54cc3be897daeb1999e6'), name: 'Battest' },
+  { _id: new ObjectId('672b54613be897daeb1999e3'), name: 'Batiment C' },
+  { _id: new ObjectId('669104ed1d0220beb6023c9f'), name: 'Batiment A' },
+  { _id: new ObjectId('672b54803be897daeb1999e4'), name: 'Batiment D' },
+  { _id: new ObjectId('669104ed1d0220beb6023ca0'), name: 'Batiment B' }
+]
+Buildings fetched successfully: [
+  {
+    _id: new ObjectId('672b54aa3be897daeb1999e5'),
+    name: 'Batiment 104'
+  },
+  { _id: new ObjectId('672b54cc3be897daeb1999e6'), name: 'Battest' },
+  { _id: new ObjectId('672b54613be897daeb1999e3'), name: 'Batiment C' },
+  { _id: new ObjectId('669104ed1d0220beb6023c9f'), name: 'Batiment A' },
+  { _id: new ObjectId('672b54803be897daeb1999e4'), name: 'Batiment D' },
+  { _id: new ObjectId('669104ed1d0220beb6023ca0'), name: 'Batiment B' }
+]
+Rapports photos fetched successfully: []
+Rapports photos fetched successfully: []
+Buildings fetched successfully: [
+  {
+    _id: new ObjectId('672b54aa3be897daeb1999e5'),
+    name: 'Batiment 104'
+  },
+  { _id: new ObjectId('672b54cc3be897daeb1999e6'), name: 'Battest' },
+  { _id: new ObjectId('672b54613be897daeb1999e3'), name: 'Batiment C' },
+  { _id: new ObjectId('669104ed1d0220beb6023c9f'), name: 'Batiment A' },
+  { _id: new ObjectId('672b54803be897daeb1999e4'), name: 'Batiment D' },
+  { _id: new ObjectId('669104ed1d0220beb6023ca0'), name: 'Batiment B' }
+]
+Constatations fetched successfully: [
+  {
+    _id: new ObjectId('691482f3d032c3fc1efde18a'),
+    floor: '1',
+    apartment: '105',
+    description: 'J’suis. Sjsksk sheus ',
+    image: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/DFFF1603-3BA0-4AE8-9AD6-F16571E3BB2D.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Constatation',
+    selectedDate: 2025-11-12T12:45:25.799Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:52:03.240Z,
+    __v: 0
+  }
+]
+Constatations fetched successfully: [
+  {
+    _id: new ObjectId('691482f3d032c3fc1efde18a'),
+    floor: '1',
+    apartment: '105',
+    description: 'J’suis. Sjsksk sheus ',
+    image: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/DFFF1603-3BA0-4AE8-9AD6-F16571E3BB2D.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Constatation',
+    selectedDate: 2025-11-12T12:45:25.799Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:52:03.240Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('68b5c4430c872da1085797cc'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Constatation',
+    company: 'Entreprise A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/392FC1A3-7297-4F9B-A744-67E269F5123C/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/EA95B7DB-A146-416A-A8D7-D830D8133CC1.jpg',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/392FC1A3-7297-4F9B-A744-67E269F5123C/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/D59A2F22-635C-427A-AE1B-F6C4C87CCCA1.jpg',
+    selectedDate: 2025-09-01T16:05:13.018Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-09-01T16:05:23.221Z,
+    __v: 0
+  }
+]
+Buildings fetched successfully: [
+  {
+    _id: new ObjectId('672b54aa3be897daeb1999e5'),
+    name: 'Batiment 104'
+  },
+  { _id: new ObjectId('672b54cc3be897daeb1999e6'), name: 'Battest' },
+  { _id: new ObjectId('672b54613be897daeb1999e3'), name: 'Batiment C' },
+  { _id: new ObjectId('669104ed1d0220beb6023c9f'), name: 'Batiment A' },
+  { _id: new ObjectId('672b54803be897daeb1999e4'), name: 'Batiment D' },
+  { _id: new ObjectId('669104ed1d0220beb6023ca0'), name: 'Batiment B' }
+]
+Rapports photos fetched successfully: []
+Rapports photos fetched successfully: []
+Buildings fetched successfully: [
+  {
+    _id: new ObjectId('672b54aa3be897daeb1999e5'),
+    name: 'Batiment 104'
+  },
+  { _id: new ObjectId('672b54cc3be897daeb1999e6'), name: 'Battest' },
+  { _id: new ObjectId('672b54613be897daeb1999e3'), name: 'Batiment C' },
+  { _id: new ObjectId('669104ed1d0220beb6023c9f'), name: 'Batiment A' },
+  { _id: new ObjectId('672b54803be897daeb1999e4'), name: 'Batiment D' },
+  { _id: new ObjectId('669104ed1d0220beb6023ca0'), name: 'Batiment B' }
+]
+Notes fetched successfully: [
+  {
+    _id: new ObjectId('691478a14c75e46c48e5b0a0'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Notes',
+    floor: '5',
+    apartment: '3',
+    company: 'B',
+    openTime: '13:08',
+    closedTime: '',
+    selectedDate: 2025-11-12T12:03:27.860Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:08:01.871Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914788c4c75e46c48e5b09b'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Notes',
+    floor: '3',
+    apartment: '1',
+    company: 'A ',
+    openTime: '13:07',
+    closedTime: '',
+    selectedDate: 2025-11-12T12:03:27.860Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:07:40.144Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('691478774c75e46c48e5b096'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Notes',
+    floor: '4',
+    apartment: '2',
+    company: 'G',
+    openTime: '13:07',
+    closedTime: '',
+    selectedDate: 2025-11-12T12:03:27.860Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:07:19.289Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('691477aad31e555abf782e35'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Notes',
+    floor: '4',
+    apartment: '6',
+    company: 'Neoliane ',
+    openTime: '13:03',
+    closedTime: '',
+    selectedDate: 2025-11-12T12:03:27.860Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:03:54.478Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914762566db720f865f6f9e'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Notes',
+    floor: '1',
+    apartment: '2',
+    company: 'À',
+    openTime: '12:57',
+    closedTime: '',
+    selectedDate: 2025-11-12T11:57:06.309Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T11:57:25.492Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914749366db720f865f6f94'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Notes',
+    floor: '2',
+    apartment: '5',
+    company: 'G',
+    openTime: '12:50',
+    closedTime: '',
+    selectedDate: 2025-11-11T23:00:00.000Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T11:50:43.368Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914748e66db720f865f6f8f'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Notes',
+    floor: '2',
+    apartment: '5',
+    company: 'G',
+    openTime: '',
+    closedTime: '',
+    selectedDate: 2025-11-11T23:00:00.000Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T11:50:38.289Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914747f66db720f865f6f82'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Notes',
+    floor: '2',
+    apartment: '5',
+    company: 'G',
+    openTime: '',
+    closedTime: '',
+    selectedDate: 2025-11-12T11:49:34.020Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T11:50:23.834Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('691471ec5d7f209b9c8f6c6e'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Notes',
+    floor: '1',
+    apartment: '1',
+    company: 'Testzer ',
+    openTime: '12:39',
+    closedTime: '',
+    selectedDate: 2025-11-12T11:38:58.723Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T11:39:24.497Z,
+    __v: 0
+  }
+]
+Buildings fetched successfully: [
+  {
+    _id: new ObjectId('672b54aa3be897daeb1999e5'),
+    name: 'Batiment 104'
+  },
+  { _id: new ObjectId('672b54cc3be897daeb1999e6'), name: 'Battest' },
+  { _id: new ObjectId('672b54613be897daeb1999e3'), name: 'Batiment C' },
+  { _id: new ObjectId('669104ed1d0220beb6023c9f'), name: 'Batiment A' },
+  { _id: new ObjectId('672b54803be897daeb1999e4'), name: 'Batiment D' },
+  { _id: new ObjectId('669104ed1d0220beb6023ca0'), name: 'Batiment B' }
+]
+Rapports photos fetched successfully: []
+Rapports photos fetched successfully: []
+Rapport photo created successfully: {
+  reportNumber: 1,
+  chantierName: 'Azy',
+  company: 'A',
+  imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/A4F63BC9-F4C3-494F-A88D-894C1A57842F.png',
+  imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/041BD45F-FD6F-451F-863A-26E135C8CEAE.png',
+  city: 'Montfermeil',
+  building: 'Batiment 104',
+  task: 'Rapport Photo',
+  selectedDate: 2025-11-12T12:58:28.339Z,
+  userId: new ObjectId('667abba866c1d7380fa198ab'),
+  _id: new ObjectId('6914848cd032c3fc1efde1d1'),
+  createdAt: 2025-11-12T12:58:52.850Z,
+  __v: 0
+}
+Rapports photos fetched successfully: [
+  {
+    _id: new ObjectId('6914848cd032c3fc1efde1d1'),
+    reportNumber: 1,
+    chantierName: 'Azy',
+    company: 'A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/A4F63BC9-F4C3-494F-A88D-894C1A57842F.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/041BD45F-FD6F-451F-863A-26E135C8CEAE.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T12:58:28.339Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:58:52.850Z,
+    __v: 0
+  }
+]
+Buildings fetched successfully: [
+  {
+    _id: new ObjectId('672b54aa3be897daeb1999e5'),
+    name: 'Batiment 104'
+  },
+  { _id: new ObjectId('672b54cc3be897daeb1999e6'), name: 'Battest' },
+  { _id: new ObjectId('672b54613be897daeb1999e3'), name: 'Batiment C' },
+  { _id: new ObjectId('669104ed1d0220beb6023c9f'), name: 'Batiment A' },
+  { _id: new ObjectId('672b54803be897daeb1999e4'), name: 'Batiment D' },
+  { _id: new ObjectId('669104ed1d0220beb6023ca0'), name: 'Batiment B' }
+]
+Constatations fetched successfully: [
+  {
+    _id: new ObjectId('691482f3d032c3fc1efde18a'),
+    floor: '1',
+    apartment: '105',
+    description: 'J’suis. Sjsksk sheus ',
+    image: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/DFFF1603-3BA0-4AE8-9AD6-F16571E3BB2D.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Constatation',
+    selectedDate: 2025-11-12T12:45:25.799Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:52:03.240Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('68b5c4430c872da1085797cc'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Constatation',
+    company: 'Entreprise A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/392FC1A3-7297-4F9B-A744-67E269F5123C/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/EA95B7DB-A146-416A-A8D7-D830D8133CC1.jpg',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/392FC1A3-7297-4F9B-A744-67E269F5123C/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/D59A2F22-635C-427A-AE1B-F6C4C87CCCA1.jpg',
+    selectedDate: 2025-09-01T16:05:13.018Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-09-01T16:05:23.221Z,
+    __v: 0
+  }
+]
+Constatations fetched successfully: [
+  {
+    _id: new ObjectId('691482f3d032c3fc1efde18a'),
+    floor: '1',
+    apartment: '105',
+    description: 'J’suis. Sjsksk sheus ',
+    image: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/DFFF1603-3BA0-4AE8-9AD6-F16571E3BB2D.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Constatation',
+    selectedDate: 2025-11-12T12:45:25.799Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:52:03.240Z,
+    __v: 0
+  }
+]
+Buildings fetched successfully: [
+  {
+    _id: new ObjectId('672b54aa3be897daeb1999e5'),
+    name: 'Batiment 104'
+  },
+  { _id: new ObjectId('672b54cc3be897daeb1999e6'), name: 'Battest' },
+  { _id: new ObjectId('672b54613be897daeb1999e3'), name: 'Batiment C' },
+  { _id: new ObjectId('669104ed1d0220beb6023c9f'), name: 'Batiment A' },
+  { _id: new ObjectId('672b54803be897daeb1999e4'), name: 'Batiment D' },
+  { _id: new ObjectId('669104ed1d0220beb6023ca0'), name: 'Batiment B' }
+]
+Buildings fetched successfully: [
+  {
+    _id: new ObjectId('672b54aa3be897daeb1999e5'),
+    name: 'Batiment 104'
+  },
+  { _id: new ObjectId('672b54cc3be897daeb1999e6'), name: 'Battest' },
+  { _id: new ObjectId('672b54613be897daeb1999e3'), name: 'Batiment C' },
+  { _id: new ObjectId('669104ed1d0220beb6023c9f'), name: 'Batiment A' },
+  { _id: new ObjectId('672b54803be897daeb1999e4'), name: 'Batiment D' },
+  { _id: new ObjectId('669104ed1d0220beb6023ca0'), name: 'Batiment B' }
+]
+Notes fetched successfully: [
+  {
+    _id: new ObjectId('691478a14c75e46c48e5b0a0'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Notes',
+    floor: '5',
+    apartment: '3',
+    company: 'B',
+    openTime: '13:08',
+    closedTime: '',
+    selectedDate: 2025-11-12T12:03:27.860Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:08:01.871Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914788c4c75e46c48e5b09b'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Notes',
+    floor: '3',
+    apartment: '1',
+    company: 'A ',
+    openTime: '13:07',
+    closedTime: '',
+    selectedDate: 2025-11-12T12:03:27.860Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:07:40.144Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('691478774c75e46c48e5b096'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Notes',
+    floor: '4',
+    apartment: '2',
+    company: 'G',
+    openTime: '13:07',
+    closedTime: '',
+    selectedDate: 2025-11-12T12:03:27.860Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:07:19.289Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('691477aad31e555abf782e35'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Notes',
+    floor: '4',
+    apartment: '6',
+    company: 'Neoliane ',
+    openTime: '13:03',
+    closedTime: '',
+    selectedDate: 2025-11-12T12:03:27.860Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:03:54.478Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914762566db720f865f6f9e'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Notes',
+    floor: '1',
+    apartment: '2',
+    company: 'À',
+    openTime: '12:57',
+    closedTime: '',
+    selectedDate: 2025-11-12T11:57:06.309Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T11:57:25.492Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914749366db720f865f6f94'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Notes',
+    floor: '2',
+    apartment: '5',
+    company: 'G',
+    openTime: '12:50',
+    closedTime: '',
+    selectedDate: 2025-11-11T23:00:00.000Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T11:50:43.368Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914748e66db720f865f6f8f'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Notes',
+    floor: '2',
+    apartment: '5',
+    company: 'G',
+    openTime: '',
+    closedTime: '',
+    selectedDate: 2025-11-11T23:00:00.000Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T11:50:38.289Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914747f66db720f865f6f82'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Notes',
+    floor: '2',
+    apartment: '5',
+    company: 'G',
+    openTime: '',
+    closedTime: '',
+    selectedDate: 2025-11-12T11:49:34.020Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T11:50:23.834Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('691471ec5d7f209b9c8f6c6e'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Notes',
+    floor: '1',
+    apartment: '1',
+    company: 'Testzer ',
+    openTime: '12:39',
+    closedTime: '',
+    selectedDate: 2025-11-12T11:38:58.723Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T11:39:24.497Z,
+    __v: 0
+  }
+]
+Buildings fetched successfully: [
+  {
+    _id: new ObjectId('672b54aa3be897daeb1999e5'),
+    name: 'Batiment 104'
+  },
+  { _id: new ObjectId('672b54cc3be897daeb1999e6'), name: 'Battest' },
+  { _id: new ObjectId('672b54613be897daeb1999e3'), name: 'Batiment C' },
+  { _id: new ObjectId('669104ed1d0220beb6023c9f'), name: 'Batiment A' },
+  { _id: new ObjectId('672b54803be897daeb1999e4'), name: 'Batiment D' },
+  { _id: new ObjectId('669104ed1d0220beb6023ca0'), name: 'Batiment B' }
+]
+Buildings fetched successfully: [
+  {
+    _id: new ObjectId('672b54aa3be897daeb1999e5'),
+    name: 'Batiment 104'
+  },
+  { _id: new ObjectId('672b54cc3be897daeb1999e6'), name: 'Battest' },
+  { _id: new ObjectId('672b54613be897daeb1999e3'), name: 'Batiment C' },
+  { _id: new ObjectId('669104ed1d0220beb6023c9f'), name: 'Batiment A' },
+  { _id: new ObjectId('672b54803be897daeb1999e4'), name: 'Batiment D' },
+  { _id: new ObjectId('669104ed1d0220beb6023ca0'), name: 'Batiment B' }
+]
+Notes fetched successfully: [
+  {
+    _id: new ObjectId('691478a14c75e46c48e5b0a0'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Notes',
+    floor: '5',
+    apartment: '3',
+    company: 'B',
+    openTime: '13:08',
+    closedTime: '',
+    selectedDate: 2025-11-12T12:03:27.860Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:08:01.871Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914788c4c75e46c48e5b09b'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Notes',
+    floor: '3',
+    apartment: '1',
+    company: 'A ',
+    openTime: '13:07',
+    closedTime: '',
+    selectedDate: 2025-11-12T12:03:27.860Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:07:40.144Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('691478774c75e46c48e5b096'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Notes',
+    floor: '4',
+    apartment: '2',
+    company: 'G',
+    openTime: '13:07',
+    closedTime: '',
+    selectedDate: 2025-11-12T12:03:27.860Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:07:19.289Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('691477aad31e555abf782e35'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Notes',
+    floor: '4',
+    apartment: '6',
+    company: 'Neoliane ',
+    openTime: '13:03',
+    closedTime: '',
+    selectedDate: 2025-11-12T12:03:27.860Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:03:54.478Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914762566db720f865f6f9e'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Notes',
+    floor: '1',
+    apartment: '2',
+    company: 'À',
+    openTime: '12:57',
+    closedTime: '',
+    selectedDate: 2025-11-12T11:57:06.309Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T11:57:25.492Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914749366db720f865f6f94'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Notes',
+    floor: '2',
+    apartment: '5',
+    company: 'G',
+    openTime: '12:50',
+    closedTime: '',
+    selectedDate: 2025-11-11T23:00:00.000Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T11:50:43.368Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914748e66db720f865f6f8f'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Notes',
+    floor: '2',
+    apartment: '5',
+    company: 'G',
+    openTime: '',
+    closedTime: '',
+    selectedDate: 2025-11-11T23:00:00.000Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T11:50:38.289Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914747f66db720f865f6f82'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Notes',
+    floor: '2',
+    apartment: '5',
+    company: 'G',
+    openTime: '',
+    closedTime: '',
+    selectedDate: 2025-11-12T11:49:34.020Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T11:50:23.834Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('691471ec5d7f209b9c8f6c6e'),
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Notes',
+    floor: '1',
+    apartment: '1',
+    company: 'Testzer ',
+    openTime: '12:39',
+    closedTime: '',
+    selectedDate: 2025-11-12T11:38:58.723Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T11:39:24.497Z,
+    __v: 0
+  }
+]
+Buildings fetched successfully: [
+  {
+    _id: new ObjectId('672b54aa3be897daeb1999e5'),
+    name: 'Batiment 104'
+  },
+  { _id: new ObjectId('672b54cc3be897daeb1999e6'), name: 'Battest' },
+  { _id: new ObjectId('672b54613be897daeb1999e3'), name: 'Batiment C' },
+  { _id: new ObjectId('669104ed1d0220beb6023c9f'), name: 'Batiment A' },
+  { _id: new ObjectId('672b54803be897daeb1999e4'), name: 'Batiment D' },
+  { _id: new ObjectId('669104ed1d0220beb6023ca0'), name: 'Batiment B' }
+]
+Rapports photos fetched successfully: [
+  {
+    _id: new ObjectId('6914848cd032c3fc1efde1d1'),
+    reportNumber: 1,
+    chantierName: 'Azy',
+    company: 'A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/A4F63BC9-F4C3-494F-A88D-894C1A57842F.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/041BD45F-FD6F-451F-863A-26E135C8CEAE.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T12:58:28.339Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:58:52.850Z,
+    __v: 0
+  }
+]
+Rapports photos fetched successfully: [
+  {
+    _id: new ObjectId('6914848cd032c3fc1efde1d1'),
+    reportNumber: 1,
+    chantierName: 'Azy',
+    company: 'A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/A4F63BC9-F4C3-494F-A88D-894C1A57842F.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/041BD45F-FD6F-451F-863A-26E135C8CEAE.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T12:58:28.339Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:58:52.850Z,
+    __v: 0
+  }
+]
+Buildings fetched successfully: [
+  {
+    _id: new ObjectId('672b54aa3be897daeb1999e5'),
+    name: 'Batiment 104'
+  },
+  { _id: new ObjectId('672b54cc3be897daeb1999e6'), name: 'Battest' },
+  { _id: new ObjectId('672b54613be897daeb1999e3'), name: 'Batiment C' },
+  { _id: new ObjectId('669104ed1d0220beb6023c9f'), name: 'Batiment A' },
+  { _id: new ObjectId('672b54803be897daeb1999e4'), name: 'Batiment D' },
+  { _id: new ObjectId('669104ed1d0220beb6023ca0'), name: 'Batiment B' }
+]
+Rapports photos fetched successfully: [
+  {
+    _id: new ObjectId('6914848cd032c3fc1efde1d1'),
+    reportNumber: 1,
+    chantierName: 'Azy',
+    company: 'A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/A4F63BC9-F4C3-494F-A88D-894C1A57842F.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/041BD45F-FD6F-451F-863A-26E135C8CEAE.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T12:58:28.339Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:58:52.850Z,
+    __v: 0
+  }
+]
+Rapports photos fetched successfully: [
+  {
+    _id: new ObjectId('6914848cd032c3fc1efde1d1'),
+    reportNumber: 1,
+    chantierName: 'Azy',
+    company: 'A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/A4F63BC9-F4C3-494F-A88D-894C1A57842F.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/041BD45F-FD6F-451F-863A-26E135C8CEAE.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T12:58:28.339Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:58:52.850Z,
+    __v: 0
+  }
+]
+Rapports photos fetched successfully: [
+  {
+    _id: new ObjectId('6914848cd032c3fc1efde1d1'),
+    reportNumber: 1,
+    chantierName: 'Azy',
+    company: 'A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/A4F63BC9-F4C3-494F-A88D-894C1A57842F.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/041BD45F-FD6F-451F-863A-26E135C8CEAE.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T12:58:28.339Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:58:52.850Z,
+    __v: 0
+  }
+]
+Rapports photos fetched successfully: [
+  {
+    _id: new ObjectId('6914848cd032c3fc1efde1d1'),
+    reportNumber: 1,
+    chantierName: 'Azy',
+    company: 'A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/A4F63BC9-F4C3-494F-A88D-894C1A57842F.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/041BD45F-FD6F-451F-863A-26E135C8CEAE.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T12:58:28.339Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:58:52.850Z,
+    __v: 0
+  }
+]
+Rapports photos fetched successfully: [
+  {
+    _id: new ObjectId('6914848cd032c3fc1efde1d1'),
+    reportNumber: 1,
+    chantierName: 'Azy',
+    company: 'A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/A4F63BC9-F4C3-494F-A88D-894C1A57842F.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/041BD45F-FD6F-451F-863A-26E135C8CEAE.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T12:58:28.339Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:58:52.850Z,
+    __v: 0
+  }
+]
+Rapports photos fetched successfully: [
+  {
+    _id: new ObjectId('6914848cd032c3fc1efde1d1'),
+    reportNumber: 1,
+    chantierName: 'Azy',
+    company: 'A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/A4F63BC9-F4C3-494F-A88D-894C1A57842F.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/041BD45F-FD6F-451F-863A-26E135C8CEAE.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T12:58:28.339Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:58:52.850Z,
+    __v: 0
+  }
+]
+Rapport photo created successfully: {
+  reportNumber: 1,
+  chantierName: 'Montfermeil',
+  company: 'E',
+  imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/E5237EE6-76B6-41D8-AF31-DA8135711F08.jpg',
+  imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/CD79B6E9-DF63-4160-936C-F96776EFB890.png',
+  city: 'Montfermeil',
+  building: 'Batiment 104',
+  task: 'Rapport Photo',
+  selectedDate: 2025-11-12T13:02:51.906Z,
+  userId: new ObjectId('667abba866c1d7380fa198ab'),
+  _id: new ObjectId('691485cbd032c3fc1efde208'),
+  createdAt: 2025-11-12T13:04:11.207Z,
+  __v: 0
+}
+Rapports photos fetched successfully: [
+  {
+    _id: new ObjectId('691485cbd032c3fc1efde208'),
+    reportNumber: 1,
+    chantierName: 'Montfermeil',
+    company: 'E',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/E5237EE6-76B6-41D8-AF31-DA8135711F08.jpg',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/CD79B6E9-DF63-4160-936C-F96776EFB890.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T13:02:51.906Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T13:04:11.207Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914848cd032c3fc1efde1d1'),
+    reportNumber: 1,
+    chantierName: 'Azy',
+    company: 'A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/A4F63BC9-F4C3-494F-A88D-894C1A57842F.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/041BD45F-FD6F-451F-863A-26E135C8CEAE.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T12:58:28.339Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:58:52.850Z,
+    __v: 0
+  }
+]
+Rapports photos fetched successfully: [
+  {
+    _id: new ObjectId('691485cbd032c3fc1efde208'),
+    reportNumber: 1,
+    chantierName: 'Montfermeil',
+    company: 'E',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/E5237EE6-76B6-41D8-AF31-DA8135711F08.jpg',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/CD79B6E9-DF63-4160-936C-F96776EFB890.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T13:02:51.906Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T13:04:11.207Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914848cd032c3fc1efde1d1'),
+    reportNumber: 1,
+    chantierName: 'Azy',
+    company: 'A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/A4F63BC9-F4C3-494F-A88D-894C1A57842F.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/041BD45F-FD6F-451F-863A-26E135C8CEAE.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T12:58:28.339Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:58:52.850Z,
+    __v: 0
+  }
+]
+Buildings fetched successfully: [
+  {
+    _id: new ObjectId('672b54aa3be897daeb1999e5'),
+    name: 'Batiment 104'
+  },
+  { _id: new ObjectId('672b54cc3be897daeb1999e6'), name: 'Battest' },
+  { _id: new ObjectId('672b54613be897daeb1999e3'), name: 'Batiment C' },
+  { _id: new ObjectId('669104ed1d0220beb6023c9f'), name: 'Batiment A' },
+  { _id: new ObjectId('672b54803be897daeb1999e4'), name: 'Batiment D' },
+  { _id: new ObjectId('669104ed1d0220beb6023ca0'), name: 'Batiment B' }
+]
+Buildings fetched successfully: [
+  {
+    _id: new ObjectId('672b54aa3be897daeb1999e5'),
+    name: 'Batiment 104'
+  },
+  { _id: new ObjectId('672b54cc3be897daeb1999e6'), name: 'Battest' },
+  { _id: new ObjectId('672b54613be897daeb1999e3'), name: 'Batiment C' },
+  { _id: new ObjectId('669104ed1d0220beb6023c9f'), name: 'Batiment A' },
+  { _id: new ObjectId('672b54803be897daeb1999e4'), name: 'Batiment D' },
+  { _id: new ObjectId('669104ed1d0220beb6023ca0'), name: 'Batiment B' }
+]
+Buildings fetched successfully: [
+  {
+    _id: new ObjectId('672b54aa3be897daeb1999e5'),
+    name: 'Batiment 104'
+  },
+  { _id: new ObjectId('672b54cc3be897daeb1999e6'), name: 'Battest' },
+  { _id: new ObjectId('672b54613be897daeb1999e3'), name: 'Batiment C' },
+  { _id: new ObjectId('669104ed1d0220beb6023c9f'), name: 'Batiment A' },
+  { _id: new ObjectId('672b54803be897daeb1999e4'), name: 'Batiment D' },
+  { _id: new ObjectId('669104ed1d0220beb6023ca0'), name: 'Batiment B' }
+]
+Buildings fetched successfully: [
+  {
+    _id: new ObjectId('672b54aa3be897daeb1999e5'),
+    name: 'Batiment 104'
+  },
+  { _id: new ObjectId('672b54cc3be897daeb1999e6'), name: 'Battest' },
+  { _id: new ObjectId('672b54613be897daeb1999e3'), name: 'Batiment C' },
+  { _id: new ObjectId('669104ed1d0220beb6023c9f'), name: 'Batiment A' },
+  { _id: new ObjectId('672b54803be897daeb1999e4'), name: 'Batiment D' },
+  { _id: new ObjectId('669104ed1d0220beb6023ca0'), name: 'Batiment B' }
+]
+Buildings fetched successfully: [
+  {
+    _id: new ObjectId('672b54aa3be897daeb1999e5'),
+    name: 'Batiment 104'
+  },
+  { _id: new ObjectId('672b54cc3be897daeb1999e6'), name: 'Battest' },
+  { _id: new ObjectId('672b54613be897daeb1999e3'), name: 'Batiment C' },
+  { _id: new ObjectId('669104ed1d0220beb6023c9f'), name: 'Batiment A' },
+  { _id: new ObjectId('672b54803be897daeb1999e4'), name: 'Batiment D' },
+  { _id: new ObjectId('669104ed1d0220beb6023ca0'), name: 'Batiment B' }
+]
+Rapports photos fetched successfully: [
+  {
+    _id: new ObjectId('691485cbd032c3fc1efde208'),
+    reportNumber: 1,
+    chantierName: 'Montfermeil',
+    company: 'E',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/E5237EE6-76B6-41D8-AF31-DA8135711F08.jpg',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/CD79B6E9-DF63-4160-936C-F96776EFB890.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T13:02:51.906Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T13:04:11.207Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914848cd032c3fc1efde1d1'),
+    reportNumber: 1,
+    chantierName: 'Azy',
+    company: 'A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/A4F63BC9-F4C3-494F-A88D-894C1A57842F.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/041BD45F-FD6F-451F-863A-26E135C8CEAE.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T12:58:28.339Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:58:52.850Z,
+    __v: 0
+  }
+]
+Rapports photos fetched successfully: [
+  {
+    _id: new ObjectId('691485cbd032c3fc1efde208'),
+    reportNumber: 1,
+    chantierName: 'Montfermeil',
+    company: 'E',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/E5237EE6-76B6-41D8-AF31-DA8135711F08.jpg',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/CD79B6E9-DF63-4160-936C-F96776EFB890.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T13:02:51.906Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T13:04:11.207Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914848cd032c3fc1efde1d1'),
+    reportNumber: 1,
+    chantierName: 'Azy',
+    company: 'A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/A4F63BC9-F4C3-494F-A88D-894C1A57842F.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/041BD45F-FD6F-451F-863A-26E135C8CEAE.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T12:58:28.339Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:58:52.850Z,
+    __v: 0
+  }
+]
+Buildings fetched successfully: [
+  {
+    _id: new ObjectId('672b54aa3be897daeb1999e5'),
+    name: 'Batiment 104'
+  },
+  { _id: new ObjectId('672b54cc3be897daeb1999e6'), name: 'Battest' },
+  { _id: new ObjectId('672b54613be897daeb1999e3'), name: 'Batiment C' },
+  { _id: new ObjectId('669104ed1d0220beb6023c9f'), name: 'Batiment A' },
+  { _id: new ObjectId('672b54803be897daeb1999e4'), name: 'Batiment D' },
+  { _id: new ObjectId('669104ed1d0220beb6023ca0'), name: 'Batiment B' }
+]
+Rapports photos fetched successfully: [
+  {
+    _id: new ObjectId('691485cbd032c3fc1efde208'),
+    reportNumber: 1,
+    chantierName: 'Montfermeil',
+    company: 'E',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/E5237EE6-76B6-41D8-AF31-DA8135711F08.jpg',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/CD79B6E9-DF63-4160-936C-F96776EFB890.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T13:02:51.906Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T13:04:11.207Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914848cd032c3fc1efde1d1'),
+    reportNumber: 1,
+    chantierName: 'Azy',
+    company: 'A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/A4F63BC9-F4C3-494F-A88D-894C1A57842F.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/041BD45F-FD6F-451F-863A-26E135C8CEAE.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T12:58:28.339Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:58:52.850Z,
+    __v: 0
+  }
+]
+Rapports photos fetched successfully: [
+  {
+    _id: new ObjectId('691485cbd032c3fc1efde208'),
+    reportNumber: 1,
+    chantierName: 'Montfermeil',
+    company: 'E',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/E5237EE6-76B6-41D8-AF31-DA8135711F08.jpg',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/CD79B6E9-DF63-4160-936C-F96776EFB890.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T13:02:51.906Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T13:04:11.207Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914848cd032c3fc1efde1d1'),
+    reportNumber: 1,
+    chantierName: 'Azy',
+    company: 'A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/A4F63BC9-F4C3-494F-A88D-894C1A57842F.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/041BD45F-FD6F-451F-863A-26E135C8CEAE.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T12:58:28.339Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:58:52.850Z,
+    __v: 0
+  }
+]
+Rapports photos fetched successfully: [
+  {
+    _id: new ObjectId('691485cbd032c3fc1efde208'),
+    reportNumber: 1,
+    chantierName: 'Montfermeil',
+    company: 'E',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/E5237EE6-76B6-41D8-AF31-DA8135711F08.jpg',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/CD79B6E9-DF63-4160-936C-F96776EFB890.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T13:02:51.906Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T13:04:11.207Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914848cd032c3fc1efde1d1'),
+    reportNumber: 1,
+    chantierName: 'Azy',
+    company: 'A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/A4F63BC9-F4C3-494F-A88D-894C1A57842F.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/041BD45F-FD6F-451F-863A-26E135C8CEAE.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T12:58:28.339Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:58:52.850Z,
+    __v: 0
+  }
+]
+Rapports photos fetched successfully: [
+  {
+    _id: new ObjectId('691485cbd032c3fc1efde208'),
+    reportNumber: 1,
+    chantierName: 'Montfermeil',
+    company: 'E',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/E5237EE6-76B6-41D8-AF31-DA8135711F08.jpg',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/CD79B6E9-DF63-4160-936C-F96776EFB890.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T13:02:51.906Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T13:04:11.207Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914848cd032c3fc1efde1d1'),
+    reportNumber: 1,
+    chantierName: 'Azy',
+    company: 'A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/A4F63BC9-F4C3-494F-A88D-894C1A57842F.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/041BD45F-FD6F-451F-863A-26E135C8CEAE.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T12:58:28.339Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:58:52.850Z,
+    __v: 0
+  }
+]
+Rapports photos fetched successfully: [
+  {
+    _id: new ObjectId('691485cbd032c3fc1efde208'),
+    reportNumber: 1,
+    chantierName: 'Montfermeil',
+    company: 'E',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/E5237EE6-76B6-41D8-AF31-DA8135711F08.jpg',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/CD79B6E9-DF63-4160-936C-F96776EFB890.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T13:02:51.906Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T13:04:11.207Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914848cd032c3fc1efde1d1'),
+    reportNumber: 1,
+    chantierName: 'Azy',
+    company: 'A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/A4F63BC9-F4C3-494F-A88D-894C1A57842F.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/041BD45F-FD6F-451F-863A-26E135C8CEAE.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T12:58:28.339Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:58:52.850Z,
+    __v: 0
+  }
+]
+Rapports photos fetched successfully: [
+  {
+    _id: new ObjectId('691485cbd032c3fc1efde208'),
+    reportNumber: 1,
+    chantierName: 'Montfermeil',
+    company: 'E',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/E5237EE6-76B6-41D8-AF31-DA8135711F08.jpg',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/CD79B6E9-DF63-4160-936C-F96776EFB890.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T13:02:51.906Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T13:04:11.207Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914848cd032c3fc1efde1d1'),
+    reportNumber: 1,
+    chantierName: 'Azy',
+    company: 'A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/A4F63BC9-F4C3-494F-A88D-894C1A57842F.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/041BD45F-FD6F-451F-863A-26E135C8CEAE.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T12:58:28.339Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:58:52.850Z,
+    __v: 0
+  }
+]
+Rapports photos fetched successfully: [
+  {
+    _id: new ObjectId('691485cbd032c3fc1efde208'),
+    reportNumber: 1,
+    chantierName: 'Montfermeil',
+    company: 'E',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/E5237EE6-76B6-41D8-AF31-DA8135711F08.jpg',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/CD79B6E9-DF63-4160-936C-F96776EFB890.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T13:02:51.906Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T13:04:11.207Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914848cd032c3fc1efde1d1'),
+    reportNumber: 1,
+    chantierName: 'Azy',
+    company: 'A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/A4F63BC9-F4C3-494F-A88D-894C1A57842F.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/041BD45F-FD6F-451F-863A-26E135C8CEAE.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T12:58:28.339Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:58:52.850Z,
+    __v: 0
+  }
+]
+Rapports photos fetched successfully: [
+  {
+    _id: new ObjectId('691485cbd032c3fc1efde208'),
+    reportNumber: 1,
+    chantierName: 'Montfermeil',
+    company: 'E',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/E5237EE6-76B6-41D8-AF31-DA8135711F08.jpg',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/CD79B6E9-DF63-4160-936C-F96776EFB890.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T13:02:51.906Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T13:04:11.207Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914848cd032c3fc1efde1d1'),
+    reportNumber: 1,
+    chantierName: 'Azy',
+    company: 'A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/A4F63BC9-F4C3-494F-A88D-894C1A57842F.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/041BD45F-FD6F-451F-863A-26E135C8CEAE.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T12:58:28.339Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:58:52.850Z,
+    __v: 0
+  }
+]
+Rapports photos fetched successfully: [
+  {
+    _id: new ObjectId('691485cbd032c3fc1efde208'),
+    reportNumber: 1,
+    chantierName: 'Montfermeil',
+    company: 'E',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/E5237EE6-76B6-41D8-AF31-DA8135711F08.jpg',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/CD79B6E9-DF63-4160-936C-F96776EFB890.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T13:02:51.906Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T13:04:11.207Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914848cd032c3fc1efde1d1'),
+    reportNumber: 1,
+    chantierName: 'Azy',
+    company: 'A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/A4F63BC9-F4C3-494F-A88D-894C1A57842F.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/041BD45F-FD6F-451F-863A-26E135C8CEAE.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T12:58:28.339Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:58:52.850Z,
+    __v: 0
+  }
+]
+Rapports photos fetched successfully: [
+  {
+    _id: new ObjectId('691485cbd032c3fc1efde208'),
+    reportNumber: 1,
+    chantierName: 'Montfermeil',
+    company: 'E',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/E5237EE6-76B6-41D8-AF31-DA8135711F08.jpg',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/CD79B6E9-DF63-4160-936C-F96776EFB890.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T13:02:51.906Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T13:04:11.207Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914848cd032c3fc1efde1d1'),
+    reportNumber: 1,
+    chantierName: 'Azy',
+    company: 'A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/A4F63BC9-F4C3-494F-A88D-894C1A57842F.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/041BD45F-FD6F-451F-863A-26E135C8CEAE.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T12:58:28.339Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:58:52.850Z,
+    __v: 0
+  }
+]
+Rapports photos fetched successfully: [
+  {
+    _id: new ObjectId('691485cbd032c3fc1efde208'),
+    reportNumber: 1,
+    chantierName: 'Montfermeil',
+    company: 'E',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/E5237EE6-76B6-41D8-AF31-DA8135711F08.jpg',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/CD79B6E9-DF63-4160-936C-F96776EFB890.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T13:02:51.906Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T13:04:11.207Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914848cd032c3fc1efde1d1'),
+    reportNumber: 1,
+    chantierName: 'Azy',
+    company: 'A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/A4F63BC9-F4C3-494F-A88D-894C1A57842F.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/041BD45F-FD6F-451F-863A-26E135C8CEAE.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T12:58:28.339Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:58:52.850Z,
+    __v: 0
+  }
+]
+Rapports photos fetched successfully: [
+  {
+    _id: new ObjectId('691485cbd032c3fc1efde208'),
+    reportNumber: 1,
+    chantierName: 'Montfermeil',
+    company: 'E',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/E5237EE6-76B6-41D8-AF31-DA8135711F08.jpg',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/CD79B6E9-DF63-4160-936C-F96776EFB890.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T13:02:51.906Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T13:04:11.207Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914848cd032c3fc1efde1d1'),
+    reportNumber: 1,
+    chantierName: 'Azy',
+    company: 'A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/A4F63BC9-F4C3-494F-A88D-894C1A57842F.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/041BD45F-FD6F-451F-863A-26E135C8CEAE.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T12:58:28.339Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:58:52.850Z,
+    __v: 0
+  }
+]
+Rapports photos fetched successfully: [
+  {
+    _id: new ObjectId('691485cbd032c3fc1efde208'),
+    reportNumber: 1,
+    chantierName: 'Montfermeil',
+    company: 'E',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/E5237EE6-76B6-41D8-AF31-DA8135711F08.jpg',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/CD79B6E9-DF63-4160-936C-F96776EFB890.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T13:02:51.906Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T13:04:11.207Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914848cd032c3fc1efde1d1'),
+    reportNumber: 1,
+    chantierName: 'Azy',
+    company: 'A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/A4F63BC9-F4C3-494F-A88D-894C1A57842F.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/041BD45F-FD6F-451F-863A-26E135C8CEAE.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T12:58:28.339Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:58:52.850Z,
+    __v: 0
+  }
+]
+Rapports photos fetched successfully: [
+  {
+    _id: new ObjectId('691485cbd032c3fc1efde208'),
+    reportNumber: 1,
+    chantierName: 'Montfermeil',
+    company: 'E',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/E5237EE6-76B6-41D8-AF31-DA8135711F08.jpg',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/CD79B6E9-DF63-4160-936C-F96776EFB890.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T13:02:51.906Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T13:04:11.207Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914848cd032c3fc1efde1d1'),
+    reportNumber: 1,
+    chantierName: 'Azy',
+    company: 'A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/A4F63BC9-F4C3-494F-A88D-894C1A57842F.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/041BD45F-FD6F-451F-863A-26E135C8CEAE.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T12:58:28.339Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:58:52.850Z,
+    __v: 0
+  }
+]
+Rapports photos fetched successfully: [
+  {
+    _id: new ObjectId('691485cbd032c3fc1efde208'),
+    reportNumber: 1,
+    chantierName: 'Montfermeil',
+    company: 'E',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/E5237EE6-76B6-41D8-AF31-DA8135711F08.jpg',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/CD79B6E9-DF63-4160-936C-F96776EFB890.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T13:02:51.906Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T13:04:11.207Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914848cd032c3fc1efde1d1'),
+    reportNumber: 1,
+    chantierName: 'Azy',
+    company: 'A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/A4F63BC9-F4C3-494F-A88D-894C1A57842F.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/041BD45F-FD6F-451F-863A-26E135C8CEAE.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T12:58:28.339Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:58:52.850Z,
+    __v: 0
+  }
+]
+Rapports photos fetched successfully: [
+  {
+    _id: new ObjectId('691485cbd032c3fc1efde208'),
+    reportNumber: 1,
+    chantierName: 'Montfermeil',
+    company: 'E',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/E5237EE6-76B6-41D8-AF31-DA8135711F08.jpg',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/CD79B6E9-DF63-4160-936C-F96776EFB890.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T13:02:51.906Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T13:04:11.207Z,
+    __v: 0
+  },
+  {
+    _id: new ObjectId('6914848cd032c3fc1efde1d1'),
+    reportNumber: 1,
+    chantierName: 'Azy',
+    company: 'A',
+    imageAvant: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/A4F63BC9-F4C3-494F-A88D-894C1A57842F.png',
+    imageApres: 'file:///var/mobile/Containers/Data/Application/998F9DCA-EE20-4829-A1CE-B97040C0D684/Library/Caches/ExponentExperienceData/@kijiramer/applicationbtpv1/ImagePicker/041BD45F-FD6F-451F-863A-26E135C8CEAE.png',
+    city: 'Montfermeil',
+    building: 'Batiment 104',
+    task: 'Rapport Photo',
+    selectedDate: 2025-11-12T12:58:28.339Z,
+    userId: new ObjectId('667abba866c1d7380fa198ab'),
+    createdAt: 2025-11-12T12:58:52.850Z,
+    __v: 0
+  }
+]
