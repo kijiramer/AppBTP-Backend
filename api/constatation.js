@@ -1,9 +1,9 @@
 // /api/constatation.js - Route pour récupérer toutes les constatations (avec photos)
-import dbConnect from '../db';
-import { Constatation } from '../CombinedModel';
-import jwt from 'jsonwebtoken';
+const dbConnect = require('../db');
+const { Constatation } = require('../CombinedModel');
+const jwt = require('jsonwebtoken');
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   await dbConnect();
   if (req.method === 'GET') {
     // Authentification et filtres
