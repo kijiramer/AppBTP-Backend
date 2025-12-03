@@ -785,7 +785,7 @@ app.put('/constatations/:id', async (req, res) => {
 
     // Construire l'objet de mise à jour avec tous les champs possibles
     const updateFields = {};
-    if (updateData.intituleMission !== undefined) updateFields.intituleMission = updateData.intituleMission;
+    // intituleMission supprimé
     if (updateData.chantierName !== undefined) updateFields.chantierName = updateData.chantierName;
     if (updateData.company !== undefined) updateFields.company = updateData.company;
     if (updateData.city !== undefined) updateFields.city = updateData.city;
@@ -980,6 +980,7 @@ app.delete('/remarques/:id', async (req, res) => {
 // ==================== ROUTES POUR LES DOSSIERS (FOLDERS) ====================
 // Créer un nouveau dossier avec numéro auto-incrémenté
 app.post('/folders', async (req, res) => {
+  console.log('POST /folders hit. Body:', req.body);
   const header = req.get('Authorization');
   if (!header) {
     return res.status(401).json({ success: false, message: 'You are not authorized.' });
@@ -993,7 +994,7 @@ app.post('/folders', async (req, res) => {
       throw new Error('Invalid user.');
     }
 
-    const { chantierName, company, city, building, task, mission, startDate, endDate } = req.body;
+    // intituleMission supprimé du destructuring
 
     // Trouver le dernier numéro de rapport et incrémenter
     const lastFolder = await Folder.findOne().sort({ reportNumber: -1 });
@@ -1006,7 +1007,7 @@ app.post('/folders', async (req, res) => {
       city,
       building,
       task,
-      mission,
+      mission, // champ optionnel, intituleMission supprimé
       startDate: new Date(startDate),
       endDate: endDate ? new Date(endDate) : undefined,
       userId: user._id
@@ -1321,7 +1322,7 @@ app.put('/rapportsPhotos/:id', async (req, res) => {
       rapportPhotoId,
       {
         $set: {
-          intituleMission: updateData.intituleMission,
+          // intituleMission supprimé
           chantierName: updateData.chantierName,
           company: updateData.company,
           city: updateData.city,
