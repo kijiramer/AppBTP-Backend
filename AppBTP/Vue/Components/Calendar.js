@@ -33,7 +33,11 @@ export function displayCalendarScreen(selectedDate, onDateChange, datesWithNotes
         .startOf('isoWeek');
 
     return Array.from({ length: 21 }, (_, i) => {
+<<<<<<< HEAD
       const dayMoment = moment(startOfWeek).add(i, 'days');
+=======
+      const dayMoment = moment(startOfWeek).add(i, 'days').startOf('day');
+>>>>>>> 4d5876b5dc0dbef0ca21bd0de8065553b9bca84b
       return {
         weekday: dayMoment.format('ddd'),
         date: dayMoment.toDate(),
@@ -54,7 +58,12 @@ export function displayCalendarScreen(selectedDate, onDateChange, datesWithNotes
   // Handlers
   const handleTodayPress = () => {
     setWeekOffset(0);
+<<<<<<< HEAD
     const newDate = new Date();
+=======
+    const newDate = moment().startOf('day').toDate();
+    console.log('🏠 Today button pressed:', newDate.toISOString(), 'Local:', newDate.toLocaleDateString());
+>>>>>>> 4d5876b5dc0dbef0ca21bd0de8065553b9bca84b
     if (onDateChange) {
       onDateChange(newDate);
     } else {
@@ -63,6 +72,10 @@ export function displayCalendarScreen(selectedDate, onDateChange, datesWithNotes
   };
 
   const handleDateSelect = (date) => {
+<<<<<<< HEAD
+=======
+    console.log('📅 Calendar date clicked:', date.toISOString(), 'Local:', date.toLocaleDateString());
+>>>>>>> 4d5876b5dc0dbef0ca21bd0de8065553b9bca84b
     if (onDateChange) {
       onDateChange(date);
     } else {
@@ -75,7 +88,11 @@ export function displayCalendarScreen(selectedDate, onDateChange, datesWithNotes
 
   // Render
   return (
+<<<<<<< HEAD
       <SafeAreaView style={styles.container}>
+=======
+      <View style={styles.container}>
+>>>>>>> 4d5876b5dc0dbef0ca21bd0de8065553b9bca84b
 
         {/* Calendrier */}
         <View style={styles.calendarFrame}>
@@ -146,7 +163,11 @@ export function displayCalendarScreen(selectedDate, onDateChange, datesWithNotes
 
         </View>
 
+<<<<<<< HEAD
       </SafeAreaView>
+=======
+      </View>
+>>>>>>> 4d5876b5dc0dbef0ca21bd0de8065553b9bca84b
   );
 }
 
@@ -154,16 +175,32 @@ export function displayCalendarScreen(selectedDate, onDateChange, datesWithNotes
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+<<<<<<< HEAD
     backgroundColor: '#fff',
     padding: 10,
+=======
+    borderRadius: 12,
+    backgroundColor: '#fff',
+>>>>>>> 4d5876b5dc0dbef0ca21bd0de8065553b9bca84b
   },
 
   calendarFrame: {
     backgroundColor: '#fff',
     borderRadius: 12,
+<<<<<<< HEAD
     borderWidth: 1,
     borderColor: '#d1d1d1',
     padding: 15,
+=======
+    borderWidth: 2,
+    borderColor: 'black',
+    padding: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 5,
+>>>>>>> 4d5876b5dc0dbef0ca21bd0de8065553b9bca84b
   },
 
   header: {
@@ -181,24 +218,39 @@ const styles = StyleSheet.create({
   },
 
   monthText: {
+<<<<<<< HEAD
     fontSize: 18,
+=======
+    fontSize: 20,
+>>>>>>> 4d5876b5dc0dbef0ca21bd0de8065553b9bca84b
     fontWeight: '600',
     color: '#333',
   },
 
   weekRow: {
     flexDirection: 'row',
+<<<<<<< HEAD
     marginBottom: 12,
+=======
+    marginBottom: 4,
+>>>>>>> 4d5876b5dc0dbef0ca21bd0de8065553b9bca84b
   },
 
   dayWrapper: {
     flex: 1,
+<<<<<<< HEAD
     marginHorizontal: 2,
+=======
+>>>>>>> 4d5876b5dc0dbef0ca21bd0de8065553b9bca84b
   },
 
   dayItem: {
     paddingVertical: 12,
+<<<<<<< HEAD
     borderRadius: 16,
+=======
+    borderRadius: 12,
+>>>>>>> 4d5876b5dc0dbef0ca21bd0de8065553b9bca84b
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -206,13 +258,20 @@ const styles = StyleSheet.create({
   weekdayText: {
     fontSize: 12,
     color: '#555',
+<<<<<<< HEAD
     marginBottom: 4,
+=======
+    marginBottom: 5,
+>>>>>>> 4d5876b5dc0dbef0ca21bd0de8065553b9bca84b
   },
 
   dateContainer: {
     alignItems: 'center',
     position: 'relative',
+<<<<<<< HEAD
     paddingTop: 0,
+=======
+>>>>>>> 4d5876b5dc0dbef0ca21bd0de8065553b9bca84b
   },
 
   dateText: {

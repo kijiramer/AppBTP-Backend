@@ -50,7 +50,16 @@ export default function Header({ navigation, isHomePage, city, building, task })
         // Build nested structure: city -> buildings -> pages
         const mapped = (cities.length ? cities : [city, 'Saint Ouen', 'Paris 17eme'].filter(Boolean)).map((c) => {
           const cityName = c.name || c;
+<<<<<<< HEAD
           const bForCity = buildings.filter(b => (b.city && (b.city === cityName || b.city === (c.name || c))) || (b.name && b.name.includes(cityName)));
+=======
+          console.log('🔍 Filtering buildings for city:', cityName);
+          const bForCity = buildings.filter(b => {
+            const matches = b.city && b.city === cityName;
+            console.log('  Building:', b.name, 'City:', b.city, 'Matches:', matches);
+            return matches;
+          });
+>>>>>>> 4d5876b5dc0dbef0ca21bd0de8065553b9bca84b
 
           const buildingNodes = (bForCity.length ? bForCity : []).map(b => {
             const bName = b.name || b.building || String(b);
@@ -64,12 +73,26 @@ export default function Header({ navigation, isHomePage, city, building, task })
             };
           });
 
+<<<<<<< HEAD
           // If no buildings found, still expose pages at city level
           const cityChildren = buildingNodes.length > 0 ? buildingNodes : pages.map(p => ({
             label: p,
             route: p === 'Notes' ? 'Note' : p === 'Constatations' ? 'Constatation' : 'Effectif',
             params: { city: cityName, task: p },
           }));
+=======
+          // Si aucun bâtiment n'est trouvé, créer un bâtiment par défaut
+          const cityChildren = buildingNodes.length > 0 ? buildingNodes : [
+            {
+              label: 'Bâtiment par défaut',
+              children: pages.map(p => ({
+                label: p,
+                route: p === 'Notes' ? 'Note' : p === 'Constatations' ? 'Constatation' : 'Effectif',
+                params: { city: cityName, building: 'Bâtiment par défaut', task: p },
+              })),
+            }
+          ];
+>>>>>>> 4d5876b5dc0dbef0ca21bd0de8065553b9bca84b
 
           return { label: cityName, children: cityChildren };
         });
@@ -109,7 +132,13 @@ export default function Header({ navigation, isHomePage, city, building, task })
   }
   // Building level (if present)
   if (tabItems.length > 1) {
+<<<<<<< HEAD
     segments.push({ label: tabItems[1].name, items: [] });
+=======
+    const currentCity = cityItems.find(c => c.label === tabItems[0].name);
+    const buildingsForCity = currentCity?.children || [];
+    segments.push({ label: tabItems[1].name, items: buildingsForCity });
+>>>>>>> 4d5876b5dc0dbef0ca21bd0de8065553b9bca84b
   }
   // Task/last level: provide quick pages menu
   if (tabItems.length > 2) {
@@ -175,7 +204,11 @@ export default function Header({ navigation, isHomePage, city, building, task })
 
       {!isHomePage && (
         <>
+<<<<<<< HEAD
           <MobileBreadcrumb segments={segments} navigation={navigation} />
+=======
+          <MobileBreadcrumb segments={segments} navigation={navigation} currentCity={tabItems[0]?.name} currentBuilding={tabItems[1]?.name} />
+>>>>>>> 4d5876b5dc0dbef0ca21bd0de8065553b9bca84b
         </>
       )}
     </View>

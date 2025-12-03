@@ -16,9 +16,23 @@ import ScreenWrapper from '../Controleur/ScreenWrapper';
 import { displayCalendarScreen } from './Components/Calendar';
 import { useUserRole } from '../Controleur/UserRoleContext';
 
+<<<<<<< HEAD
 export default function RapportPhoto({ route, navigation }) {
     const { city, building, task } = route.params;
     const { canAddItem } = useUserRole();
+=======
+// Fonction helper pour formater une date en YYYY-MM-DD (heure locale)
+const formatLocalDate = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
+export default function RapportPhoto({ route, navigation }) {
+    const { city, building, task } = route.params;
+    const { canAddItem, canDelete } = useUserRole();
+>>>>>>> 4d5876b5dc0dbef0ca21bd0de8065553b9bca84b
 
     const [folders, setFolders] = useState([]);
     const [selectedFolder, setSelectedFolder] = useState(null);
@@ -114,11 +128,24 @@ export default function RapportPhoto({ route, navigation }) {
                 return;
             }
 
+<<<<<<< HEAD
             const response = await axios.get(`${API_BASE_URL}/folders?city=${city}&building=${building}&task=${task}`, {
+=======
+            const dateStr = formatLocalDate(selectedDate);
+            console.log('📁 Loading folders for date:', dateStr);
+            const response = await axios.get(`${API_BASE_URL}/folders?city=${city}&building=${building}&task=${task}&date=${dateStr}`, {
+>>>>>>> 4d5876b5dc0dbef0ca21bd0de8065553b9bca84b
                 headers: { Authorization: `Bearer ${token}` },
             });
 
             if (response.data.success) {
+<<<<<<< HEAD
+=======
+                console.log('📁 Folders received:', response.data.folders.length);
+                if (response.data.folders.length > 0) {
+                    console.log('📁 First folder createdDate:', response.data.folders[0].createdDate);
+                }
+>>>>>>> 4d5876b5dc0dbef0ca21bd0de8065553b9bca84b
                 setFolders(response.data.folders);
                 // Charger les photos pour chaque dossier
                 response.data.folders.forEach(folder => loadFolderPhotos(folder._id));
@@ -175,8 +202,14 @@ export default function RapportPhoto({ route, navigation }) {
                 building,
                 task,
                 mission: form.mission,
+<<<<<<< HEAD
                 startDate: form.startDate.toISOString(),
                 endDate: form.endDate ? form.endDate.toISOString() : undefined,
+=======
+                startDate: formatLocalDate(form.startDate),
+                endDate: form.endDate ? formatLocalDate(form.endDate) : undefined,
+                createdDate: formatLocalDate(selectedDate), // Date du calendrier
+>>>>>>> 4d5876b5dc0dbef0ca21bd0de8065553b9bca84b
             };
 
             const response = await axios.post(`${API_BASE_URL}/folders`, folderData, {
@@ -240,6 +273,7 @@ export default function RapportPhoto({ route, navigation }) {
                 return;
             }
 
+<<<<<<< HEAD
             // Convertir les URIs en base64
             const avantBase64 = await FileSystem.readAsStringAsync(photoForm.avant, {
                 encoding: FileSystem.EncodingType.Base64,
@@ -251,6 +285,11 @@ export default function RapportPhoto({ route, navigation }) {
             const photoData = {
                 imageAvant: `data:image/jpeg;base64,${avantBase64}`,
                 imageApres: `data:image/jpeg;base64,${apresBase64}`,
+=======
+            const photoData = {
+                imageAvant: photoForm.avant,
+                imageApres: photoForm.apres,
+>>>>>>> 4d5876b5dc0dbef0ca21bd0de8065553b9bca84b
             };
 
             const response = await axios.post(`${API_BASE_URL}/folders/${selectedFolder._id}/photos`, photoData, {
@@ -612,7 +651,11 @@ export default function RapportPhoto({ route, navigation }) {
     // Charger les dossiers au montage et quand la date change
     useEffect(() => {
         loadFolders();
+<<<<<<< HEAD
     }, [city, building, task]);
+=======
+    }, [city, building, task, selectedDate]);
+>>>>>>> 4d5876b5dc0dbef0ca21bd0de8065553b9bca84b
 
     return (
         <ScreenWrapper>
@@ -639,6 +682,16 @@ export default function RapportPhoto({ route, navigation }) {
                         {displayCalendarScreen(selectedDate, setSelectedDate, [])}
                     </View>
 
+<<<<<<< HEAD
+=======
+                    {/* Titre de la section ou message si vide */}
+                    {folders.length > 0 ? (
+                        <Text style={styles.sectionTitle}>Rapport photo :</Text>
+                    ) : (
+                        <Text style={styles.emptyMessage}>Aucun rapport photo pour ce jour là</Text>
+                    )}
+
+>>>>>>> 4d5876b5dc0dbef0ca21bd0de8065553b9bca84b
                     {/* Liste des dossiers */}
                     {folders.map((folder) => {
                         const isExpanded = expandedFolders[folder._id] || false;
@@ -655,12 +708,23 @@ export default function RapportPhoto({ route, navigation }) {
                                         <Text style={styles.folderTitle}>{folder.intituleMission}</Text>
                                         <Text style={styles.folderSubtitle}>{folder.company}</Text>
                                     </View>
+<<<<<<< HEAD
                                     <TouchableOpacity
                                         style={styles.deleteFolderBtn}
                                         onPress={() => deleteFolder(folder._id)}
                                     >
                                         <Text style={styles.deleteFolderText}>🗑️</Text>
                                     </TouchableOpacity>
+=======
+                                    {canDelete() && (
+                                        <TouchableOpacity
+                                            style={styles.deleteFolderBtn}
+                                            onPress={() => deleteFolder(folder._id)}
+                                        >
+                                            <Text style={styles.deleteFolderText}>🗑️</Text>
+                                        </TouchableOpacity>
+                                    )}
+>>>>>>> 4d5876b5dc0dbef0ca21bd0de8065553b9bca84b
                                 </View>
 
                                 {/* Photos du dossier */}
@@ -676,12 +740,23 @@ export default function RapportPhoto({ route, navigation }) {
                                                 <Image source={{ uri: photo.imageApres }} style={styles.image} />
                                             </View>
                                         </View>
+<<<<<<< HEAD
                                         <TouchableOpacity
                                             style={styles.deletePhotoBtn}
                                             onPress={() => deletePhoto(photo._id, folder._id)}
                                         >
                                             <Text style={styles.deletePhotoText}>Supprimer cette paire</Text>
                                         </TouchableOpacity>
+=======
+                                        {canDelete() && (
+                                            <TouchableOpacity
+                                                style={styles.deletePhotoBtn}
+                                                onPress={() => deletePhoto(photo._id, folder._id)}
+                                            >
+                                                <Text style={styles.deletePhotoText}>Supprimer cette paire</Text>
+                                            </TouchableOpacity>
+                                        )}
+>>>>>>> 4d5876b5dc0dbef0ca21bd0de8065553b9bca84b
                                     </View>
                                 ))}
 
@@ -981,6 +1056,7 @@ const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#f9f9f9' },
     contentContainer: { padding: 16 },
     calendarContainer: {
+<<<<<<< HEAD
         backgroundColor: '#fff',
         borderRadius: 12,
         padding: 8,
@@ -990,6 +1066,23 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 4,
         elevation: 3,
+=======
+        marginBottom: 16,
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: 16,
+        marginTop: 8,
+    },
+    emptyMessage: {
+        fontSize: 16,
+        color: '#999',
+        textAlign: 'center',
+        marginVertical: 32,
+        fontStyle: 'italic',
+>>>>>>> 4d5876b5dc0dbef0ca21bd0de8065553b9bca84b
     },
 
     // Styles pour les dossiers
