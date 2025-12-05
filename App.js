@@ -1224,6 +1224,12 @@ app.delete('/folders/:id', async (req, res) => {
 
 // ==================== ROUTE UPLOAD PHOTO (BASE64 - Cloudinary plus tard) ====================
 // Stocke les images en base64 comme Remarque et Constatation
+
+// Route de test pour vérifier que le endpoint est chargé
+app.get('/upload-test', (req, res) => {
+  res.json({ message: 'Upload endpoint is loaded and accessible' });
+});
+
 app.post('/uploadConstatationPhoto', upload.fields([{ name: 'imageAvant', maxCount: 1 }, { name: 'imageApres', maxCount: 1 }]), async (req, res) => {
   const header = req.get('Authorization');
   if (!header) return res.status(401).json({ error: 'Token manquant.' });
