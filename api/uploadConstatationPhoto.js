@@ -1,19 +1,13 @@
 // /api/uploadConstatationPhoto.js - Upload photo pour constatation (Cloudinary)
-import formidable from 'formidable';
-import jwt from 'jsonwebtoken';
-import dbConnect from '../db';
-import { Constatation } from '../CombinedModel';
-import cloudinary from '../utils/cloudinary';
-
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+const formidable = require('formidable');
+const jwt = require('jsonwebtoken');
+const dbConnect = require('../db');
+const { Constatation } = require('../CombinedModel');
+const cloudinary = require('../utils/cloudinary');
 
 const JWT_SECRET = 'hvdvay6ert72839289()aiyg8t87qt72393293883uhefiuh78ttq3ifi78272jbkj?[]]pou89ywe';
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Méthode non autorisée' });
   }
