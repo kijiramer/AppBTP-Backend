@@ -4,15 +4,11 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
-const multer = require('multer');
 const connectDB = require('./db');
 const { User, City, Building, Note, Constatation, Effectif, Remarque, Folder, FolderPhoto } = require('./CombinedModel'); // Import the models
-const avatarRouter = require('./avatar');
+const avatarRouter = require('../avatar');
 
 const JWT_SECRET = 'hvdvay6ert72839289()aiyg8t87qt72393293883uhefiuh78ttq3ifi78272jbkj?[]]pou89ywe';
-
-// Configuration Multer pour upload en mémoire
-const upload = multer({ storage: multer.memoryStorage() });
 
 const app = express();
 
@@ -335,41 +331,41 @@ app.get('/buildings', async (req, res) => {
 
 
 app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+  console.log('Login attempt with email:', email);
+
+  const user = await User.findOne({ email });
+  console.log('User found:', user);
+
+  if (!user) {
+    return res.status(400).json({ success: false, message: 'Could not find user with this email address, please try again.' });
+  }
+
   try {
-    const { email, password } = req.body;
-    console.log('Login attempt with email:', email);
-
-    const user = await User.findOne({ email });
-    console.log('User found:', user);
-
-    if (!user) {
-      return res.status(400).json({ success: false, message: 'Could not find user with this email address, please try again.' });
-    }
-
     if (!await comparePassword(password, user.salt, user.hash)) {
       return res.status(400).json({ success: false, message: 'Unable to log in with provided credentials.' });
     }
-
-    const payload = {
-      id: user._id,
-      name: user.name,
-      email: user.email
-    };
-    const token = jwt.sign(payload, JWT_SECRET, {
-      expiresIn: '7d',
-    });
-    // Set cookie httpOnly
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-    });
-    return res.status(200).json({ success: true, token });
   } catch (err) {
-    console.error('Login error:', err);
-    return res.status(500).json({ success: false, message: 'Internal server error.', error: err.message });
+    console.log('Error comparing password:', err);
+    return res.status(500).json({ success: false, message: 'Internal server error.' });
   }
+
+  const payload = {
+    id: user._id,
+    name: user.name,
+    email: user.email
+  };
+  const token = jwt.sign(payload, JWT_SECRET, {
+    expiresIn: '7d',
+  });
+  // Set cookie httpOnly
+  res.cookie('token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+  });
+  return res.status(200).json({ success: true, token });
 });
 
 app.post('/signup', async (req, res) => {
@@ -1098,46 +1094,6 @@ app.get('/folders', async (req, res) => {
   }
 });
 
-// Récupérer les dates avec des dossiers
-app.get('/folders/dates', async (req, res) => {
-  const header = req.get('Authorization');
-  if (!header) {
-    return res.status(401).json({ success: false, message: 'You are not authorized.' });
-  }
-
-  const token = header.split(' ')[1];
-  try {
-    const payload = jwt.verify(token, JWT_SECRET);
-    const user = await User.findById(payload.id);
-    if (!user) {
-      throw new Error('Invalid user.');
-    }
-
-    const { city, building, task } = req.query;
-    const filter = { userId: user._id };
-    if (city) filter.city = city;
-    if (building) filter.building = building;
-    if (task) filter.task = task;
-
-    const folders = await Folder.find(filter).select('startDate').lean();
-    const set = new Set();
-    for (const folder of folders) {
-      if (folder.startDate) {
-        const d = new Date(folder.startDate);
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        set.add(`${y}-${m}-${day}`);
-      }
-    }
-    console.log('Folder dates fetched successfully:', Array.from(set).length);
-    return res.json({ success: true, dates: Array.from(set) });
-  } catch (err) {
-    console.error('Error fetching folder dates:', err.message);
-    res.status(500).json({ success: false, message: 'Error fetching folder dates', error: err.message });
-  }
-});
-
 // Modifier un dossier
 app.put('/folders/:id', async (req, res) => {
   const header = req.get('Authorization');
@@ -1222,81 +1178,6 @@ app.delete('/folders/:id', async (req, res) => {
   }
 });
 
-// ==================== ROUTE UPLOAD PHOTO (BASE64 - Cloudinary plus tard) ====================
-// Stocke les images en base64 comme Remarque et Constatation
-app.post('/uploadConstatationPhoto', upload.fields([{ name: 'imageAvant', maxCount: 1 }, { name: 'imageApres', maxCount: 1 }]), async (req, res) => {
-  const header = req.get('Authorization');
-  if (!header) return res.status(401).json({ error: 'Token manquant.' });
-
-  try {
-    const token = header.split(' ')[1];
-    const payload = jwt.verify(token, JWT_SECRET);
-    const userId = payload.id;
-
-    const fileAvant = req.files['imageAvant'] ? req.files['imageAvant'][0] : null;
-    const fileApres = req.files['imageApres'] ? req.files['imageApres'][0] : null;
-
-    // Au moins un fichier doit être présent
-    if (!fileAvant && !fileApres) {
-      return res.status(400).json({ error: 'Au moins une image est requise.' });
-    }
-
-    const result = { success: true };
-
-    // Convertir imageAvant en base64 si présent
-    if (fileAvant) {
-      result.imageAvant = `data:${fileAvant.mimetype};base64,${fileAvant.buffer.toString('base64')}`;
-    }
-
-    // Convertir imageApres en base64 si présent
-    if (fileApres) {
-      result.imageApres = `data:${fileApres.mimetype};base64,${fileApres.buffer.toString('base64')}`;
-    }
-
-    return res.json(result);
-  } catch (err) {
-    console.error('Error processing upload:', err);
-    return res.status(500).json({ error: 'Erreur serveur.' });
-  }
-});
-
-// Alias pour compatibilité avec le frontend qui appelle /api/uploadConstatationPhoto
-app.post('/api/uploadConstatationPhoto', upload.fields([{ name: 'imageAvant', maxCount: 1 }, { name: 'imageApres', maxCount: 1 }]), async (req, res) => {
-  const header = req.get('Authorization');
-  if (!header) return res.status(401).json({ error: 'Token manquant.' });
-
-  try {
-    const token = header.split(' ')[1];
-    const payload = jwt.verify(token, JWT_SECRET);
-    const userId = payload.id;
-
-    const fileAvant = req.files['imageAvant'] ? req.files['imageAvant'][0] : null;
-    const fileApres = req.files['imageApres'] ? req.files['imageApres'][0] : null;
-
-    // Au moins un fichier doit être présent
-    if (!fileAvant && !fileApres) {
-      return res.status(400).json({ error: 'Au moins une image est requise.' });
-    }
-
-    const result = { success: true };
-
-    // Convertir imageAvant en base64 si présent
-    if (fileAvant) {
-      result.imageAvant = `data:${fileAvant.mimetype};base64,${fileAvant.buffer.toString('base64')}`;
-    }
-
-    // Convertir imageApres en base64 si présent
-    if (fileApres) {
-      result.imageApres = `data:${fileApres.mimetype};base64,${fileApres.buffer.toString('base64')}`;
-    }
-
-    return res.json(result);
-  } catch (err) {
-    console.error('Error processing upload:', err);
-    return res.status(500).json({ error: 'Erreur serveur.' });
-  }
-});
-
 // ==================== ROUTES POUR LES PHOTOS ====================
 // Ajouter une paire de photos avant/après à un dossier
 app.post('/folders/:folderId/photos', async (req, res) => {
@@ -1373,50 +1254,6 @@ app.get('/folders/:folderId/photos', async (req, res) => {
   } catch (err) {
     console.error('Error fetching photos:', err.message);
     res.status(500).json({ success: false, message: 'Error fetching photos', error: err.message });
-  }
-});
-
-// Mettre à jour une photo (ajouter imageApres)
-app.put('/photos/:id', async (req, res) => {
-  const header = req.get('Authorization');
-  if (!header) {
-    return res.status(401).json({ success: false, message: 'You are not authorized.' });
-  }
-
-  const token = header.split(' ')[1];
-  try {
-    const payload = jwt.verify(token, JWT_SECRET);
-    const user = await User.findById(payload.id);
-    if (!user) {
-      throw new Error('Invalid user.');
-    }
-
-    const photoId = req.params.id;
-    const { imageApres } = req.body;
-
-    if (!imageApres) {
-      return res.status(400).json({ success: false, message: 'imageApres is required' });
-    }
-
-    const photo = await FolderPhoto.findById(photoId);
-
-    if (!photo) {
-      return res.status(404).json({ success: false, message: 'Photo not found' });
-    }
-
-    // Vérifier que l'utilisateur est le propriétaire de la photo
-    if (photo.userId.toString() !== user._id.toString()) {
-      return res.status(403).json({ success: false, message: 'You are not authorized to update this photo' });
-    }
-
-    photo.imageApres = imageApres;
-    await photo.save();
-
-    console.log('Photo updated successfully:', photoId);
-    res.json({ success: true, photo });
-  } catch (err) {
-    console.error('Error updating photo:', err.message);
-    res.status(500).json({ success: false, message: 'Error updating photo', error: err.message });
   }
 });
 
@@ -1625,9 +1462,6 @@ app.post('/logout', (req, res) => {
   return res.json({ success: true, message: 'Logged out' });
 });
 
-// Mount the avatar router
-app.use(avatarRouter);
-
 // Configuration pour Vercel (serverless) et développement local
 if (process.env.NODE_ENV !== 'production') {
   const PORT = process.env.PORT || 8081;
@@ -1653,6 +1487,9 @@ if (process.env.NODE_ENV !== 'production') {
     console.error('Uncaught Exception:', err);
   });
 }
+
+// Mount the avatar router
+app.use(avatarRouter);
 
 // Export pour Vercel
 module.exports = app;
