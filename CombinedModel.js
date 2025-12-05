@@ -81,20 +81,9 @@ const noteSchema = new mongoose.Schema({
 
 const Note = mongoose.model('Note', noteSchema);
 
-// Constatation schema
+// Constatation schema - Supports both "Rapport Photo" and "Constatation Simple" formats
 const constatationSchema = new mongoose.Schema({
-  floor: {
-    type: String,
-    required: true
-  },
-  apartment: {
-    type: String,
-    required: true
-  },
-  description: {
-    type: String,
-    required: false
-  },
+  // Champs communs à tous les types
   city: {
     type: String,
     required: true
@@ -107,23 +96,58 @@ const constatationSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  imageAvant: {
-    type: String,
-    required: true
-  },
-  imageApres: {
-    type: String,
-    required: true
-  },
   selectedDate: {
     type: Date,
     required: true
+  },
+  endDate: {
+    type: Date,
+    required: false
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
+  // Champs pour "Rapport Photo" (format ancien)
+  reportNumber: {
+    type: Number,
+    required: false
+  },
+  chantierName: {
+    type: String,
+    required: false
+  },
+  company: {
+    type: String,
+    required: false
+  },
+  imageAvant: {
+    type: String,
+    required: false
+  },
+  imageApres: {
+    type: String,
+    required: false
+  },
+  // Champs pour "Constatation Simple" (format nouveau)
+  floor: {
+    type: String,
+    required: false
+  },
+  apartment: {
+    type: String,
+    required: false
+  },
+  description: {
+    type: String,
+    required: false
+  },
+  image: {
+    type: String,
+    required: false
+  },
+  // Metadata
   createdAt: {
     type: Date,
     default: Date.now
