@@ -1,0 +1,16 @@
+=== ENDPOINTS CRITIQUES À VÉRIFIER ===
+
+✅ GET /cities - Récupérer les villes
+✅ GET /buildings - Récupérer les bâtiments
+✅ POST /constatations - Créer une constatation
+✅ GET /constatations - Récupérer les constatations
+✅ POST /remarques - Créer une remarque
+✅ GET /remarques - Récupérer les remarques
+✅ POST /folders - Créer un dossier/rapport photo
+✅ GET /folders - Récupérer les dossiers
+✅ POST /uploadConstatationPhoto - Upload de photo (sans /api/)
+✅ POST /api/uploadConstatationPhoto - Upload de photo (avec /api/)
+✅ POST /folders/:folderId/photos - Ajouter une photo à un dossier
+✅ GET /folders/:folderId/photos - Récupérer les photos d'un dossier
+✅ PUT /photos/:id - Mettre à jour une photo (ajouter imageApres)
+❓ GET /folders/dates - Récupérer les dates avec dossiers (À VÉRIFIER)
