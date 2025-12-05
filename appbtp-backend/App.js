@@ -1024,7 +1024,7 @@ app.post('/folders', async (req, res) => {
       throw new Error('Invalid user.');
     }
 
-    const { intituleMission, chantierName, company, city, building, task, mission, startDate, endDate } = req.body;
+    const { chantierName, company, city, building, task, mission, startDate, endDate, createdDate } = req.body;
 
     // Trouver le dernier numéro de rapport et incrémenter
     const lastFolder = await Folder.findOne().sort({ reportNumber: -1 });
@@ -1032,7 +1032,6 @@ app.post('/folders', async (req, res) => {
 
     const folder = new Folder({
       reportNumber,
-      intituleMission,
       chantierName,
       company,
       city,
@@ -1111,7 +1110,7 @@ app.put('/folders/:id', async (req, res) => {
     }
 
     const folderId = req.params.id;
-    const { intituleMission, chantierName, company, mission, startDate, endDate } = req.body;
+    const { chantierName, company, mission, startDate, endDate } = req.body;
 
     const folder = await Folder.findById(folderId);
     if (!folder) {
@@ -1124,7 +1123,6 @@ app.put('/folders/:id', async (req, res) => {
     }
 
     // Mettre à jour les champs
-    if (intituleMission) folder.intituleMission = intituleMission;
     if (chantierName) folder.chantierName = chantierName;
     if (company) folder.company = company;
     if (mission) folder.mission = mission;
