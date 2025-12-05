@@ -83,13 +83,17 @@ const Note = mongoose.model('Note', noteSchema);
 
 // Constatation schema
 const constatationSchema = new mongoose.Schema({
-  reportNumber: {
-    type: Number,
-    required: true
-  },
-  chantierName: {
+  floor: {
     type: String,
     required: true
+  },
+  apartment: {
+    type: String,
+    required: true
+  },
+  description: {
+    type: String,
+    required: false
   },
   city: {
     type: String,
@@ -100,10 +104,6 @@ const constatationSchema = new mongoose.Schema({
     required: true
   },
   task: {
-    type: String,
-    required: true
-  },
-  company: {
     type: String,
     required: true
   },
@@ -118,10 +118,6 @@ const constatationSchema = new mongoose.Schema({
   selectedDate: {
     type: Date,
     required: true
-  },
-  endDate: {
-    type: Date,
-    required: false
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -151,7 +147,53 @@ const effectifSchema = new mongoose.Schema({
 
 const Effectif = mongoose.model('Effectif', effectifSchema);
 
-module.exports = { City, User, Building, Note, Constatation, Effectif };
+// Remarque schema
+const remarqueSchema = new mongoose.Schema({
+  city: {
+    type: String,
+    required: true
+  },
+  building: {
+    type: String,
+    required: true
+  },
+  task: {
+    type: String,
+    required: true
+  },
+  floor: {
+    type: String,
+    required: true
+  },
+  apartment: {
+    type: String,
+    required: true
+  },
+  description: {
+    type: String,
+    required: false
+  },
+  image: {
+    type: String,
+    required: true
+  },
+  selectedDate: {
+    type: Date,
+    required: true
+  },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+const Remarque = mongoose.model('Remarque', remarqueSchema);
+
 // Folder schema
 const folderSchema = new mongoose.Schema({
   reportNumber: { type: Number, required: true },
@@ -180,4 +222,4 @@ const folderPhotoSchema = new mongoose.Schema({
 
 const FolderPhoto = mongoose.model('FolderPhoto', folderPhotoSchema);
 
-module.exports = { City, User, Building, Note, Constatation, Effectif, Folder, FolderPhoto };
+module.exports = { City, User, Building, Note, Constatation, Effectif, Remarque, Folder, FolderPhoto };
