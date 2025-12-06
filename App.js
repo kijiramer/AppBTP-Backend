@@ -1630,9 +1630,6 @@ app.post('/logout', (req, res) => {
   return res.json({ success: true, message: 'Logged out' });
 });
 
-// Mount the avatar router
-app.use(avatarRouter);
-
 // Configuration pour Vercel (serverless) et développement local
 if (process.env.NODE_ENV !== 'production') {
   const PORT = process.env.PORT || 8081;
