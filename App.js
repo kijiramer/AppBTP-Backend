@@ -7,7 +7,6 @@ const cookieParser = require('cookie-parser');
 const multer = require('multer');
 const connectDB = require('./db');
 const { User, City, Building, Note, Constatation, Effectif, Remarque, Folder, FolderPhoto } = require('./CombinedModel'); // Import the models
-const avatarRouter = require('./avatar');
 
 const JWT_SECRET = 'hvdvay6ert72839289()aiyg8t87qt72393293883uhefiuh78ttq3ifi78272jbkj?[]]pou89ywe';
 
