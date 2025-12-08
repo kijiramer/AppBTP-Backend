@@ -92,10 +92,12 @@ app.post('/effectif', async (req, res) => {
       throw new Error('Invalid user.');
     }
     const { city, building, task, floor, apartment, company, nombrePersonnes, selectedDate } = req.body;
+    console.log('📥 POST /effectif - Body:', { city, building, task, floor, apartment, company, nombrePersonnes, selectedDate });
     
     // Normaliser la date pour éviter les problèmes de timezone
     const normalizedDate = new Date(selectedDate);
     normalizedDate.setHours(12, 0, 0, 0);
+    console.log('📅 Normalized date:', normalizedDate);
     
     const effectif = new Effectif({
       city,
@@ -109,6 +111,7 @@ app.post('/effectif', async (req, res) => {
       userId: user._id
     });
     await effectif.save();
+    console.log('✅ Effectif saved:', effectif._id);
     res.json({ success: true, effectif });
   } catch (err) {
     console.error('Error creating effectif:', err.message);
@@ -158,6 +161,8 @@ app.get('/effectifs', async (req, res) => {
       throw new Error('Invalid user.');
     }
     const { city, building, task, floor, apartment, company, selectedDate } = req.query;
+    console.log('📥 GET /effectifs - Query params:', { city, building, task, selectedDate });
+    
     const filter = {}; // Suppression du filtre userId - accessible à tous
     if (city) filter.city = city;
     if (building) filter.building = building;
@@ -173,9 +178,12 @@ app.get('/effectifs', async (req, res) => {
       const endDate = new Date(selectedDate);
       endDate.setHours(23, 59, 59, 999);
       filter.selectedDate = { $gte: startDate, $lte: endDate };
+      console.log('📅 Date filter:', { selectedDate, startDate, endDate });
     }
     
+    console.log('🔍 Final filter:', filter);
     const effectifs = await Effectif.find(filter).sort({ createdAt: -1 }).populate('userId', 'name email');
+    console.log('✅ Found effectifs:', effectifs.length);
     res.json({ success: true, effectifs });
   } catch (err) {
     console.error('Error fetching effectifs:', err.message);
