@@ -1229,6 +1229,32 @@ app.get('/upload-test', (req, res) => {
   res.json({ message: 'Upload endpoint is loaded and accessible' });
 });
 
+// Upload photo pour remarques (une seule image)
+app.post('/user/uploadPhoto', upload.single('photo'), async (req, res) => {
+  const header = req.get('Authorization');
+  if (!header) return res.status(401).json({ success: false, error: 'Token manquant.' });
+
+  try {
+    const token = header.split(' ')[1];
+    const payload = jwt.verify(token, JWT_SECRET);
+    const userId = payload.id;
+
+    const file = req.file;
+
+    if (!file) {
+      return res.status(400).json({ success: false, error: 'Photo requise.' });
+    }
+
+    // Convertir en base64
+    const avatarUrl = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+
+    return res.json({ success: true, avatarUrl });
+  } catch (err) {
+    console.error('Error uploading photo:', err);
+    return res.status(500).json({ success: false, error: 'Erreur serveur.' });
+  }
+});
+
 app.post('/uploadConstatationPhoto', upload.fields([{ name: 'imageAvant', maxCount: 1 }, { name: 'imageApres', maxCount: 1 }]), async (req, res) => {
   const header = req.get('Authorization');
   if (!header) return res.status(401).json({ error: 'Token manquant.' });
