@@ -1230,7 +1230,7 @@ app.get('/upload-test', (req, res) => {
 });
 
 // Upload photo pour remarques (une seule image)
-app.post('/user/uploadPhoto', upload.single('photo'), async (req, res) => {
+app.post('/uploadRemarquePhoto', upload.single('photo'), async (req, res) => {
   const header = req.get('Authorization');
   if (!header) return res.status(401).json({ success: false, error: 'Token manquant.' });
 
