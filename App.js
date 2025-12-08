@@ -92,7 +92,7 @@ app.post('/effectif', async (req, res) => {
       throw new Error('Invalid user.');
     }
     const { city, building, task, floor, apartment, company, nombrePersonnes, selectedDate } = req.body;
-    console.log('📥 POST /effectif - Body:', { city, building, task, floor, apartment, company, nombrePersonnes, selectedDate });
+    console.log('📥 POST /effectif - Body complet:', JSON.stringify(req.body, null, 2));
     
     // Normaliser la date pour éviter les problèmes de timezone
     const normalizedDate = new Date(selectedDate);
@@ -161,7 +161,8 @@ app.get('/effectifs', async (req, res) => {
       throw new Error('Invalid user.');
     }
     const { city, building, task, floor, apartment, company, selectedDate } = req.query;
-    console.log('📥 GET /effectifs - Query params:', { city, building, task, selectedDate });
+    console.log('📥 GET /effectifs - Query params:', JSON.stringify({ city, building, task, floor, apartment, company, selectedDate }));
+    console.log('📥 GET /effectifs - ALL params:', JSON.stringify(req.query));
     
     const filter = {}; // Suppression du filtre userId - accessible à tous
     if (city) filter.city = city;
