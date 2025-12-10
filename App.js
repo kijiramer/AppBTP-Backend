@@ -5,13 +5,42 @@ const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
 const connectDB = require('./db');
 const { User, City, Building, Note, Constatation, Effectif, Remarque, Folder, FolderPhoto } = require('./CombinedModel'); // Import the models
 
 const JWT_SECRET = 'hvdvay6ert72839289()aiyg8t87qt72393293883uhefiuh78ttq3ifi78272jbkj?[]]pou89ywe';
 
+// Configuration Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'dwg5uabzp',
+  api_key: process.env.CLOUDINARY_API_KEY || '656746425983172',
+  api_secret: process.env.CLOUDINARY_API_SECRET || 'lsBHdpTtPMX4o8mKlrMbQSqnPF8'
+});
+
 // Configuration Multer pour upload en mémoire
 const upload = multer({ storage: multer.memoryStorage() });
+
+// Helper function pour uploader vers Cloudinary
+const uploadToCloudinary = (buffer, folder = 'appbtp') => {
+  return new Promise((resolve, reject) => {
+    const uploadStream = cloudinary.uploader.upload_stream(
+      {
+        folder: folder,
+        resource_type: 'auto',
+        transformation: [
+          { width: 1200, height: 1200, crop: 'limit' },
+          { quality: 'auto:good' }
+        ]
+      },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result.secure_url);
+      }
+    );
+    uploadStream.end(buffer);
+  });
+};
 
 const app = express();
 
@@ -1246,8 +1275,8 @@ app.post('/uploadRemarquePhoto', upload.single('photo'), async (req, res) => {
       return res.status(400).json({ success: false, error: 'Photo requise.' });
     }
 
-    // Convertir en base64
-    const avatarUrl = `data:${file.mimetype};base64,${file.buffer.toString('base64')}`;
+    // Upload vers Cloudinary
+    const avatarUrl = await uploadToCloudinary(file.buffer, 'appbtp/remarques');
 
     return res.json({ success: true, avatarUrl });
   } catch (err) {
@@ -1275,14 +1304,14 @@ app.post('/uploadConstatationPhoto', upload.fields([{ name: 'imageAvant', maxCou
 
     const result = { success: true };
 
-    // Convertir imageAvant en base64 si présent
+    // Upload imageAvant vers Cloudinary si présent
     if (fileAvant) {
-      result.imageAvant = `data:${fileAvant.mimetype};base64,${fileAvant.buffer.toString('base64')}`;
+      result.imageAvant = await uploadToCloudinary(fileAvant.buffer, 'appbtp/constatations');
     }
 
-    // Convertir imageApres en base64 si présent
+    // Upload imageApres vers Cloudinary si présent
     if (fileApres) {
-      result.imageApres = `data:${fileApres.mimetype};base64,${fileApres.buffer.toString('base64')}`;
+      result.imageApres = await uploadToCloudinary(fileApres.buffer, 'appbtp/constatations');
     }
 
     return res.json(result);
@@ -1312,14 +1341,14 @@ app.post('/api/uploadConstatationPhoto', upload.fields([{ name: 'imageAvant', ma
 
     const result = { success: true };
 
-    // Convertir imageAvant en base64 si présent
+    // Upload imageAvant vers Cloudinary si présent
     if (fileAvant) {
-      result.imageAvant = `data:${fileAvant.mimetype};base64,${fileAvant.buffer.toString('base64')}`;
+      result.imageAvant = await uploadToCloudinary(fileAvant.buffer, 'appbtp/constatations');
     }
 
-    // Convertir imageApres en base64 si présent
+    // Upload imageApres vers Cloudinary si présent
     if (fileApres) {
-      result.imageApres = `data:${fileApres.mimetype};base64,${fileApres.buffer.toString('base64')}`;
+      result.imageApres = await uploadToCloudinary(fileApres.buffer, 'appbtp/constatations');
     }
 
     return res.json(result);
