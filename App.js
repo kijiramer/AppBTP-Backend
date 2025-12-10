@@ -13,9 +13,9 @@ const JWT_SECRET = 'hvdvay6ert72839289()aiyg8t87qt72393293883uhefiuh78ttq3ifi782
 
 // Configuration Cloudinary
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'dwg5uabzp',
-  api_key: process.env.CLOUDINARY_API_KEY || '656746425983172',
-  api_secret: process.env.CLOUDINARY_API_SECRET || 'lsBHdpTtPMX4o8mKlrMbQSqnPF8'
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'dwmrtp6fp',
+  api_key: process.env.CLOUDINARY_API_KEY || '722881814655342',
+  api_secret: process.env.CLOUDINARY_API_SECRET || 'DIZLSOcjiwWXu2FRtkRLHT-zPh8'
 });
 
 // Configuration Multer pour upload en mémoire
