@@ -1,0 +1,31 @@
+node_modules
+.env
+.vercel
+*.log
+.DS_Store
+.debris
+.idea
+.vscode
+.claude
+.megaignore
+.admin-web-todo
+*.tmp
+App.js.backup
+AppBTP/
+WebApp/
+Sauvegarde v1/
+appbtp-backend/
+api/
+compare/
+UserDetailsBefore
+vercel 2.json
+vercel.json
+User.js
+compare
+add_buildings.js
+add_cities.js
+create_admin.js
+create_role_users.js
+create_user.js
+list_users.js
+README.md
