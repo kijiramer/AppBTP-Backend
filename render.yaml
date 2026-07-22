@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: appbtp-backend
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node App.js
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: NODE_ENV
+        value: production
+    healthCheckPath: /
