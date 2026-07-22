@@ -1463,30 +1463,28 @@ app.post('/logout', (req, res) => {
 });
 
 // Configuration pour Vercel (serverless) et développement local
-if (process.env.NODE_ENV !== 'production') {
-  const PORT = process.env.PORT || 8081;
-  const HOST = process.env.HOST || '0.0.0.0';
+const PORT = process.env.PORT || 8081;
+const HOST = process.env.HOST || '0.0.0.0';
 
-  const server = app.listen(PORT, HOST, () => {
-    console.log(`Express server is running on port ${PORT}.`);
-  });
+const server = app.listen(PORT, HOST, () => {
+  console.log(`Express server is running on port ${PORT}.`);
+});
 
-  server.on('error', (err) => {
-    if (err && err.code === 'EADDRINUSE') {
-      console.error(`Error: Port ${PORT} is already in use. Kill the process using it or change PORT.`);
-    } else {
-      console.error('Server error:', err);
-    }
-  });
+server.on('error', (err) => {
+  if (err && err.code === 'EADDRINUSE') {
+    console.error(`Error: Port ${PORT} is already in use. Kill the process using it or change PORT.`);
+  } else {
+    console.error('Server error:', err);
+  }
+});
 
-  process.on('unhandledRejection', (reason) => {
-    console.error('Unhandled Rejection at:', reason);
-  });
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled Rejection at:', reason);
+});
 
-  process.on('uncaughtException', (err) => {
-    console.error('Uncaught Exception:', err);
-  });
-}
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
 
 // Mount the avatar router
 app.use(avatarRouter);
