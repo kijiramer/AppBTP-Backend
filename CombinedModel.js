@@ -196,7 +196,10 @@ const Remarque = mongoose.model('Remarque', remarqueSchema);
 // Folder schema - Pour les dossiers de rapport photo avec numéro auto-incrémenté
 const folderSchema = new mongoose.Schema({
   reportNumber: { type: Number, required: true },
-  intituleMission: { type: String, required: true },
+  // Champ retire du formulaire de l'application : il n'est plus jamais envoye
+  // ni renseigne par POST /folders. Le laisser obligatoire faisait echouer la
+  // validation a chaque creation de dossier.
+  intituleMission: { type: String, required: false },
   chantierName: { type: String, required: true },
   company: { type: String, required: true },
   city: { type: String, required: true },
@@ -215,7 +218,9 @@ const Folder = mongoose.model('Folder', folderSchema);
 const folderPhotoSchema = new mongoose.Schema({
   folderId: { type: mongoose.Schema.Types.ObjectId, ref: 'Folder', required: true },
   imageAvant: { type: String, required: true },
-  imageApres: { type: String, required: true },
+  // L'image "apres" est ajoutee dans un second temps via PUT /photos/:id :
+  // l'application cree d'abord la photo avec le seul "avant" (imageApres null).
+  imageApres: { type: String, required: false },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   createdAt: { type: Date, default: Date.now }
 });

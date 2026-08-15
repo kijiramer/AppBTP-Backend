@@ -7,6 +7,7 @@ const cookieParser = require('cookie-parser');
 const connectDB = require('./db');
 const { User, City, Building, Note, Constatation, Effectif, Remarque, Folder, FolderPhoto } = require('./CombinedModel'); // Import the models
 const avatarRouter = require('./avatar');
+const uploadsRouter = require('./uploads');
 
 const JWT_SECRET = 'hvdvay6ert72839289()aiyg8t87qt72393293883uhefiuh78ttq3ifi78272jbkj?[]]pou89ywe';
 
@@ -1094,6 +1095,44 @@ app.get('/folders', async (req, res) => {
   }
 });
 
+// Dates ayant au moins un dossier, pour le marquage du calendrier cote app.
+// Doit rester declaree avant les routes /folders/:id, sinon "dates" serait
+// interprete comme un identifiant.
+app.get('/folders/dates', async (req, res) => {
+  const header = req.get('Authorization');
+  if (!header) {
+    return res.status(401).json({ success: false, message: 'You are not authorized.' });
+  }
+
+  const token = header.split(' ')[1];
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(payload.id);
+    if (!user) {
+      throw new Error('Invalid user.');
+    }
+
+    const { city, building, task } = req.query;
+    const filter = {};
+    if (city) filter.city = city;
+    if (building) filter.building = building;
+    if (task) filter.task = task;
+
+    const folders = await Folder.find(filter).select('startDate');
+    // Format YYYY-MM-DD attendu par le calendrier de l'app.
+    const dates = [...new Set(
+      folders
+        .filter((f) => f.startDate)
+        .map((f) => new Date(f.startDate).toISOString().slice(0, 10))
+    )];
+
+    res.json({ success: true, dates });
+  } catch (err) {
+    console.error('Error fetching folder dates:', err.message);
+    res.status(500).json({ success: false, message: 'Error fetching folder dates', error: err.message });
+  }
+});
+
 // Modifier un dossier
 app.put('/folders/:id', async (req, res) => {
   const header = req.get('Authorization');
@@ -1254,6 +1293,43 @@ app.get('/folders/:folderId/photos', async (req, res) => {
   } catch (err) {
     console.error('Error fetching photos:', err.message);
     res.status(500).json({ success: false, message: 'Error fetching photos', error: err.message });
+  }
+});
+
+// Mettre a jour une photo de dossier. L'app s'en sert pour ajouter l'image
+// "apres" sur une photo deja creee avec seulement l'image "avant".
+app.put('/photos/:id', async (req, res) => {
+  const header = req.get('Authorization');
+  if (!header) {
+    return res.status(401).json({ success: false, message: 'You are not authorized.' });
+  }
+
+  const token = header.split(' ')[1];
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(payload.id);
+    if (!user) {
+      throw new Error('Invalid user.');
+    }
+
+    const photo = await FolderPhoto.findById(req.params.id);
+    if (!photo) {
+      return res.status(404).json({ success: false, message: 'Photo not found' });
+    }
+    if (photo.userId.toString() !== user._id.toString()) {
+      return res.status(403).json({ success: false, message: 'You are not authorized to modify this photo' });
+    }
+
+    // Seules les URLs d'images sont modifiables ici.
+    const { imageAvant, imageApres } = req.body;
+    if (imageAvant !== undefined) photo.imageAvant = imageAvant;
+    if (imageApres !== undefined) photo.imageApres = imageApres;
+
+    await photo.save();
+    res.json({ success: true, photo });
+  } catch (err) {
+    console.error('Error updating photo:', err.message);
+    res.status(500).json({ success: false, message: 'Error updating photo', error: err.message });
   }
 });
 
@@ -1488,6 +1564,9 @@ process.on('uncaughtException', (err) => {
 
 // Mount the avatar router
 app.use(avatarRouter);
+
+// Routes d'upload de photos (remarques et rapports photo)
+app.use(uploadsRouter);
 
 // Export pour Vercel
 module.exports = app;
