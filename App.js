@@ -9,7 +9,10 @@ const { User, City, Building, Note, Constatation, Effectif, Remarque, Folder, Fo
 const avatarRouter = require('./avatar');
 const uploadsRouter = require('./uploads');
 
-const JWT_SECRET = 'hvdvay6ert72839289()aiyg8t87qt72393293883uhefiuh78ttq3ifi78272jbkj?[]]pou89ywe';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET manquant. Definir la variable d environnement avant de demarrer.');
+}
 
 const app = express();
 
@@ -807,6 +810,16 @@ app.put('/constatations/:id', async (req, res) => {
     const constatationId = req.params.id;
     const updateData = req.body;
 
+    // Proprietaire ou admin, comme le DELETE plus bas. Sans ce controle, tout
+    // compte connecte pouvait modifier la constatation de n'importe qui.
+    const existing = await Constatation.findById(constatationId);
+    if (!existing) {
+      return res.status(404).json({ success: false, message: 'Constatation not found' });
+    }
+    if (existing.userId.toString() !== user._id.toString() && user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'You are not authorized to update this constatation' });
+    }
+
     // Construire l'objet de mise à jour avec tous les champs possibles
     const updateFields = {};
     if (updateData.intituleMission !== undefined) updateFields.intituleMission = updateData.intituleMission;
@@ -1467,6 +1480,16 @@ app.put('/rapportsPhotos/:id', async (req, res) => {
     const rapportPhotoId = req.params.id;
     const updateData = req.body;
 
+    // Proprietaire ou admin, comme le DELETE plus bas. Sans ce controle, tout
+    // compte connecte pouvait modifier le rapport photo de n'importe qui.
+    const existing = await Constatation.findById(rapportPhotoId);
+    if (!existing) {
+      return res.status(404).json({ success: false, message: 'Rapport photo not found' });
+    }
+    if (existing.userId.toString() !== user._id.toString() && user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'You are not authorized to update this rapport photo' });
+    }
+
     // Mettre à jour le rapport photo
     const updatedRapportPhoto = await Constatation.findByIdAndUpdate(
       rapportPhotoId,
@@ -1542,17 +1565,22 @@ app.post('/logout', (req, res) => {
 const PORT = process.env.PORT || 8081;
 const HOST = process.env.HOST || '0.0.0.0';
 
-const server = app.listen(PORT, HOST, () => {
-  console.log(`Express server is running on port ${PORT}.`);
-});
+// N'ouvrir un port que lance directement (`node App.js`, cas de Render).
+// Importe comme module — tests, deploiement serverless — on exporte juste
+// l'app sans ecouter.
+if (require.main === module) {
+  const server = app.listen(PORT, HOST, () => {
+    console.log(`Express server is running on port ${PORT}.`);
+  });
 
-server.on('error', (err) => {
-  if (err && err.code === 'EADDRINUSE') {
-    console.error(`Error: Port ${PORT} is already in use. Kill the process using it or change PORT.`);
-  } else {
-    console.error('Server error:', err);
-  }
-});
+  server.on('error', (err) => {
+    if (err && err.code === 'EADDRINUSE') {
+      console.error(`Error: Port ${PORT} is already in use. Kill the process using it or change PORT.`);
+    } else {
+      console.error('Server error:', err);
+    }
+  });
+}
 
 process.on('unhandledRejection', (reason) => {
   console.error('Unhandled Rejection at:', reason);

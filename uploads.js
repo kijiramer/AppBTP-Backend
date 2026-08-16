@@ -12,7 +12,10 @@ const cloudinary = require('cloudinary').v2;
 // Meme secret que App.js et avatar.js : les jetons doivent rester verifiables
 // par tous les modules. Ne pas diverger vers une variable d'environnement ici
 // tant que App.js utilise la constante en dur.
-const JWT_SECRET = 'hvdvay6ert72839289()aiyg8t87qt72393293883uhefiuh78ttq3ifi78272jbkj?[]]pou89ywe';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET manquant. Definir la variable d environnement avant de demarrer.');
+}
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,

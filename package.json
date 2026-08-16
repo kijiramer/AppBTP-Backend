@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "App.js",
   "scripts": {
-    "start": "node App.js"
+    "start": "node App.js",
+    "test": "jest"
   },
   "author": "",
   "license": "ISC",
@@ -18,5 +19,24 @@
     "mongoose": "^8.4.3",
     "multer": "^2.2.0",
     "nodemon": "^3.1.3"
+  },
+  "devDependencies": {
+    "jest": "^30.4.2",
+    "supertest": "^7.2.2"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "<rootDir>/*.test.js"
+    ],
+    "modulePathIgnorePatterns": [
+      "<rootDir>/.debris/",
+      "<rootDir>/AppBTP/",
+      "<rootDir>/WebApp/",
+      "<rootDir>/appbtp-backend/",
+      "<rootDir>/Sauvegarde v1/",
+      "<rootDir>/compare/",
+      "<rootDir>/UserDetailsBefore/"
+    ]
   }
 }

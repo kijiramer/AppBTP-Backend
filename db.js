@@ -8,8 +8,10 @@ const connectDB = async () => {
     return;
   }
 
-  const defaultUri = 'mongodb+srv://kijiramer:admin@cluster0.bafh5lk.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
-  const mongoUri = process.env.MONGODB_URI || defaultUri;
+  const mongoUri = process.env.MONGODB_URI;
+  if (!mongoUri) {
+    throw new Error('MONGODB_URI manquant. Definir la variable d environnement avant de demarrer.');
+  }
 
   try {
     if (mongoose.connection.readyState === 0) {

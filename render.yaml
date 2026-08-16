@@ -8,6 +8,9 @@ services:
     envVars:
       - key: MONGODB_URI
         sync: false
+      # A definir dans le dashboard Render. Le serveur refuse de demarrer sans.
+      - key: JWT_SECRET
+        sync: false
       - key: NODE_ENV
         value: production
     healthCheckPath: /
