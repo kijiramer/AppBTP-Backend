@@ -11,6 +11,14 @@ services:
       # A definir dans le dashboard Render. Le serveur refuse de demarrer sans.
       - key: JWT_SECRET
         sync: false
+      # A definir dans le dashboard Render. Sans ces 3 valeurs, /uploadRemarquePhoto
+      # et /uploadConstatationPhoto renvoient 500 ("Stockage d'images non configure").
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
       - key: NODE_ENV
         value: production
     healthCheckPath: /

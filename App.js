@@ -1399,7 +1399,7 @@ app.post('/rapportsPhotos', async (req, res) => {
       throw new Error('Invalid user.');
     }
 
-    const { reportNumber, chantierName, city, building, task, company, imageAvant, imageApres, selectedDate, endDate } = req.body;
+    const { reportNumber, chantierName, city, building, task, company, entreprise, batiment, intituleMission, imageAvant, imageApres, selectedDate, endDate } = req.body;
 
     const rapportPhoto = new Constatation({
       reportNumber,
@@ -1408,6 +1408,9 @@ app.post('/rapportsPhotos', async (req, res) => {
       building,
       task,
       company,
+      entreprise,
+      batiment,
+      intituleMission,
       imageAvant,
       imageApres,
       selectedDate: new Date(selectedDate),
@@ -1498,6 +1501,8 @@ app.put('/rapportsPhotos/:id', async (req, res) => {
           intituleMission: updateData.intituleMission,
           chantierName: updateData.chantierName,
           company: updateData.company,
+          entreprise: updateData.entreprise,
+          batiment: updateData.batiment,
           city: updateData.city,
           building: updateData.building,
           task: updateData.task,

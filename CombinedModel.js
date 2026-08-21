@@ -102,6 +102,17 @@ const constatationSchema = new mongoose.Schema({
     type: String,
     required: false
   },
+  // L'app mobile envoie "entreprise" et "batiment" (pas "company") pour le
+  // rapport photo : sans ces champs, les valeurs saisies etaient silencieusement
+  // perdues a l'enregistrement.
+  entreprise: {
+    type: String,
+    required: false
+  },
+  batiment: {
+    type: String,
+    required: false
+  },
   imageAvant: {
     type: String,
     required: false
