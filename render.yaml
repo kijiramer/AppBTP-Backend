@@ -11,6 +11,16 @@ services:
       # A definir dans le dashboard Render. Le serveur refuse de demarrer sans.
       - key: JWT_SECRET
         sync: false
+      # Stockage des photos (Supabase Storage). Sans ces trois variables, les
+      # routes d'upload repondent 500 avec un message explicite plutot que de
+      # laisser le SDK echouer obscurement. La cle est secrete : dashboard
+      # uniquement, jamais dans le depot.
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_BUCKET
+        value: photos
       - key: NODE_ENV
         value: production
     healthCheckPath: /
