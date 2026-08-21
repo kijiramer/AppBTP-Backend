@@ -1,0 +1,24 @@
+# Empeche la mise en pause du projet Supabase.
+#
+# Supabase suspend les projets du plan gratuit apres 7 jours de faible
+# activite, et l'activite mesuree est celle de la base Postgres. Ce backend
+# tourne sur MongoDB : sans ce ping quotidien, le Postgres du projet ne
+# recevrait jamais aucune requete et la pause serait systematique. Un projet
+# en pause renvoie HTTP 540 sur tous ses services, Storage compris : toutes
+# les photos de l'application deviendraient inaccessibles d'un coup.
+name: supabase-keepalive
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # tous les jours a 06:00 UTC
+  workflow_dispatch: # relance manuelle depuis l'onglet Actions
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Postgres via l'API REST
+        run: |
+          curl -fsS "${{ secrets.SUPABASE_URL }}/rest/v1/keepalive?select=id" \
+            -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"

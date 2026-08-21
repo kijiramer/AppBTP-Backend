@@ -1,4 +1,4 @@
-// Routes d'upload de photos vers Cloudinary.
+// Routes d'upload de photos vers Supabase Storage.
 //
 // L'application mobile envoie les images en multipart/form-data puis stocke
 // l'URL renvoyee ici dans la remarque ou la photo de dossier. Sans ces routes,
@@ -7,7 +7,8 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
-const cloudinary = require('cloudinary').v2;
+const crypto = require('crypto');
+const { createClient } = require('@supabase/supabase-js');
 
 // Meme secret que App.js et avatar.js : les jetons doivent rester verifiables
 // par tous les modules. Ne pas diverger vers une variable d'environnement ici
@@ -17,11 +18,20 @@ if (!JWT_SECRET) {
   throw new Error('JWT_SECRET manquant. Definir la variable d environnement avant de demarrer.');
 }
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+// Client cree paresseusement : ce module est importe par App.js au demarrage,
+// or createClient jette si l'URL est absente. On veut que le serveur demarre
+// et renvoie une 500 explicite sur l'upload, pas qu'il refuse de booter.
+let supabase = null;
+function getSupabase() {
+  if (!supabase) {
+    supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      { auth: { persistSession: false } }
+    );
+  }
+  return supabase;
+}
 
 // Stockage en memoire : le disque de Render est ephemere, un fichier ecrit
 // localement disparait au redemarrage de l'instance.
@@ -46,19 +56,19 @@ function authenticate(req, res, next) {
   }
 }
 
-function cloudinaryConfigured() {
+function storageConfigured() {
   return Boolean(
-    process.env.CLOUDINARY_CLOUD_NAME &&
-    process.env.CLOUDINARY_API_KEY &&
-    process.env.CLOUDINARY_API_SECRET
+    process.env.SUPABASE_URL &&
+    process.env.SUPABASE_SERVICE_ROLE_KEY &&
+    process.env.SUPABASE_BUCKET
   );
 }
 
-// Middleware: echoue explicitement si les variables Cloudinary manquent, plutot
+// Middleware: echoue explicitement si les variables Supabase manquent, plutot
 // que de laisser le SDK renvoyer une erreur obscure.
-function requireCloudinary(req, res, next) {
-  if (!cloudinaryConfigured()) {
-    console.error('Upload refuse : variables CLOUDINARY_* absentes.');
+function requireStorage(req, res, next) {
+  if (!storageConfigured()) {
+    console.error('Upload refuse : variables SUPABASE_* absentes.');
     return res.status(500).json({
       success: false,
       message: "Stockage d'images non configure sur le serveur.",
@@ -67,15 +77,22 @@ function requireCloudinary(req, res, next) {
   next();
 }
 
-// Envoie un buffer vers Cloudinary et renvoie l'URL HTTPS.
-function uploadBuffer(buffer, folder) {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      { folder, resource_type: 'image' },
-      (err, result) => (err ? reject(err) : resolve(result.secure_url))
-    );
-    stream.end(buffer);
-  });
+// Envoie un buffer vers Supabase Storage et renvoie l'URL publique.
+// Le nom de fichier est un UUID : deux photos prises la meme seconde par deux
+// utilisateurs ne doivent pas s'ecraser l'une l'autre.
+async function uploadBuffer(buffer, folder, mimetype) {
+  const type = mimetype && mimetype.startsWith('image/') ? mimetype : 'image/jpeg';
+  const ext = type.split('/')[1].replace('jpeg', 'jpg');
+  const key = `${folder}/${crypto.randomUUID()}.${ext}`;
+  const bucket = getSupabase().storage.from(process.env.SUPABASE_BUCKET);
+
+  // supabase-js ne jette pas : il renvoie { data, error }. Sans ce test, un
+  // upload en echec renverrait quand meme une URL bien formee, et le bug ne se
+  // verrait qu'a l'affichage, plus tard.
+  const { error } = await bucket.upload(key, buffer, { contentType: type });
+  if (error) throw new Error(error.message);
+
+  return bucket.getPublicUrl(key).data.publicUrl;
 }
 
 // Photo d'une remarque. L'app envoie un seul fichier sous le champ "photo"
@@ -83,14 +100,14 @@ function uploadBuffer(buffer, folder) {
 router.post(
   '/uploadRemarquePhoto',
   authenticate,
-  requireCloudinary,
+  requireStorage,
   upload.single('photo'),
   async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ success: false, message: 'Aucune photo recue.' });
     }
     try {
-      const avatarUrl = await uploadBuffer(req.file.buffer, 'appbtp/remarques');
+      const avatarUrl = await uploadBuffer(req.file.buffer, 'appbtp/remarques', req.file.mimetype);
       return res.json({ success: true, avatarUrl });
     } catch (err) {
       console.error('Erreur upload remarque:', err.message);
@@ -105,7 +122,7 @@ router.post(
 router.post(
   '/uploadConstatationPhoto',
   authenticate,
-  requireCloudinary,
+  requireStorage,
   upload.fields([
     { name: 'imageAvant', maxCount: 1 },
     { name: 'imageApres', maxCount: 1 },
@@ -120,8 +137,8 @@ router.post(
 
     try {
       const [imageAvant, imageApres] = await Promise.all([
-        avantFile ? uploadBuffer(avantFile.buffer, 'appbtp/constatations') : Promise.resolve(null),
-        apresFile ? uploadBuffer(apresFile.buffer, 'appbtp/constatations') : Promise.resolve(null),
+        avantFile ? uploadBuffer(avantFile.buffer, 'appbtp/constatations', avantFile.mimetype) : Promise.resolve(null),
+        apresFile ? uploadBuffer(apresFile.buffer, 'appbtp/constatations', apresFile.mimetype) : Promise.resolve(null),
       ]);
       return res.json({ success: true, imageAvant, imageApres });
     } catch (err) {
