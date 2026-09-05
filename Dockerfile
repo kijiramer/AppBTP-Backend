@@ -5,7 +5,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
-COPY App.js CombinedModel.js db.js avatar.js uploads.js User.js ./
+COPY App.js CombinedModel.js db.js avatar.js uploads.js ./
 
 EXPOSE 8081
 
