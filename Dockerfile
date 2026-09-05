@@ -1,3 +1,4 @@
+# AppBtp backend - staging image
 FROM node:20.18-alpine
 
 WORKDIR /app
