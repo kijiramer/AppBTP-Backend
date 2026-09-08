@@ -25,7 +25,8 @@ const allowedOrigins = [
   'http://localhost:3001',
   'http://localhost:5173',
   'https://appbtp-webapp.vercel.app',
-  'https://app-btp-webapp.vercel.app'
+  'https://app-btp-webapp.vercel.app',
+  'https://appbtp.lab'
 ];
 
 app.use((req, res, next) => {

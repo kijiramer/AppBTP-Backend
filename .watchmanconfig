@@ -1,0 +1,15 @@
+{
+  "ignore_dirs": [
+    "node_modules",
+    ".git",
+    "android",
+    "ios",
+    "dist",
+    "build",
+    ".expo",
+    ".next",
+    "coverage",
+    "Pods"
+  ],
+  "fsevents_latency": 0.5
+}

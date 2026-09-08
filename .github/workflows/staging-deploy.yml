@@ -1,0 +1,47 @@
+name: Staging CI/CD
+
+on:
+  push:
+    branches: [staging]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm test
+
+  deploy:
+    needs: test
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image tagged with commit SHA
+        run: docker build -t appbtp-backend:${{ github.sha }} .
+
+      - name: Deploy staging stack
+        working-directory: /opt/staging/appbtp
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          sed -i "s|appbtp-backend:.*|appbtp-backend:${IMAGE_TAG}|" docker-compose.yml
+          docker compose up -d
+
+      - name: Wait for healthcheck
+        run: |
+          for i in $(seq 1 15); do
+            status=$(docker inspect --format='{{.State.Health.Status}}' appbtp-staging-backend 2>/dev/null || echo "starting")
+            if [ "$status" = "healthy" ]; then
+              echo "Healthy."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Container never became healthy, deployment considered failed."
+          exit 1
